@@ -92,9 +92,9 @@ summarylength = 25
       #  [[params.footer.sitemap.link]]
        #   name = "Blog"
        #   url  = "blog"
-        [[params.footer.sitemap.link]]
-          name = "Contact"
-          url  = "contact"
+     #   [[params.footer.sitemap.link]]
+    #      name = "Contact"
+   #       url  = "contact"
       # Footer Social Media
       [params.footer.social]
         title   = "Social Media"
