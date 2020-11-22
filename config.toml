@@ -52,7 +52,7 @@ summarylength = 25
   [params.banner]
     enable                = true
     background_image      = "images/backgrounds/hero_background.png"
-    heading               = "Agnieszka Prawda \nData analyst \nProject Manager \nEntrepreneur"
+    heading               = "Agnieszka Prawda\nData analyst\nProject Manager\nEntrepreneur"
     tagline               = "WELCOME TO MY PORTFOLIO WEBISTE"
     primary_button        = "See My Projects"
     primary_button_url    = "portfolio"
