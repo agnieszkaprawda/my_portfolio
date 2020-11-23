@@ -21,7 +21,7 @@ summarylength = 25
     url     = "portfolio"
     weight  = 3
   [[menu.nav]]
-    name    = "Blog"
+    name    = "Other Projects"
     url     = "blog"
     weight  = 4
   [[menu.nav]]
@@ -90,7 +90,7 @@ summarylength = 25
     #      name = "Projects"
      #     url  = "portfolio"
       #  [[params.footer.sitemap.link]]
-       #   name = "Additional projects"
+       #   name = "Other projects"
        #   url  = "blog"
      #   [[params.footer.sitemap.link]]
     #      name = "Contact"
