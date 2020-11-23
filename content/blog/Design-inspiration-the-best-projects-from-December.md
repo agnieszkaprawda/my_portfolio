@@ -31,8 +31,6 @@ It was an absolute pleasure to work with such fantastic, creative, and open peop
 
 ![meetable_logo](/images/blog/blog_post_01.jpg)
 
-Black Lines wants it to be as easy to serve a Negroni as it is a pint of lager. The drinks company is seeking to revolutionise the bar experience by serving cocktails by draught with a changing menu of drinks (as well as same favourite stand-bys). A pink grapefruit spritz was served through the summer while a new pear and white tea fizz joins the line-up for winter.
-
 > "The secret of getting ahead is getting started"
 
 
