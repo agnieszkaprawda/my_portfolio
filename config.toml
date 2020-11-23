@@ -90,7 +90,7 @@ summarylength = 25
     #      name = "Projects"
      #     url  = "portfolio"
       #  [[params.footer.sitemap.link]]
-       #   name = "Blog"
+       #   name = "Additional projects"
        #   url  = "blog"
      #   [[params.footer.sitemap.link]]
     #      name = "Contact"

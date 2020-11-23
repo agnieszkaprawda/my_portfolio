@@ -1,36 +1,40 @@
 ---
-author: Alexender Schoitiz
+author: Agnieszka Prawda
 date: "2019-12-24T13:45:06+06:00"
 feature_image: images/blog/blog-details-image.jpg
-image: images/blog/blog-post-04.jpg
-title: 'Design Inspiration: The Best Projects From December'
+image: images/blog/cover_meetable.png
+title: 'Oxford Hack 2020 - Meetable MVP'
 ---
-### Black Lines brand identity, by & Smith
+### Oxford Hack 2020 - Meetable
+
+What is Meetable?
+Meetable is an app that enables you to find friends during the lockdown. It matches you with a small group of other students from your university every week and sets weekly challenges for you basing on your common interests.
+
+
+
+As an Executive Committee member of the Entrepreneurship Club at London Business School, I decided to build on my passion for tech & startups.
+
+Therefore, last weekend I joined my first hackathon organised by the University of Oxford - #OxfordHack2020 and created a marvelous team with Yash Dandavate, Samuel Ola, and Jason Zhao.
+
+
+![Meetable](vid/Meetable_1.mp4)
+
+
+
+We spent 36 h working on the creation of the MVP - including the development of the UI & UX, logistics behind the product, ways of gaining revenue, and coding the backend & frontend of the app.
+
+We came up with an idea related to enabling young people to socialize during COVID-19 times.
+
+Within a few hours, we managed to conduct the survey and get 54 responses that confirm the viability of our idea.
+
+It was an absolute pleasure to work with such fantastic, creative, and open people! Thank you so much team once again for making this experience so priceless and amusing!
+
+![meetable_logo](blog/1.png)
 
 Black Lines wants it to be as easy to serve a Negroni as it is a pint of lager. The drinks company is seeking to revolutionise the bar experience by serving cocktails by draught with a changing menu of drinks (as well as same favourite stand-bys). A pink grapefruit spritz was served through the summer while a new pear and white tea fizz joins the line-up for winter.
 
-1. ROFL means Rolling on floor laughing.
-2. STFU means Shut the *freak* up.
-3. LMK means Let me know.
-4. ILY means I love you.
-5. YOLO means You only live once.
-6. SMH means Shaking my head.
-
-The company was previously known as Hingston + Co. but has been given a complete rebrand — including a new logo, tap badges, website and branded material — by London-based design studio & Smith. The new identity is based on the Kandinsky abstract painting, Black Lines, and true to its name, is mostly black and white with a few flashes of colour. According to & Smith, the identity brings together “art and science” and has been brought to life through collaborations with nine illustrators.
-
-1. ROFL means Rolling on floor laughing.
-2. STFU means Shut the *freak* up.
-3. LMK means Let me know.
-4. ILY means I love you.
-5. YOLO means You only live once.
-6. SMH means Shaking my head.
-
-![blog-details-image-02](https://user-images.githubusercontent.com/16266381/71399826-2009b380-264f-11ea-9bc3-59d7fa9a9994.jpg)
-
-Black Lines wants it to be as easy to serve a Negroni as it is a pint of lager. The drinks company is seeking to revolutionise the bar experience by serving cocktails by draught with a changing menu of drinks (as well as same favourite stand-bys). A pink grapefruit spritz was served through the summer while a new pear and white tea fizz joins the line-up for winter.
-
-> "The public is more familiar with bad design than good design. It is, in effect, conditioned to prefer bad design, because that is what it lives with. The new becomes threatening, the old reassuring."
+> "The secret of getting ahead is getting started"
 
 
-> Paul Rand, graphic designer
+> Mars Twain
 
