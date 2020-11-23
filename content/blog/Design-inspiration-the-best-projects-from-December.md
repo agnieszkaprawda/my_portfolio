@@ -1,8 +1,8 @@
 ---
 author: Agnieszka Prawda
 date: "2020-11-23T13:45:06+06:00"
-feature_image: images/blog/blog-details-image.jpg
-image: images/blog/blog-post-05.jpg
+feature_image: images/blog/cover_meetable.jpg
+image: images/blog/blog-post-02.jpg
 title: 'Oxford Hack 2020 - Meetable MVP'
 ---
 ### Oxford Hack 2020 - Meetable
