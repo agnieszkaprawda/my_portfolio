@@ -16,17 +16,10 @@ As an Executive Committee member of the Entrepreneurship Club at London Business
 
 Therefore, last weekend I joined my first hackathon organised by the University of Oxford - #OxfordHack2020 and created a marvelous team with Yash Dandavate, Samuel Ola, and Jason Zhao.
 
+##### Watch the pitch video
 
+[![Meetable](https://img.youtube.com/vi/4A4NiSxpHXk/hqdefault.jpg)](https://youtu.be/4A4NiSxpHXk)
 
-[![Meetable](/images/blog/blog_post_01.jpg)](https://youtu.be/4A4NiSxpHXk)
-
-
-
-[![Meetable](https://img.youtube.com/vi/4A4NiSxpHXk/0.jpg)](https://youtu.be/4A4NiSxpHXk)
-
-
-https://img.youtube.com/vi/4A4NiSxpHXk/maxresdefault.jpg
-https://img.youtube.com/vi/4A4NiSxpHXk/hqdefault.jpg
 
 We spent 36 h working on the creation of the MVP - including the development of the UI & UX, logistics behind the product, ways of gaining revenue, and coding the backend & frontend of the app.
 
