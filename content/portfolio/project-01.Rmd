@@ -1,0 +1,600 @@
+---
+categories:
+- ""
+- ""
+date: "2017-10-31T21:28:43-05:00"
+description: ""
+draft: false
+keywords: ""
+slug: project2
+title: "Predicting interest rates at the Lending Club"
+image: project02.jpg
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r, load_libraries, include = FALSE}
+library(tidyverse) # the usual stuff: dplyr, readr, and other goodies
+library(lubridate) # to handle dates
+library(GGally) # for correlation-scatterplot matrix
+library(car) # vif() function to check for multicolinearity
+library(ggfortify) # to produce residual diagnostic plots
+library(rsample) # to split dataframe in training- & testing sets
+library(here) # to read files and organise data
+library(janitor) # clean_names()
+library(broom) # use broom:augment() to get tidy table with regression output, residuals, etc
+library(huxtable) # to get summary table of all models produced
+library(caret) # to train more advanced models (k-fold cross-validation, stepwise regression, LASSO)
+library(zoo) #to allow for timeseries operations
+
+```
+
+
+In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, we will first build a linear regression model
+
+
+# Load and prepare the data
+
+We start by loading the data to R in a dataframe.
+```{r, load_data, warning=FALSE, message=FALSE}
+
+lc_raw <- read_csv("~/Documents/LBS/Data Science/Session 03/LendingClub Data.csv",  skip=1) %>%  clean_names() # use janitor::clean_names()
+```
+
+# ICE the data: Inspect, Clean, Explore
+
+Any data science engagement starts with ICE. Inspect, Clean and Explore the data. For this workshop I have cleaned the data for you. 
+
+```{r}
+glimpse(lc_raw) 
+
+lc_clean<- lc_raw %>%
+  dplyr::select(-x20:-x80) %>% #delete empty columns
+  filter(!is.na(int_rate)) %>%   #delete empty rows
+  mutate(
+    issue_d = mdy(issue_d),  # lubridate::mdy() to fix date format
+    term = factor(term_months),     # turn 'term' into a categorical variable
+    delinq_2yrs = factor(delinq_2yrs) # turn 'delinq_2yrs' into a categorical variable
+  ) %>% 
+  dplyr::select(-emp_title,-installment, -term_months, everything()) %>% mutate(emp_length=as.factor(emp_length)) #move some not-so-important variables to the end. 
+
+
+glimpse(lc_clean) 
+summary(lc_clean)
+    
+```
+
+The data is now in a clean format stored in the dataframe "lc_clean." 
+
+# Q1. Explore the data by building some visualizations as suggested below. Fill free to add your own. 
+
+Provide your answers in the code block below. (Look at the "Lending_Club_Session1_and_2.html" for some hints on how to do this using ggplot.)
+
+```{r, data_visualisation}
+# Build a histogram of interest rates. Make sure it looks nice!
+ggplot(lc_clean, aes(x=int_rate))+ 
+  geom_histogram(bins=20) + 
+  labs(title="Histogram of Interest Rate",
+       x="Interest Rate",
+       y="Count")+
+  scale_x_continuous(labels = scales::percent)+
+  theme_bw()
+
+
+# Build a histogram of interest rates but use different color for loans of different grades 
+ggplot(lc_clean, aes(x=int_rate, fill=grade))+ 
+  geom_histogram(bins=20)+
+  labs(title="Histogram of Interest Rate by Grade",
+       x="Interest Rate",
+       y="Count")+
+  scale_x_continuous(labels = scales::percent)+
+  theme_bw()
+
+
+# Produce a scatter plot of loan amount against interest rate and add visually the line of best fit
+ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=loan_amnt)) +  geom_smooth(method="lm",se=0)+
+  geom_point()+
+scale_x_continuous(label=scales::dollar)+
+  labs(y="Interest Rate", x="Annual Income")+
+  theme_bw()
+
+
+# Produce a scatter plot of annual income against interest rate and add visually the line of best fit 
+ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=annual_inc)) + 
+  geom_point(size=0.1)+ 
+  geom_smooth(method="lm", se=0) +
+  scale_x_continuous(label=scales::dollar)+
+  labs(y="Interest Rate", x="Annual Income")+
+  theme_bw()
+
+
+# In the same axes, produce box plots of the interest rate for every value of delinquencies
+ggplot(lc_clean , aes(y=int_rate, x=delinq_2yrs, colour= delinq_2yrs)) + 
+  geom_boxplot()+
+  # geom_jitter()+
+  theme_bw()+
+   scale_y_continuous(labels=scales::percent)+
+  theme(legend.position = "none")+
+  labs(
+    title = "Do delinquencies in the last two years impact interest rate charged?",
+    x= "Number of delinquecies in last two years", y="Interest Rate"
+  )+
+  theme_bw()
+
+
+
+#Create our own ones as well
+
+#loan period vs interest rate
+ggplot(lc_clean, aes(x=term, y = int_rate))+
+  geom_boxplot()+
+  labs(title="Interest Rate Spread by Loan Term",
+       x="Loan Term in Months",
+       y="Interest Rate")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bw()
+
+#home ownership vs interest rate
+ggplot(lc_clean, aes(x=home_ownership, y = int_rate))+
+  geom_boxplot()+
+  labs(title="Interest Rate Spread by Ownership Status",
+       x="Ownership Status",
+       y="Interest Rate")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bw()
+
+#Employment Length vs Interest 
+ggplot(lc_clean, aes(x=emp_length, y = int_rate))+
+  geom_boxplot()+
+  labs(title="Interest Rate Spread by Ownership Status",
+       x="Ownership Status",
+       y="Interest Rate")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bw()
+
+
+
+```
+
+# Estimate simple linear regression models
+
+We start with a simple but quite powerful model.
+
+```{r, simple regression}
+#Use the lm command to estimate a regression model with the following variables "loan_amnt",  "term", "dti", "annual_inc", and "grade"
+
+model1<-lm( int_rate ~ loan_amnt+ term+ dti+ annual_inc+ grade, data = lc_clean
+  )
+summary(model1) # noticed that annual income has a p value of over 0.05
+
+```
+
+## Q2. Answer the following questions on model 1.{-}
+
+a. Are all variables statistically significant?
+>We noticed that in model1 annual_inc is the only insignificant variable. Therefore, it will be reasonable to exclude it in our future models.
+
+b. How do you interpret the coefficient of the Term60 dummy variable? Of the grade B dummy variable? 
+>All things being equal and on average compared to term 30, the interest rate increases by 3.608e-03 percentage point if the lending time amounts to 60 (term is equal to 60).
+>All things being equal and on average compared to grade A, the interest rate increases by 3.554e-02  percentage point if the grade of user is B category.
+
+c. How much explanatory power does the model have? 
+>Our model has 91.97% explanatory power (we checked it looking at Adjusted R-squared).
+
+d. Approximately, how wide would the 95% confidence interval of any prediction based on this model be? 
+>Our 95% Confidence Interval of any prediction based on model1, would amount to 1.96*0.01056 = ~±0.021.
+
+# Feature Engineering
+
+Let's build progressively more complex models with more features.
+
+```{r, Feature Engineering}
+#Add to the previous model an interaction between loan amount and grade. Use the "var1*var2" notation to define an interaction term in the linear regression model. This will add the interaction and the individual variables to the model. 
+model2 <-lm( int_rate ~ loan_amnt*grade+ term+ dti+ annual_inc, data = lc_clean
+  )
+
+summary(model2)
+#Add to the model the square and the cube of annual income. Use the poly(var_name,3) command as a variable in the linear regression model.  
+model3 <- lm( int_rate ~ loan_amnt*grade+ term+ dti+poly(annual_inc,3), data = lc_clean
+  ) 
+summary(model3) # makes no difference
+#Continuing with the previous model, instead of annual income as a continuous variable break it down into quartiles and use quartile dummy variables. You can do this with the following command. 
+  
+lc_clean2 <- lc_clean %>% 
+  mutate(quartiles_annual_inc = as.factor(ntile(annual_inc, 4)))
+
+model4 <-lm( int_rate ~ loan_amnt*grade+ term+ dti+quartiles_annual_inc, data = lc_clean2
+  ) 
+summary(model4)  # still makes no difference
+
+#Compare the performance of these four models using the anova command
+anova(model1, model2, model3, model4
+      )
+  
+```
+
+## Q3. Answer the following questions {-}
+a. Which of the four models has the most explanatory power in sample
+> Models 2, 3 & 4 have the most explanatory power amounting to 0.9204. (The Adjusted R-squared is the same for all the 3 models)
+
+b. In model 2, how do you interpret the estimated coefficient of the interaction term between grade B and loan amount? 
+>All things being equal and on average compared to grade A, if the loan amount increase by 10 000, the interest rate for grade B useres will decrease by 6.617e-04 percentage point.
+
+c. The problem of multicolinearity describes the situations where one feature is highly correlated with other fueatures (or with a linear combination of other features). If your goal is to use the model to make predictions, should you be concerned by the problem of multicolinearity? Why, or why not?
+> Multicolinearity impacts inference more than prediction, so for the case of prediction it is not very relevant. However, if one is using the model to explain their existing dataset they may have inaccurate results.
+
+
+# Out of sample testing
+Let's check the predictive accuracy of model2 by holding out a subset of the data to use as testing. This method is sometimes refered to as the hold-out method for out-of-sample testing.
+```{r, out of sample testing}
+#split the data in dataframe called "testing" and another one called  "training". The "training" dataframe should have 80% of the data and the "testing" dataframe 20%.
+set.seed(176823769)
+train_test_split <- initial_split(lc_clean2, prop=0.8) # splitting dataset
+lc_clean_train<- training(train_test_split)
+lc_clean_test<- testing(train_test_split) 
+
+
+#Fit model2 on the training set 
+model2_training<-lm(int_rate ~ loan_amnt + term+ dti + annual_inc + grade +grade:loan_amnt, data=lc_clean_train)
+summary(model2_training)
+
+#Calculate the RMSE of the model in the training set (in sample)
+rmse_training<-sqrt(mean((residuals(model2_training))^2))
+#USe the model to make predictions out of sample in the testing set
+pred<-predict(model2_training,lc_clean_test)
+#Calculate the RMSE of the model in the testing set (out of sample)
+rmse_testing<- RMSE(pred,lc_clean_test$int_rate)
+
+rmse_training
+rmse_testing
+```
+
+## Q4. How much does the predictive accuracy of model 2 deteriorate when we move from in sample to out of sample testing? Is this sensitive to the random seed chosen? Is there any evidence of overfitting? {-}
+
+>The predictive accuracy of model 2 does not much deteriorate when we move from in sample to out of sample testing. For purpose of checking it we compare the rmse_training to rmse_testing (0.0104 compared to 0.01061). We tried to check if the model is sensitive for the multiple random seed choices and we discovered that the model is not much sensitive (rmse is still a factor of e-2). There isn't any evidence of overfitting.
+
+
+
+# k-fold cross validation
+
+We can also do out of sample testing using the method of k-fold cross validation. Using the caret package this is easy.
+
+```{r, k-fold cross validation}
+#the method "cv" stands for cross validation. We re going to create 10 folds.  
+
+control <- trainControl (
+    method="cv",
+    number=10,
+    verboseIter=TRUE) #by setting this to true the model will report its progress after each estimation
+
+#we are going to train the model and report the results using k-fold cross validation
+plsFit<-train(
+    int_rate ~ loan_amnt + term+ dti + annual_inc + grade +grade:loan_amnt ,
+    lc_clean,
+   method = "lm",
+    trControl = control
+   )
+  
+summary(plsFit)
+
+```
+
+## Q5. Compare the out-of-sample RMSE of 10-fold cross validation and the hold-out method. Are they different? Which do you think is more reliable? Are there any drawbacks to the k-fold cross validation method compared to the hold-out method? {-}
+
+>Answer here: The RMSE for both moethds is the same, however the k-fold cross validation method gives a range of answers and is more reliable since it checks k times and for k samples. However, the drawback of k-fold cross validation is that it takes much longer time.
+
+
+# Sample size estimation and learning curves
+
+We can use the hold out method for out-of-sample testing to check if we have a sufficiently large sample to estimate the model reliably. The idea is to set aside some of the data as a testing set. From the remaining data draw progressively larger training sets and check how the performance of the model on the testing set changes. If the performance no longer improves with larger datasets we know we have a large enough sample.  The code below does this. Examine it and run it with different random seeds. 
+
+```{r, learning curves}
+#select a testing dataset (25% of all data)
+set.seed(12)
+
+train_test_split <- initial_split(lc_clean, prop = 0.75)
+remaining <- training(train_test_split)
+testing <- testing(train_test_split)
+
+#We are now going to run 30 models starting from a tiny training set drawn from the training data and progressively increasing its size. The testing set remains the same in all iterations.
+
+#initiating the model by setting some parameters to zero
+rmse_sample <- 0
+sample_size<-0
+Rsq_sample<-0
+
+for(i in 1:30) {
+#from the remaining dataset select a smaller subset to training the data
+set.seed(100)
+sample
+
+  learning_split <- initial_split(remaining, prop = i/200)
+  training <- training(learning_split)
+  sample_size[i]=nrow(training)
+  
+  #traing the model on the small dataset
+  model3<-lm(int_rate ~ loan_amnt + term+ dti + annual_inc + grade + grade:loan_amnt, training)
+  #test the performance of the model on the large testing dataset. This stays fixed for all iterations.
+  pred<-predict(model3,testing)
+  rmse_sample[i]<-RMSE(pred,testing$int_rate)
+  Rsq_sample[i]<-R2(pred,testing$int_rate)
+}
+plot(sample_size,rmse_sample)
+plot(sample_size,Rsq_sample)
+```
+
+## Q6. Using the learning curves above, approximately how large of a sample size would we need to estimate model 3 reliably? Once we reach this sample size, if we want to reduce the prediction error further what options do we have?{-}
+
+>Answer here: After analysing the graphs above, we noticed that the sample size that would estimate model 3 reliably is 1500. Once we reach this sample size, we can still try to reduce the prediction error by regularization or using the k-fold cross validation method.
+
+
+# Regularization using LASSO regression
+
+If we are in the region of the learning curve where we do not have enough data, one option is to use a regularization method such as LASSO.
+
+Let's try to estimate large and complicated model (many interactions and polynomials) on a small training dataset using OLS regression and hold-out validation method.
+
+```{r, OLS model overfitting}
+
+#split the data in testing and training. The training test is really small.
+set.seed(1234)
+train_test_split <- initial_split(lc_clean, prop = 0.01)
+training <- training(train_test_split)
+testing <- testing(train_test_split)
+
+model_lm<-lm(int_rate ~ poly(loan_amnt,3) + term+ dti + annual_inc + grade +grade:poly(loan_amnt,3):term +poly(loan_amnt,3):term +grade:term, training)
+predictions <- predict(model_lm,testing)
+
+
+# Model prediction performance
+data.frame(
+  RMSE = RMSE(predictions, testing$int_rate),
+  Rsquare = R2(predictions, testing$int_rate)
+)
+```
+
+Not surprisingly this model does not perform well -- as we knew form the learning curves we constructed for a simpler model we need a lot more data to estimate this model reliably. Try running it again with different seeds. The model's performance tends to be sensitive to the choice of the training set.
+
+LASSO regression offers one solution -- it extends the OLS regression by penalizing the model for setting any coefficient to a value that is different from zero. The penalty is proportional to a parameter $\lambda $ (pronounced lambda). This parameter cannot be estimated directly (and for this reason sometimes it is refered to as hyperparameter) and will be selected through k-fold cross validation in order to provide the best out-of-sample performance.  As result of the LASSO precedure, only those features that are more strongly associated with the outcome will have non-zero coefficients and the estimated model will be less sensitive to the training set. Sometimes LASSO regression is refered to as regularization. 
+
+```{r, LASSO compared to OLS, warning=FALSE, message=FALSE}
+#we will look for the optimal lambda in this sequence (we will try 1000 different lambdas)
+lambda_seq <- seq(0, 0.01, length = 1000)
+#lasso regression using k-fold cross validation to select the best lambda
+
+lasso <- train(
+ int_rate ~ poly(loan_amnt,3) + term+ dti + annual_inc + grade +grade:poly(loan_amnt,3):term +poly(loan_amnt,3):term +grade:term,
+ data = training,
+ method = "glmnet",
+  preProc = c("center", "scale"), #This option standardizes the data before running the LASSO regression
+  trControl = control,
+  tuneGrid = expand.grid(alpha = 1, lambda = lambda_seq) #alpha=1 specifies to run a LASSO regression. If alpha=0 the model would run ridge regression.
+  )
+
+
+# Model coefficients
+coef(lasso$finalModel, lasso$bestTune$lambda)
+#Best lambda
+lasso$bestTune$lambda
+# Count of how many coefficients are greater than zero and how many are equal to zero
+sum(coef(lasso$finalModel, lasso$bestTune$lambda)!=0)
+sum(coef(lasso$finalModel, lasso$bestTune$lambda)==0)
+
+# Make predictions
+predictions <- predict(lasso,testing)
+
+# Model prediction performance
+data.frame(
+  RMSE = RMSE(predictions, testing$int_rate),
+  Rsquare = R2(predictions, testing$int_rate)
+)
+
+```
+
+## Q7. Answer the following questions {-}
+a. Which model performs best out of sample, OLS regression or LASSO? 
+> From the above, we can infere that the LASSO regression method is a better fit with a much smaller RMSE and significantly larger Adjusted R-squared using only 0.01 of data. 
+
+b. What value of lambda offers best performance? Is this sensitive to the random seed?
+>The best performance lambda in the seed 1234 is equal to 0.0005805806. The lambda is very sensitive to random seed, however the output of LASSO regression seems consistent.
+
+c. How many coefficients are zero and how many are non-zero in the LASSO model of best fit? 
+> In our LASSO regression, 23 variables are equal to zero and 35 variables are not equal to 0.
+
+d. Why is it important to standardize continuous variables before running LASSO?
+> Note in linear regression formula, the larger the values of the data, the smaller the coefficients. Since LASSO easily penalises small coefficients to zero, it is important to control the magnitude of data values before running regression.
+
+
+# Using Time Information
+Let's try to further improve the model's predictive performance. So far we have not used any time series information. Effectively, all things being equal, our prediction for the interest rate of a loan given in 2009 would be the same as that of a loan given in 2011. Is this a good assumption?
+ 
+First, investigate graphically whether there are any time trends in the interest rates. (Note that the variable "issue_d" only has information on the month the loan was awarded but not the exact date.) Can you use this information to further improve the forecasting accuracy of your model? Try controlling for time in a linear fashion (i.e., a linear time trend) and controlling for time as quarter dummies (this is a method to capture non-linear effects of time -- we assume that the impact of time doesn't change within a quarter but it can chance from quarter to quarter). Finally, check if time affect loans of different grades differently.
+
+```{r, time trends}
+
+
+#linear time trend (add code below)
+
+ggplot(lc_clean, aes(x=issue_d,y=int_rate))+
+  geom_point()+
+  geom_smooth(method="lm")
+
+
+#linear time trend by grade (add code below)
+ggplot(lc_clean, aes(x=issue_d,y=int_rate, colour=grade))+
+  geom_point()+
+  geom_smooth(method="lm")
+
+glimpse(lc_clean2)
+
+
+#Train models using OLS regression and k-fold cross-validation
+#The first model has some explanatory variables and a linear time trend
+
+time1<-train(
+  int_rate ~ loan_amnt*grade+ term+ dti + issue_d,#fill your variables here "+ issue_d"
+  lc_clean,
+  method = "lm",
+  trControl = control)
+
+summary(time1) # seems like dti is corrolated with issue_d (maybe lots of people defaulted because of the crisis)
+
+#The second model has a different linear time trend for each grade class
+time2<-train(
+    int_rate ~ loan_amnt*grade+ term+ dti + issue_d*grade, #fill your variables here 
+    lc_clean,
+   method = "lm",
+    trControl = control
+   )
+  
+
+summary(time2)
+
+#Change the time trend to a quarter dummy variables.
+#zoo::as.yearqrt() creates quarter dummies 
+lc_clean_quarter<-lc_clean %>%
+  mutate(yq = as.factor(as.yearqtr(lc_clean$issue_d, format = "%Y-%m-%d")))
+
+
+
+time3<-train(
+    int_rate ~loan_amnt*grade+ term+ dti + yq ,#fill your variables here 
+    lc_clean_quarter,
+     method = "lm",
+    trControl = control
+   )
+  
+summary(time3)
+
+#We specify one quarter dummy variable for each grade. This is going to be a large model as there are 19 quarters x 7 grades = 133 quarter-grade dummies.
+time4<-train(
+    int_rate ~loan_amnt*grade+ term+ dti + yq*grade ,#fill your variables here 
+    lc_clean_quarter,
+     method = "lm",
+    trControl = control
+   )
+
+summary(time4)
+
+data.frame(
+  time1$results$RMSE,
+  time2$results$RMSE,
+  time3$results$RMSE,
+  time4$results$RMSE)
+
+
+```
+## Q8 Based on your analysis above, is there any evidence to suggest that interest rates change over time? Does including time trends /quarter dummies imrpove predictions? {-}
+
+>Based on our model, there is the evidence to suggest that interest rate change over time is significant. Including time trends or quarter dummier does improve the predictions.
+
+# Using Bond Yields 
+One concern with using time trends for forecasting is that in order to make predictions for future loans we will need to project trends to the future. This is an extrapolation that may not be reasonable, especially if macroeconomic conditions in the future change. Furthermore, if we are using quarter dummies, it is not even possible to estimate the coefficient of these dummy variables for future quarters.
+
+Instead, perhaps it's better to find the reasons as to why different periods are different from one another. The csv file "MonthBondYields.csv" contains information on the yield of US Treasuries on the first day of each month. Can you use it to see if you can improve your predictions without using time dummies? 
+
+
+```{r, bond yields}
+#load the data to memory as a dataframe
+bond_prices<-readr::read_csv("~/Documents/LBS/Data Science/Session 03/MonthBondYields.csv")
+
+#make the date of the bond file comparable to the lending club dataset
+#for some regional date/number (locale) settings this may not work. If it does try running the following line of code in the Console
+#Sys.setlocale("LC_TIME","English")
+bond_prices <- bond_prices %>%
+  mutate(Date2=as.Date(paste("01",Date,sep="-"),"%d-%b-%y")) %>%
+  select(-starts_with("X"))
+
+#let's see what happened to bond yields over time. Lower bond yields mean the cost of borrowing has gone down.
+
+bond_prices %>%
+  ggplot(aes(x=Date2, y=Price))+geom_point(size=0.1, alpha=0.5)
+
+#join the data using a left join
+lc_with_bonds<-lc_clean %>%
+  left_join(bond_prices, by = c("issue_d" = "Date2")) %>%
+  arrange(issue_d) %>%
+  filter(!is.na(Price)) #drop any observations where there re no bond prices available
+
+# investigate graphically if there is a relationship 
+lc_with_bonds%>%
+  ggplot(aes(x=int_rate, y=Price))+geom_point(size=0.1, alpha=0.5)+geom_smooth(method="lm")
+
+lc_with_bonds%>%
+  ggplot(aes(x=int_rate, y=Price, color=grade))+geom_point(size=0.1, alpha=0.5)+geom_smooth(method="lm")
+
+#let's train a model using the bond information
+
+
+plsFit<-train(
+    int_rate ~loan_amnt*grade+ term+ dti + Price*grade , #fill your variables here 
+    lc_with_bonds,
+   method = "lm",
+    trControl = control
+   )
+
+summary(plsFit)
+
+```
+## Q9. Do bond yields have any explanatory power?
+
+>Answer here: From the above, after including in our model "Price", we can infer that the bonds have the explanatory power. However, the explanatory power increases our Adjusted R-squared less than the time trend/quarter variables.
+
+## Q10. Choose a model and describe your methodology {-}
+Feel free to investigate more models with different features using the methodologies covered so far. Present the model you believe predicts interest rates the best. Describe how good it is (including the approximate length of the 95% Confidence Interval of predictions that use this model) and what features it uses. What methodology did you use to choose it? (Do not use time trends or quarter dummies in your model as the first cannot be extrapolated into the future reliably and the second cannot be even estimated for future quarters.)
+
+>We were tryinig to add even more variables to our model, however, many of them turned out not to be significant. Our final model can be observed below. It has an explanatory power with adjusted R-squared of 93.57%. Tt has a Confidence Interval at 95% of ±0.01852592%. It can be used to accuratley predict the mean. We used the linear model with method of stepwise k-fold cross validation.
+
+```{r}
+lc_with_yq_bonds<- lc_with_bonds %>% 
+  mutate(yq = as.factor(as.yearqtr(issue_d, format = "%Y-%m-%d")))
+
+model_wild_west <- train(
+    int_rate ~loan_amnt*grade+ term+ dti + poly(Price, 3)*grade, #fill your variables here 
+    lc_with_yq_bonds,
+   method = "lm",
+    trControl = control
+   )
+summary(model_wild_west)
+
+0.009452*1.96
+```
+
+## Q11. (optional) Use other publicly available datasets to further improve performance (e.g., quarterly data on US inflation or [CPI](https://fred.stlouisfed.org/series/CPALTT01USQ657N)). Explain why you think the additional data will make a difference and check if it does.{-}
+
+>Changes in CPI should correlate to changes in inflation, therefore such a variable can better explain behaviour of interest rates in the market as behaviour of inlfation partially explaines the behaviour of loan takers and actions of investors/government.
+
+```{r}
+CPI_df <- read_csv("~/Documents/LBS/Data Science/Session 03/CPALTT01USM657N.csv") %>%  clean_names() # use janitor::clean_names()
+
+glimpse(CPI_df)
+lc_with_CPI<-lc_with_bonds %>%
+  left_join(CPI_df, by = c("issue_d" = "date")) %>%
+  arrange(issue_d)
+
+glimpse(lc_with_CPI)
+model_wild_west2 <- train(
+    int_rate ~loan_amnt*grade+ term+ dti + poly(Price, 3)*grade+cpaltt01usm657n*grade , #fill your variables here 
+    lc_with_CPI,
+   method = "lm",
+    trControl = control
+   )
+summary(model_wild_west2)
+
+
+```

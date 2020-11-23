@@ -1,0 +1,1622 @@
+---
+categories:
+- ""
+- ""
+date: "2017-10-31T21:28:43-05:00"
+description: ""
+draft: false
+keywords: ""
+slug: project2
+title: "Predicting interest rates at the Lending Club"
+image: project02.jpg
+---
+
+
+
+<p>In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, we will first build a linear regression model</p>
+<div id="load-and-prepare-the-data" class="section level1">
+<h1>Load and prepare the data</h1>
+<p>We start by loading the data to R in a dataframe.</p>
+<pre class="r"><code>lc_raw &lt;- read_csv(&quot;~/Documents/LBS/Data Science/Session 03/LendingClub Data.csv&quot;,  skip=1) %&gt;%  clean_names() # use janitor::clean_names()</code></pre>
+</div>
+<div id="ice-the-data-inspect-clean-explore" class="section level1">
+<h1>ICE the data: Inspect, Clean, Explore</h1>
+<p>Any data science engagement starts with ICE. Inspect, Clean and Explore the data. For this workshop I have cleaned the data for you.</p>
+<pre class="r"><code>glimpse(lc_raw) </code></pre>
+<pre><code>## Rows: 42,538
+## Columns: 80
+## $ int_rate            &lt;dbl&gt; 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0…
+## $ loan_amnt           &lt;dbl&gt; 8000, 6000, 6500, 8000, 5500, 6000, 10200, 15000,…
+## $ term_months         &lt;dbl&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
+## $ installment         &lt;dbl&gt; 241.3, 181.0, 196.0, 241.3, 165.9, 181.0, 307.6, …
+## $ dti                 &lt;dbl&gt; 2.11, 5.73, 17.68, 22.71, 5.75, 21.92, 18.62, 9.7…
+## $ delinq_2yrs         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+## $ annual_inc          &lt;dbl&gt; 50000, 52800, 35352, 79200, 240000, 89000, 110000…
+## $ grade               &lt;chr&gt; &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;,…
+## $ emp_title           &lt;chr&gt; NA, &quot;coral graphics&quot;, NA, &quot;Honeywell&quot;, &quot;O T Plus,…
+## $ emp_length          &lt;chr&gt; &quot;5 years&quot;, &quot;&lt; 1 year&quot;, &quot;n/a&quot;, &quot;n/a&quot;, &quot;10+ years&quot;,…
+## $ home_ownership      &lt;chr&gt; &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;…
+## $ verification_status &lt;chr&gt; &quot;Verified&quot;, &quot;Source Verified&quot;, &quot;Not Verified&quot;, &quot;V…
+## $ issue_d             &lt;chr&gt; &quot;9/1/2011&quot;, &quot;9/1/2011&quot;, &quot;9/1/2011&quot;, &quot;9/1/2011&quot;, &quot;…
+## $ zip_code            &lt;chr&gt; &quot;977xx&quot;, &quot;228xx&quot;, &quot;864xx&quot;, &quot;322xx&quot;, &quot;278xx&quot;, &quot;760…
+## $ addr_state          &lt;chr&gt; &quot;OR&quot;, &quot;VA&quot;, &quot;AZ&quot;, &quot;FL&quot;, &quot;NC&quot;, &quot;TX&quot;, &quot;CT&quot;, &quot;WA&quot;, &quot;…
+## $ loan_status         &lt;chr&gt; &quot;Fully Paid&quot;, &quot;Charged Off&quot;, &quot;Fully Paid&quot;, &quot;Fully…
+## $ desc                &lt;chr&gt; &quot;Borrower added on 09/08/11 &gt; Consolidating debt …
+## $ purpose             &lt;chr&gt; &quot;debt_consolidation&quot;, &quot;vacation&quot;, &quot;credit_card&quot;, …
+## $ title               &lt;chr&gt; &quot;Credit Card Payoff $8K&quot;, &quot;bad choice&quot;, &quot;Credit C…
+## $ x20                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x21                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x22                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x23                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x24                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x25                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x26                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x27                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x28                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x29                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x30                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x31                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x32                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x33                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x34                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x35                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x36                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x37                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x38                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x39                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x40                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x41                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x42                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x43                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x44                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x45                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x46                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x47                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x48                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x49                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x50                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x51                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x52                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x53                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x54                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x55                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x56                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x57                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x58                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x59                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x60                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x61                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x62                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x63                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x64                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x65                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x66                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x67                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x68                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x69                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x70                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x71                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x72                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x73                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x74                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x75                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x76                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x77                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x78                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x79                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ x80                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…</code></pre>
+<pre class="r"><code>lc_clean&lt;- lc_raw %&gt;%
+  dplyr::select(-x20:-x80) %&gt;% #delete empty columns
+  filter(!is.na(int_rate)) %&gt;%   #delete empty rows
+  mutate(
+    issue_d = mdy(issue_d),  # lubridate::mdy() to fix date format
+    term = factor(term_months),     # turn &#39;term&#39; into a categorical variable
+    delinq_2yrs = factor(delinq_2yrs) # turn &#39;delinq_2yrs&#39; into a categorical variable
+  ) %&gt;% 
+  dplyr::select(-emp_title,-installment, -term_months, everything()) %&gt;% mutate(emp_length=as.factor(emp_length)) #move some not-so-important variables to the end. 
+
+
+glimpse(lc_clean) </code></pre>
+<pre><code>## Rows: 37,869
+## Columns: 20
+## $ int_rate            &lt;dbl&gt; 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0…
+## $ loan_amnt           &lt;dbl&gt; 8000, 6000, 6500, 8000, 5500, 6000, 10200, 15000,…
+## $ dti                 &lt;dbl&gt; 2.11, 5.73, 17.68, 22.71, 5.75, 21.92, 18.62, 9.7…
+## $ delinq_2yrs         &lt;fct&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+## $ annual_inc          &lt;dbl&gt; 50000, 52800, 35352, 79200, 240000, 89000, 110000…
+## $ grade               &lt;chr&gt; &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;,…
+## $ emp_length          &lt;fct&gt; 5 years, &lt; 1 year, n/a, n/a, 10+ years, 2 years, …
+## $ home_ownership      &lt;chr&gt; &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;…
+## $ verification_status &lt;chr&gt; &quot;Verified&quot;, &quot;Source Verified&quot;, &quot;Not Verified&quot;, &quot;V…
+## $ issue_d             &lt;date&gt; 2011-09-01, 2011-09-01, 2011-09-01, 2011-09-01, …
+## $ zip_code            &lt;chr&gt; &quot;977xx&quot;, &quot;228xx&quot;, &quot;864xx&quot;, &quot;322xx&quot;, &quot;278xx&quot;, &quot;760…
+## $ addr_state          &lt;chr&gt; &quot;OR&quot;, &quot;VA&quot;, &quot;AZ&quot;, &quot;FL&quot;, &quot;NC&quot;, &quot;TX&quot;, &quot;CT&quot;, &quot;WA&quot;, &quot;…
+## $ loan_status         &lt;chr&gt; &quot;Fully Paid&quot;, &quot;Charged Off&quot;, &quot;Fully Paid&quot;, &quot;Fully…
+## $ desc                &lt;chr&gt; &quot;Borrower added on 09/08/11 &gt; Consolidating debt …
+## $ purpose             &lt;chr&gt; &quot;debt_consolidation&quot;, &quot;vacation&quot;, &quot;credit_card&quot;, …
+## $ title               &lt;chr&gt; &quot;Credit Card Payoff $8K&quot;, &quot;bad choice&quot;, &quot;Credit C…
+## $ term                &lt;fct&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
+## $ term_months         &lt;dbl&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
+## $ installment         &lt;dbl&gt; 241.3, 181.0, 196.0, 241.3, 165.9, 181.0, 307.6, …
+## $ emp_title           &lt;chr&gt; NA, &quot;coral graphics&quot;, NA, &quot;Honeywell&quot;, &quot;O T Plus,…</code></pre>
+<pre class="r"><code>summary(lc_clean)</code></pre>
+<pre><code>##     int_rate      loan_amnt          dti         delinq_2yrs   
+##  Min.   :0.05   Min.   :  500   Min.   : 0.00   0      :33782  
+##  1st Qu.:0.09   1st Qu.: 5500   1st Qu.: 8.14   1      : 3141  
+##  Median :0.12   Median :10000   Median :13.36   2      :  637  
+##  Mean   :0.12   Mean   :11253   Mean   :13.28   3      :  213  
+##  3rd Qu.:0.15   3rd Qu.:15000   3rd Qu.:18.58   4      :   56  
+##  Max.   :0.25   Max.   :35000   Max.   :29.99   5      :   22  
+##                                                 (Other):   18  
+##    annual_inc         grade               emp_length    home_ownership    
+##  Min.   :   4000   Length:37869       10+ years: 8405   Length:37869      
+##  1st Qu.:  40800   Class :character   &lt; 1 year : 4384   Class :character  
+##  Median :  59534   Mode  :character   2 years  : 4168   Mode  :character  
+##  Mean   :  69148                      3 years  : 3910                     
+##  3rd Qu.:  82800                      4 years  : 3305                     
+##  Max.   :6000000                      5 years  : 3146                     
+##                                       (Other)  :10551                     
+##  verification_status    issue_d             zip_code          addr_state       
+##  Length:37869        Min.   :2007-06-01   Length:37869       Length:37869      
+##  Class :character    1st Qu.:2010-05-01   Class :character   Class :character  
+##  Mode  :character    Median :2011-02-01   Mode  :character   Mode  :character  
+##                      Mean   :2010-11-05                                        
+##                      3rd Qu.:2011-08-01                                        
+##                      Max.   :2011-12-01                                        
+##                                                                                
+##  loan_status            desc             purpose             title          
+##  Length:37869       Length:37869       Length:37869       Length:37869      
+##  Class :character   Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+##                                                                             
+##                                                                             
+##                                                                             
+##                                                                             
+##  term        term_months    installment    emp_title        
+##  36:27674   Min.   :36.0   Min.   :  16   Length:37869      
+##  60:10195   1st Qu.:36.0   1st Qu.: 169   Class :character  
+##             Median :36.0   Median : 288   Mode  :character  
+##             Mean   :42.5   Mean   : 333                     
+##             3rd Qu.:60.0   3rd Qu.: 449                     
+##             Max.   :60.0   Max.   :1305                     
+## </code></pre>
+<p>The data is now in a clean format stored in the dataframe “lc_clean.”</p>
+</div>
+<div id="q1.-explore-the-data-by-building-some-visualizations-as-suggested-below.-fill-free-to-add-your-own." class="section level1">
+<h1>Q1. Explore the data by building some visualizations as suggested below. Fill free to add your own.</h1>
+<p>Provide your answers in the code block below. (Look at the “Lending_Club_Session1_and_2.html” for some hints on how to do this using ggplot.)</p>
+<pre class="r"><code># Build a histogram of interest rates. Make sure it looks nice!
+ggplot(lc_clean, aes(x=int_rate))+ 
+  geom_histogram(bins=20) + 
+  labs(title=&quot;Histogram of Interest Rate&quot;,
+       x=&quot;Interest Rate&quot;,
+       y=&quot;Count&quot;)+
+  scale_x_continuous(labels = scales::percent)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Build a histogram of interest rates but use different color for loans of different grades 
+ggplot(lc_clean, aes(x=int_rate, fill=grade))+ 
+  geom_histogram(bins=20)+
+  labs(title=&quot;Histogram of Interest Rate by Grade&quot;,
+       x=&quot;Interest Rate&quot;,
+       y=&quot;Count&quot;)+
+  scale_x_continuous(labels = scales::percent)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Produce a scatter plot of loan amount against interest rate and add visually the line of best fit
+ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=loan_amnt)) +  geom_smooth(method=&quot;lm&quot;,se=0)+
+  geom_point()+
+scale_x_continuous(label=scales::dollar)+
+  labs(y=&quot;Interest Rate&quot;, x=&quot;Annual Income&quot;)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-3.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Produce a scatter plot of annual income against interest rate and add visually the line of best fit 
+ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=annual_inc)) + 
+  geom_point(size=0.1)+ 
+  geom_smooth(method=&quot;lm&quot;, se=0) +
+  scale_x_continuous(label=scales::dollar)+
+  labs(y=&quot;Interest Rate&quot;, x=&quot;Annual Income&quot;)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-4.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># In the same axes, produce box plots of the interest rate for every value of delinquencies
+ggplot(lc_clean , aes(y=int_rate, x=delinq_2yrs, colour= delinq_2yrs)) + 
+  geom_boxplot()+
+  # geom_jitter()+
+  theme_bw()+
+   scale_y_continuous(labels=scales::percent)+
+  theme(legend.position = &quot;none&quot;)+
+  labs(
+    title = &quot;Do delinquencies in the last two years impact interest rate charged?&quot;,
+    x= &quot;Number of delinquecies in last two years&quot;, y=&quot;Interest Rate&quot;
+  )+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-5.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Create our own ones as well
+
+#loan period vs interest rate
+ggplot(lc_clean, aes(x=term, y = int_rate))+
+  geom_boxplot()+
+  labs(title=&quot;Interest Rate Spread by Loan Term&quot;,
+       x=&quot;Loan Term in Months&quot;,
+       y=&quot;Interest Rate&quot;)+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-6.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#home ownership vs interest rate
+ggplot(lc_clean, aes(x=home_ownership, y = int_rate))+
+  geom_boxplot()+
+  labs(title=&quot;Interest Rate Spread by Ownership Status&quot;,
+       x=&quot;Ownership Status&quot;,
+       y=&quot;Interest Rate&quot;)+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-7.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Employment Length vs Interest 
+ggplot(lc_clean, aes(x=emp_length, y = int_rate))+
+  geom_boxplot()+
+  labs(title=&quot;Interest Rate Spread by Ownership Status&quot;,
+       x=&quot;Ownership Status&quot;,
+       y=&quot;Interest Rate&quot;)+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-8.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="estimate-simple-linear-regression-models" class="section level1">
+<h1>Estimate simple linear regression models</h1>
+<p>We start with a simple but quite powerful model.</p>
+<pre class="r"><code>#Use the lm command to estimate a regression model with the following variables &quot;loan_amnt&quot;,  &quot;term&quot;, &quot;dti&quot;, &quot;annual_inc&quot;, and &quot;grade&quot;
+
+model1&lt;-lm( int_rate ~ loan_amnt+ term+ dti+ annual_inc+ grade, data = lc_clean
+  )
+summary(model1) # noticed that annual income has a p value of over 0.05</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = int_rate ~ loan_amnt + term + dti + annual_inc + 
+##     grade, data = lc_clean)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11883 -0.00704 -0.00034  0.00683  0.03508 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  7.17e-02   1.69e-04  424.36  &lt; 2e-16 ***
+## loan_amnt    1.48e-07   8.28e-09   17.81  &lt; 2e-16 ***
+## term60       3.61e-03   1.42e-04   25.43  &lt; 2e-16 ***
+## dti          4.33e-05   8.27e-06    5.23  1.7e-07 ***
+## annual_inc  -9.73e-10   9.28e-10   -1.05     0.29    
+## gradeB       3.55e-02   1.49e-04  238.25  &lt; 2e-16 ***
+## gradeC       6.02e-02   1.66e-04  362.78  &lt; 2e-16 ***
+## gradeD       8.17e-02   1.91e-04  428.75  &lt; 2e-16 ***
+## gradeE       1.00e-01   2.48e-04  402.66  &lt; 2e-16 ***
+## gradeF       1.20e-01   3.67e-04  325.41  &lt; 2e-16 ***
+## gradeG       1.35e-01   6.21e-04  218.24  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0106 on 37858 degrees of freedom
+## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
+## F-statistic: 4.34e+04 on 10 and 37858 DF,  p-value: &lt;2e-16</code></pre>
+<div id="q2.-answer-the-following-questions-on-model-1." class="section level2 unnumbered">
+<h2>Q2. Answer the following questions on model 1.</h2>
+<ol style="list-style-type: lower-alpha">
+<li><p>Are all variables statistically significant?
+&gt;We noticed that in model1 annual_inc is the only insignificant variable. Therefore, it will be reasonable to exclude it in our future models.</p></li>
+<li><p>How do you interpret the coefficient of the Term60 dummy variable? Of the grade B dummy variable?
+&gt;All things being equal and on average compared to term 30, the interest rate increases by 3.608e-03 percentage point if the lending time amounts to 60 (term is equal to 60).
+&gt;All things being equal and on average compared to grade A, the interest rate increases by 3.554e-02 percentage point if the grade of user is B category.</p></li>
+<li><p>How much explanatory power does the model have?
+&gt;Our model has 91.97% explanatory power (we checked it looking at Adjusted R-squared).</p></li>
+<li><p>Approximately, how wide would the 95% confidence interval of any prediction based on this model be?
+&gt;Our 95% Confidence Interval of any prediction based on model1, would amount to 1.96*0.01056 = ~±0.021.</p></li>
+</ol>
+</div>
+</div>
+<div id="feature-engineering" class="section level1">
+<h1>Feature Engineering</h1>
+<p>Let’s build progressively more complex models with more features.</p>
+<pre class="r"><code>#Add to the previous model an interaction between loan amount and grade. Use the &quot;var1*var2&quot; notation to define an interaction term in the linear regression model. This will add the interaction and the individual variables to the model. 
+model2 &lt;-lm( int_rate ~ loan_amnt*grade+ term+ dti+ annual_inc, data = lc_clean
+  )
+
+summary(model2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = int_rate ~ loan_amnt * grade + term + dti + annual_inc, 
+##     data = lc_clean)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11981 -0.00723 -0.00006  0.00659  0.03746 
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)       7.17e-02   2.35e-04  305.76  &lt; 2e-16 ***
+## loan_amnt         1.53e-07   2.03e-08    7.54  4.9e-14 ***
+## gradeB            3.62e-02   2.73e-04  132.62  &lt; 2e-16 ***
+## gradeC            6.20e-02   2.99e-04  207.45  &lt; 2e-16 ***
+## gradeD            8.08e-02   3.48e-04  232.03  &lt; 2e-16 ***
+## gradeE            9.63e-02   4.62e-04  208.29  &lt; 2e-16 ***
+## gradeF            1.14e-01   7.74e-04  147.70  &lt; 2e-16 ***
+## gradeG            1.33e-01   1.55e-03   85.58  &lt; 2e-16 ***
+## term60            3.79e-03   1.42e-04   26.64  &lt; 2e-16 ***
+## dti               3.84e-05   8.25e-06    4.65  3.3e-06 ***
+## annual_inc       -1.22e-09   9.25e-10   -1.32   0.1856    
+## loan_amnt:gradeB -6.62e-08   2.44e-08   -2.71   0.0067 ** 
+## loan_amnt:gradeC -1.70e-07   2.62e-08   -6.50  8.1e-11 ***
+## loan_amnt:gradeD  6.70e-08   2.80e-08    2.40   0.0166 *  
+## loan_amnt:gradeE  2.21e-07   3.02e-08    7.32  2.5e-13 ***
+## loan_amnt:gradeF  2.78e-07   4.14e-08    6.72  1.8e-11 ***
+## loan_amnt:gradeG  1.27e-07   7.26e-08    1.74   0.0814 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0105 on 37852 degrees of freedom
+## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
+## F-statistic: 2.74e+04 on 16 and 37852 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#Add to the model the square and the cube of annual income. Use the poly(var_name,3) command as a variable in the linear regression model.  
+model3 &lt;- lm( int_rate ~ loan_amnt*grade+ term+ dti+poly(annual_inc,3), data = lc_clean
+  ) 
+summary(model3) # makes no difference</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = int_rate ~ loan_amnt * grade + term + dti + poly(annual_inc, 
+##     3), data = lc_clean)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11981 -0.00724 -0.00006  0.00659  0.03747 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           7.16e-02   2.28e-04  314.20  &lt; 2e-16 ***
+## loan_amnt             1.56e-07   2.05e-08    7.60  3.0e-14 ***
+## gradeB                3.62e-02   2.73e-04  132.61  &lt; 2e-16 ***
+## gradeC                6.20e-02   2.99e-04  207.40  &lt; 2e-16 ***
+## gradeD                8.08e-02   3.48e-04  232.00  &lt; 2e-16 ***
+## gradeE                9.63e-02   4.62e-04  208.28  &lt; 2e-16 ***
+## gradeF                1.14e-01   7.74e-04  147.70  &lt; 2e-16 ***
+## gradeG                1.33e-01   1.55e-03   85.57  &lt; 2e-16 ***
+## term60                3.79e-03   1.43e-04   26.55  &lt; 2e-16 ***
+## dti                   3.76e-05   8.29e-06    4.53  5.8e-06 ***
+## poly(annual_inc, 3)1 -1.59e-02   1.12e-02   -1.42   0.1549    
+## poly(annual_inc, 3)2  6.30e-03   1.09e-02    0.58   0.5621    
+## poly(annual_inc, 3)3 -8.98e-03   1.08e-02   -0.83   0.4076    
+## loan_amnt:gradeB     -6.63e-08   2.44e-08   -2.72   0.0066 ** 
+## loan_amnt:gradeC     -1.70e-07   2.62e-08   -6.50  8.2e-11 ***
+## loan_amnt:gradeD      6.71e-08   2.80e-08    2.40   0.0165 *  
+## loan_amnt:gradeE      2.21e-07   3.02e-08    7.32  2.4e-13 ***
+## loan_amnt:gradeF      2.78e-07   4.14e-08    6.72  1.8e-11 ***
+## loan_amnt:gradeG      1.27e-07   7.26e-08    1.75   0.0801 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0105 on 37850 degrees of freedom
+## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
+## F-statistic: 2.43e+04 on 18 and 37850 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#Continuing with the previous model, instead of annual income as a continuous variable break it down into quartiles and use quartile dummy variables. You can do this with the following command. 
+  
+lc_clean2 &lt;- lc_clean %&gt;% 
+  mutate(quartiles_annual_inc = as.factor(ntile(annual_inc, 4)))
+
+model4 &lt;-lm( int_rate ~ loan_amnt*grade+ term+ dti+quartiles_annual_inc, data = lc_clean2
+  ) 
+summary(model4)  # still makes no difference</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = int_rate ~ loan_amnt * grade + term + dti + quartiles_annual_inc, 
+##     data = lc_clean2)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11977 -0.00720 -0.00006  0.00660  0.03758 
+## 
+## Coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            7.19e-02   2.41e-04  297.70  &lt; 2e-16 ***
+## loan_amnt              1.62e-07   2.05e-08    7.89  3.1e-15 ***
+## gradeB                 3.62e-02   2.73e-04  132.52  &lt; 2e-16 ***
+## gradeC                 6.20e-02   2.99e-04  207.27  &lt; 2e-16 ***
+## gradeD                 8.08e-02   3.48e-04  231.88  &lt; 2e-16 ***
+## gradeE                 9.63e-02   4.62e-04  208.27  &lt; 2e-16 ***
+## gradeF                 1.14e-01   7.73e-04  147.72  &lt; 2e-16 ***
+## gradeG                 1.33e-01   1.55e-03   85.57  &lt; 2e-16 ***
+## term60                 3.78e-03   1.42e-04   26.53  &lt; 2e-16 ***
+## dti                    3.67e-05   8.26e-06    4.45  8.8e-06 ***
+## quartiles_annual_inc2 -2.62e-04   1.55e-04   -1.69   0.0907 .  
+## quartiles_annual_inc3 -3.99e-04   1.59e-04   -2.51   0.0121 *  
+## quartiles_annual_inc4 -5.38e-04   1.69e-04   -3.18   0.0015 ** 
+## loan_amnt:gradeB      -6.64e-08   2.44e-08   -2.72   0.0066 ** 
+## loan_amnt:gradeC      -1.70e-07   2.62e-08   -6.48  9.1e-11 ***
+## loan_amnt:gradeD       6.77e-08   2.80e-08    2.42   0.0156 *  
+## loan_amnt:gradeE       2.20e-07   3.02e-08    7.30  2.9e-13 ***
+## loan_amnt:gradeF       2.77e-07   4.14e-08    6.69  2.3e-11 ***
+## loan_amnt:gradeG       1.27e-07   7.26e-08    1.75   0.0809 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0105 on 37850 degrees of freedom
+## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
+## F-statistic: 2.43e+04 on 18 and 37850 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#Compare the performance of these four models using the anova command
+anova(model1, model2, model3, model4
+      )</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:Feature Engineering">
+<col><col><col><col><col><col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Res.Df</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">RSS</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Df</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Sum of Sq</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">F</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Pr(&gt;F)</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3.79e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">4.22</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.79e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">4.19</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.0332&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">50&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">1.64e-61</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3.78e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">4.19</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.000107</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.484</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.616&nbsp;&nbsp;&nbsp;</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.78e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">4.19</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.000915</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+</table>
+
+<div id="q3.-answer-the-following-questions" class="section level2 unnumbered">
+<h2>Q3. Answer the following questions</h2>
+<ol style="list-style-type: lower-alpha">
+<li><p>Which of the four models has the most explanatory power in sample
+&gt; Models 2, 3 &amp; 4 have the most explanatory power amounting to 0.9204. (The Adjusted R-squared is the same for all the 3 models)</p></li>
+<li><p>In model 2, how do you interpret the estimated coefficient of the interaction term between grade B and loan amount?
+&gt;All things being equal and on average compared to grade A, if the loan amount increase by 10 000, the interest rate for grade B useres will decrease by 6.617e-04 percentage point.</p></li>
+<li><p>The problem of multicolinearity describes the situations where one feature is highly correlated with other fueatures (or with a linear combination of other features). If your goal is to use the model to make predictions, should you be concerned by the problem of multicolinearity? Why, or why not?
+&gt; Multicolinearity impacts inference more than prediction, so for the case of prediction it is not very relevant. However, if one is using the model to explain their existing dataset they may have inaccurate results.</p></li>
+</ol>
+</div>
+</div>
+<div id="out-of-sample-testing" class="section level1">
+<h1>Out of sample testing</h1>
+<p>Let’s check the predictive accuracy of model2 by holding out a subset of the data to use as testing. This method is sometimes refered to as the hold-out method for out-of-sample testing.</p>
+<pre class="r"><code>#split the data in dataframe called &quot;testing&quot; and another one called  &quot;training&quot;. The &quot;training&quot; dataframe should have 80% of the data and the &quot;testing&quot; dataframe 20%.
+set.seed(176823769)
+train_test_split &lt;- initial_split(lc_clean2, prop=0.8) # splitting dataset
+lc_clean_train&lt;- training(train_test_split)
+lc_clean_test&lt;- testing(train_test_split) 
+
+
+#Fit model2 on the training set 
+model2_training&lt;-lm(int_rate ~ loan_amnt + term+ dti + annual_inc + grade +grade:loan_amnt, data=lc_clean_train)
+summary(model2_training)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = int_rate ~ loan_amnt + term + dti + annual_inc + 
+##     grade + grade:loan_amnt, data = lc_clean_train)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11977 -0.00721 -0.00004  0.00659  0.03764 
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)       7.16e-02   2.64e-04  271.57  &lt; 2e-16 ***
+## loan_amnt         1.59e-07   2.25e-08    7.05  1.9e-12 ***
+## term60            3.77e-03   1.59e-04   23.69  &lt; 2e-16 ***
+## dti               4.07e-05   9.23e-06    4.41  1.1e-05 ***
+## annual_inc       -8.11e-10   1.19e-09   -0.68    0.497    
+## gradeB            3.62e-02   3.04e-04  119.16  &lt; 2e-16 ***
+## gradeC            6.20e-02   3.33e-04  186.19  &lt; 2e-16 ***
+## gradeD            8.09e-02   3.87e-04  209.01  &lt; 2e-16 ***
+## gradeE            9.60e-02   5.15e-04  186.64  &lt; 2e-16 ***
+## gradeF            1.14e-01   8.72e-04  130.70  &lt; 2e-16 ***
+## gradeG            1.34e-01   1.75e-03   76.57  &lt; 2e-16 ***
+## loan_amnt:gradeB -7.33e-08   2.72e-08   -2.70    0.007 ** 
+## loan_amnt:gradeC -1.75e-07   2.92e-08   -6.00  2.0e-09 ***
+## loan_amnt:gradeD  6.79e-08   3.11e-08    2.18    0.029 *  
+## loan_amnt:gradeE  2.29e-07   3.35e-08    6.85  7.5e-12 ***
+## loan_amnt:gradeF  2.97e-07   4.62e-08    6.44  1.2e-10 ***
+## loan_amnt:gradeG  7.97e-08   8.21e-08    0.97    0.331    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0105 on 30279 degrees of freedom
+## Multiple R-squared:  0.921,  Adjusted R-squared:  0.921 
+## F-statistic: 2.2e+04 on 16 and 30279 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#Calculate the RMSE of the model in the training set (in sample)
+rmse_training&lt;-sqrt(mean((residuals(model2_training))^2))
+#USe the model to make predictions out of sample in the testing set
+pred&lt;-predict(model2_training,lc_clean_test)
+#Calculate the RMSE of the model in the testing set (out of sample)
+rmse_testing&lt;- RMSE(pred,lc_clean_test$int_rate)
+
+rmse_training</code></pre>
+<pre><code>## [1] 0.0105</code></pre>
+<pre class="r"><code>rmse_testing</code></pre>
+<pre><code>## [1] 0.0106</code></pre>
+<div id="q4.-how-much-does-the-predictive-accuracy-of-model-2-deteriorate-when-we-move-from-in-sample-to-out-of-sample-testing-is-this-sensitive-to-the-random-seed-chosen-is-there-any-evidence-of-overfitting" class="section level2 unnumbered">
+<h2>Q4. How much does the predictive accuracy of model 2 deteriorate when we move from in sample to out of sample testing? Is this sensitive to the random seed chosen? Is there any evidence of overfitting?</h2>
+<blockquote>
+<p>The predictive accuracy of model 2 does not much deteriorate when we move from in sample to out of sample testing. For purpose of checking it we compare the rmse_training to rmse_testing (0.0104 compared to 0.01061). We tried to check if the model is sensitive for the multiple random seed choices and we discovered that the model is not much sensitive (rmse is still a factor of e-2). There isn’t any evidence of overfitting.</p>
+</blockquote>
+</div>
+</div>
+<div id="k-fold-cross-validation" class="section level1">
+<h1>k-fold cross validation</h1>
+<p>We can also do out of sample testing using the method of k-fold cross validation. Using the caret package this is easy.</p>
+<pre class="r"><code>#the method &quot;cv&quot; stands for cross validation. We re going to create 10 folds.  
+
+control &lt;- trainControl (
+    method=&quot;cv&quot;,
+    number=10,
+    verboseIter=TRUE) #by setting this to true the model will report its progress after each estimation
+
+#we are going to train the model and report the results using k-fold cross validation
+plsFit&lt;-train(
+    int_rate ~ loan_amnt + term+ dti + annual_inc + grade +grade:loan_amnt ,
+    lc_clean,
+   method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(plsFit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11981 -0.00723 -0.00006  0.00659  0.03746 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         7.17e-02   2.35e-04  305.76  &lt; 2e-16 ***
+## loan_amnt           1.53e-07   2.03e-08    7.54  4.9e-14 ***
+## term60              3.79e-03   1.42e-04   26.64  &lt; 2e-16 ***
+## dti                 3.84e-05   8.25e-06    4.65  3.3e-06 ***
+## annual_inc         -1.22e-09   9.25e-10   -1.32   0.1856    
+## gradeB              3.62e-02   2.73e-04  132.62  &lt; 2e-16 ***
+## gradeC              6.20e-02   2.99e-04  207.45  &lt; 2e-16 ***
+## gradeD              8.08e-02   3.48e-04  232.03  &lt; 2e-16 ***
+## gradeE              9.63e-02   4.62e-04  208.29  &lt; 2e-16 ***
+## gradeF              1.14e-01   7.74e-04  147.70  &lt; 2e-16 ***
+## gradeG              1.33e-01   1.55e-03   85.58  &lt; 2e-16 ***
+## `loan_amnt:gradeB` -6.62e-08   2.44e-08   -2.71   0.0067 ** 
+## `loan_amnt:gradeC` -1.70e-07   2.62e-08   -6.50  8.1e-11 ***
+## `loan_amnt:gradeD`  6.70e-08   2.80e-08    2.40   0.0166 *  
+## `loan_amnt:gradeE`  2.21e-07   3.02e-08    7.32  2.5e-13 ***
+## `loan_amnt:gradeF`  2.78e-07   4.14e-08    6.72  1.8e-11 ***
+## `loan_amnt:gradeG`  1.27e-07   7.26e-08    1.74   0.0814 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0105 on 37852 degrees of freedom
+## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
+## F-statistic: 2.74e+04 on 16 and 37852 DF,  p-value: &lt;2e-16</code></pre>
+<div id="q5.-compare-the-out-of-sample-rmse-of-10-fold-cross-validation-and-the-hold-out-method.-are-they-different-which-do-you-think-is-more-reliable-are-there-any-drawbacks-to-the-k-fold-cross-validation-method-compared-to-the-hold-out-method" class="section level2 unnumbered">
+<h2>Q5. Compare the out-of-sample RMSE of 10-fold cross validation and the hold-out method. Are they different? Which do you think is more reliable? Are there any drawbacks to the k-fold cross validation method compared to the hold-out method?</h2>
+<blockquote>
+<p>Answer here: The RMSE for both moethds is the same, however the k-fold cross validation method gives a range of answers and is more reliable since it checks k times and for k samples. However, the drawback of k-fold cross validation is that it takes much longer time.</p>
+</blockquote>
+</div>
+</div>
+<div id="sample-size-estimation-and-learning-curves" class="section level1">
+<h1>Sample size estimation and learning curves</h1>
+<p>We can use the hold out method for out-of-sample testing to check if we have a sufficiently large sample to estimate the model reliably. The idea is to set aside some of the data as a testing set. From the remaining data draw progressively larger training sets and check how the performance of the model on the testing set changes. If the performance no longer improves with larger datasets we know we have a large enough sample. The code below does this. Examine it and run it with different random seeds.</p>
+<pre class="r"><code>#select a testing dataset (25% of all data)
+set.seed(12)
+
+train_test_split &lt;- initial_split(lc_clean, prop = 0.75)
+remaining &lt;- training(train_test_split)
+testing &lt;- testing(train_test_split)
+
+#We are now going to run 30 models starting from a tiny training set drawn from the training data and progressively increasing its size. The testing set remains the same in all iterations.
+
+#initiating the model by setting some parameters to zero
+rmse_sample &lt;- 0
+sample_size&lt;-0
+Rsq_sample&lt;-0
+
+for(i in 1:30) {
+#from the remaining dataset select a smaller subset to training the data
+set.seed(100)
+sample
+
+  learning_split &lt;- initial_split(remaining, prop = i/200)
+  training &lt;- training(learning_split)
+  sample_size[i]=nrow(training)
+  
+  #traing the model on the small dataset
+  model3&lt;-lm(int_rate ~ loan_amnt + term+ dti + annual_inc + grade + grade:loan_amnt, training)
+  #test the performance of the model on the large testing dataset. This stays fixed for all iterations.
+  pred&lt;-predict(model3,testing)
+  rmse_sample[i]&lt;-RMSE(pred,testing$int_rate)
+  Rsq_sample[i]&lt;-R2(pred,testing$int_rate)
+}
+plot(sample_size,rmse_sample)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/learning%20curves-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(sample_size,Rsq_sample)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/learning%20curves-2.png" width="648" style="display: block; margin: auto;" /></p>
+<div id="q6.-using-the-learning-curves-above-approximately-how-large-of-a-sample-size-would-we-need-to-estimate-model-3-reliably-once-we-reach-this-sample-size-if-we-want-to-reduce-the-prediction-error-further-what-options-do-we-have" class="section level2 unnumbered">
+<h2>Q6. Using the learning curves above, approximately how large of a sample size would we need to estimate model 3 reliably? Once we reach this sample size, if we want to reduce the prediction error further what options do we have?</h2>
+<blockquote>
+<p>Answer here: After analysing the graphs above, we noticed that the sample size that would estimate model 3 reliably is 1500. Once we reach this sample size, we can still try to reduce the prediction error by regularization or using the k-fold cross validation method.</p>
+</blockquote>
+</div>
+</div>
+<div id="regularization-using-lasso-regression" class="section level1">
+<h1>Regularization using LASSO regression</h1>
+<p>If we are in the region of the learning curve where we do not have enough data, one option is to use a regularization method such as LASSO.</p>
+<p>Let’s try to estimate large and complicated model (many interactions and polynomials) on a small training dataset using OLS regression and hold-out validation method.</p>
+<pre class="r"><code>#split the data in testing and training. The training test is really small.
+set.seed(1234)
+train_test_split &lt;- initial_split(lc_clean, prop = 0.01)
+training &lt;- training(train_test_split)
+testing &lt;- testing(train_test_split)
+
+model_lm&lt;-lm(int_rate ~ poly(loan_amnt,3) + term+ dti + annual_inc + grade +grade:poly(loan_amnt,3):term +poly(loan_amnt,3):term +grade:term, training)
+predictions &lt;- predict(model_lm,testing)
+
+
+# Model prediction performance
+data.frame(
+  RMSE = RMSE(predictions, testing$int_rate),
+  Rsquare = R2(predictions, testing$int_rate)
+)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:OLS model overfitting">
+<col><col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Rsquare</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0446</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.352</td></tr>
+</table>
+
+<p>Not surprisingly this model does not perform well – as we knew form the learning curves we constructed for a simpler model we need a lot more data to estimate this model reliably. Try running it again with different seeds. The model’s performance tends to be sensitive to the choice of the training set.</p>
+<p>LASSO regression offers one solution – it extends the OLS regression by penalizing the model for setting any coefficient to a value that is different from zero. The penalty is proportional to a parameter $$ (pronounced lambda). This parameter cannot be estimated directly (and for this reason sometimes it is refered to as hyperparameter) and will be selected through k-fold cross validation in order to provide the best out-of-sample performance. As result of the LASSO precedure, only those features that are more strongly associated with the outcome will have non-zero coefficients and the estimated model will be less sensitive to the training set. Sometimes LASSO regression is refered to as regularization.</p>
+<pre class="r"><code>#we will look for the optimal lambda in this sequence (we will try 1000 different lambdas)
+lambda_seq &lt;- seq(0, 0.01, length = 1000)
+#lasso regression using k-fold cross validation to select the best lambda
+
+lasso &lt;- train(
+ int_rate ~ poly(loan_amnt,3) + term+ dti + annual_inc + grade +grade:poly(loan_amnt,3):term +poly(loan_amnt,3):term +grade:term,
+ data = training,
+ method = &quot;glmnet&quot;,
+  preProc = c(&quot;center&quot;, &quot;scale&quot;), #This option standardizes the data before running the LASSO regression
+  trControl = control,
+  tuneGrid = expand.grid(alpha = 1, lambda = lambda_seq) #alpha=1 specifies to run a LASSO regression. If alpha=0 the model would run ridge regression.
+  )</code></pre>
+<pre><code>## + Fold01: alpha=1, lambda=0.01 
+## - Fold01: alpha=1, lambda=0.01 
+## + Fold02: alpha=1, lambda=0.01 
+## - Fold02: alpha=1, lambda=0.01 
+## + Fold03: alpha=1, lambda=0.01 
+## - Fold03: alpha=1, lambda=0.01 
+## + Fold04: alpha=1, lambda=0.01 
+## - Fold04: alpha=1, lambda=0.01 
+## + Fold05: alpha=1, lambda=0.01 
+## - Fold05: alpha=1, lambda=0.01 
+## + Fold06: alpha=1, lambda=0.01 
+## - Fold06: alpha=1, lambda=0.01 
+## + Fold07: alpha=1, lambda=0.01 
+## - Fold07: alpha=1, lambda=0.01 
+## + Fold08: alpha=1, lambda=0.01 
+## - Fold08: alpha=1, lambda=0.01 
+## + Fold09: alpha=1, lambda=0.01 
+## - Fold09: alpha=1, lambda=0.01 
+## + Fold10: alpha=1, lambda=0.01 
+## - Fold10: alpha=1, lambda=0.01 
+## Aggregating results
+## Selecting tuning parameters
+## Fitting alpha = 1, lambda = 0.000581 on full training set</code></pre>
+<pre class="r"><code># Model coefficients
+coef(lasso$finalModel, lasso$bestTune$lambda)</code></pre>
+<pre><code>## 58 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                           1
+## (Intercept)                        1.19e-01
+## poly(loan_amnt, 3)1                .       
+## poly(loan_amnt, 3)2                .       
+## poly(loan_amnt, 3)3                .       
+## term60                             7.10e-04
+## dti                                .       
+## annual_inc                         .       
+## gradeB                             1.42e-02
+## gradeC                             2.28e-02
+## gradeD                             2.43e-02
+## gradeE                             2.28e-02
+## gradeF                             1.69e-02
+## gradeG                             7.86e-03
+## poly(loan_amnt, 3)1:term60         1.78e-03
+## poly(loan_amnt, 3)2:term60         .       
+## poly(loan_amnt, 3)3:term60         .       
+## term60:gradeB                      .       
+## term60:gradeC                      .       
+## term60:gradeD                      1.22e-04
+## term60:gradeE                      3.43e-03
+## term60:gradeF                      1.86e-04
+## term60:gradeG                      3.26e-04
+## poly(loan_amnt, 3)1:term36:gradeB  .       
+## poly(loan_amnt, 3)2:term36:gradeB  .       
+## poly(loan_amnt, 3)3:term36:gradeB  .       
+## poly(loan_amnt, 3)1:term60:gradeB  .       
+## poly(loan_amnt, 3)2:term60:gradeB  .       
+## poly(loan_amnt, 3)3:term60:gradeB  .       
+## poly(loan_amnt, 3)1:term36:gradeC -9.39e-05
+## poly(loan_amnt, 3)2:term36:gradeC  .       
+## poly(loan_amnt, 3)3:term36:gradeC  .       
+## poly(loan_amnt, 3)1:term60:gradeC -3.10e-04
+## poly(loan_amnt, 3)2:term60:gradeC  .       
+## poly(loan_amnt, 3)3:term60:gradeC  .       
+## poly(loan_amnt, 3)1:term36:gradeD -2.01e-04
+## poly(loan_amnt, 3)2:term36:gradeD  .       
+## poly(loan_amnt, 3)3:term36:gradeD  .       
+## poly(loan_amnt, 3)1:term60:gradeD  .       
+## poly(loan_amnt, 3)2:term60:gradeD  .       
+## poly(loan_amnt, 3)3:term60:gradeD  .       
+## poly(loan_amnt, 3)1:term36:gradeE  .       
+## poly(loan_amnt, 3)2:term36:gradeE  1.56e-04
+## poly(loan_amnt, 3)3:term36:gradeE -2.90e-04
+## poly(loan_amnt, 3)1:term60:gradeE  2.00e-04
+## poly(loan_amnt, 3)2:term60:gradeE  .       
+## poly(loan_amnt, 3)3:term60:gradeE  1.77e-04
+## poly(loan_amnt, 3)1:term36:gradeF  .       
+## poly(loan_amnt, 3)2:term36:gradeF  .       
+## poly(loan_amnt, 3)3:term36:gradeF  .       
+## poly(loan_amnt, 3)1:term60:gradeF  7.98e-05
+## poly(loan_amnt, 3)2:term60:gradeF  .       
+## poly(loan_amnt, 3)3:term60:gradeF  .       
+## poly(loan_amnt, 3)1:term36:gradeG  .       
+## poly(loan_amnt, 3)2:term36:gradeG  .       
+## poly(loan_amnt, 3)3:term36:gradeG  .       
+## poly(loan_amnt, 3)1:term60:gradeG  3.95e-06
+## poly(loan_amnt, 3)2:term60:gradeG  5.06e-08
+## poly(loan_amnt, 3)3:term60:gradeG  .</code></pre>
+<pre class="r"><code>#Best lambda
+lasso$bestTune$lambda</code></pre>
+<pre><code>## [1] 0.000581</code></pre>
+<pre class="r"><code># Count of how many coefficients are greater than zero and how many are equal to zero
+sum(coef(lasso$finalModel, lasso$bestTune$lambda)!=0)</code></pre>
+<pre><code>## [1] 23</code></pre>
+<pre class="r"><code>sum(coef(lasso$finalModel, lasso$bestTune$lambda)==0)</code></pre>
+<pre><code>## [1] 35</code></pre>
+<pre class="r"><code># Make predictions
+predictions &lt;- predict(lasso,testing)
+
+# Model prediction performance
+data.frame(
+  RMSE = RMSE(predictions, testing$int_rate),
+  Rsquare = R2(predictions, testing$int_rate)
+)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:LASSO compared to OLS">
+<col><col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Rsquare</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0109</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.917</td></tr>
+</table>
+
+<div id="q7.-answer-the-following-questions" class="section level2 unnumbered">
+<h2>Q7. Answer the following questions</h2>
+<ol style="list-style-type: lower-alpha">
+<li><p>Which model performs best out of sample, OLS regression or LASSO?
+&gt; From the above, we can infere that the LASSO regression method is a better fit with a much smaller RMSE and significantly larger Adjusted R-squared using only 0.01 of data.</p></li>
+<li><p>What value of lambda offers best performance? Is this sensitive to the random seed?
+&gt;The best performance lambda in the seed 1234 is equal to 0.0005805806. The lambda is very sensitive to random seed, however the output of LASSO regression seems consistent.</p></li>
+<li><p>How many coefficients are zero and how many are non-zero in the LASSO model of best fit?
+&gt; In our LASSO regression, 23 variables are equal to zero and 35 variables are not equal to 0.</p></li>
+<li><p>Why is it important to standardize continuous variables before running LASSO?
+&gt; Note in linear regression formula, the larger the values of the data, the smaller the coefficients. Since LASSO easily penalises small coefficients to zero, it is important to control the magnitude of data values before running regression.</p></li>
+</ol>
+</div>
+</div>
+<div id="using-time-information" class="section level1">
+<h1>Using Time Information</h1>
+<p>Let’s try to further improve the model’s predictive performance. So far we have not used any time series information. Effectively, all things being equal, our prediction for the interest rate of a loan given in 2009 would be the same as that of a loan given in 2011. Is this a good assumption?</p>
+<p>First, investigate graphically whether there are any time trends in the interest rates. (Note that the variable “issue_d” only has information on the month the loan was awarded but not the exact date.) Can you use this information to further improve the forecasting accuracy of your model? Try controlling for time in a linear fashion (i.e., a linear time trend) and controlling for time as quarter dummies (this is a method to capture non-linear effects of time – we assume that the impact of time doesn’t change within a quarter but it can chance from quarter to quarter). Finally, check if time affect loans of different grades differently.</p>
+<pre class="r"><code>#linear time trend (add code below)
+
+ggplot(lc_clean, aes(x=issue_d,y=int_rate))+
+  geom_point()+
+  geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/time%20trends-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#linear time trend by grade (add code below)
+ggplot(lc_clean, aes(x=issue_d,y=int_rate, colour=grade))+
+  geom_point()+
+  geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/time%20trends-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>glimpse(lc_clean2)</code></pre>
+<pre><code>## Rows: 37,869
+## Columns: 21
+## $ int_rate             &lt;dbl&gt; 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, …
+## $ loan_amnt            &lt;dbl&gt; 8000, 6000, 6500, 8000, 5500, 6000, 10200, 15000…
+## $ dti                  &lt;dbl&gt; 2.11, 5.73, 17.68, 22.71, 5.75, 21.92, 18.62, 9.…
+## $ delinq_2yrs          &lt;fct&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ annual_inc           &lt;dbl&gt; 50000, 52800, 35352, 79200, 240000, 89000, 11000…
+## $ grade                &lt;chr&gt; &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;…
+## $ emp_length           &lt;fct&gt; 5 years, &lt; 1 year, n/a, n/a, 10+ years, 2 years,…
+## $ home_ownership       &lt;chr&gt; &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, …
+## $ verification_status  &lt;chr&gt; &quot;Verified&quot;, &quot;Source Verified&quot;, &quot;Not Verified&quot;, &quot;…
+## $ issue_d              &lt;date&gt; 2011-09-01, 2011-09-01, 2011-09-01, 2011-09-01,…
+## $ zip_code             &lt;chr&gt; &quot;977xx&quot;, &quot;228xx&quot;, &quot;864xx&quot;, &quot;322xx&quot;, &quot;278xx&quot;, &quot;76…
+## $ addr_state           &lt;chr&gt; &quot;OR&quot;, &quot;VA&quot;, &quot;AZ&quot;, &quot;FL&quot;, &quot;NC&quot;, &quot;TX&quot;, &quot;CT&quot;, &quot;WA&quot;, …
+## $ loan_status          &lt;chr&gt; &quot;Fully Paid&quot;, &quot;Charged Off&quot;, &quot;Fully Paid&quot;, &quot;Full…
+## $ desc                 &lt;chr&gt; &quot;Borrower added on 09/08/11 &gt; Consolidating debt…
+## $ purpose              &lt;chr&gt; &quot;debt_consolidation&quot;, &quot;vacation&quot;, &quot;credit_card&quot;,…
+## $ title                &lt;chr&gt; &quot;Credit Card Payoff $8K&quot;, &quot;bad choice&quot;, &quot;Credit …
+## $ term                 &lt;fct&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, …
+## $ term_months          &lt;dbl&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, …
+## $ installment          &lt;dbl&gt; 241.3, 181.0, 196.0, 241.3, 165.9, 181.0, 307.6,…
+## $ emp_title            &lt;chr&gt; NA, &quot;coral graphics&quot;, NA, &quot;Honeywell&quot;, &quot;O T Plus…
+## $ quartiles_annual_inc &lt;fct&gt; 2, 2, 1, 3, 4, 4, 4, 4, 2, 2, 4, 3, 3, 2, 1, 3, …</code></pre>
+<pre class="r"><code>#Train models using OLS regression and k-fold cross-validation
+#The first model has some explanatory variables and a linear time trend
+
+time1&lt;-train(
+  int_rate ~ loan_amnt*grade+ term+ dti + issue_d,#fill your variables here &quot;+ issue_d&quot;
+  lc_clean,
+  method = &quot;lm&quot;,
+  trControl = control)</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(time1) # seems like dti is corrolated with issue_d (maybe lots of people defaulted because of the crisis)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11902 -0.00659 -0.00075  0.00695  0.03618 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        -2.51e-02   2.51e-03  -10.00  &lt; 2e-16 ***
+## loan_amnt           8.84e-08   1.98e-08    4.46  8.4e-06 ***
+## gradeB              3.61e-02   2.68e-04  134.68  &lt; 2e-16 ***
+## gradeC              6.25e-02   2.93e-04  212.96  &lt; 2e-16 ***
+## gradeD              8.13e-02   3.42e-04  237.89  &lt; 2e-16 ***
+## gradeE              9.73e-02   4.54e-04  214.17  &lt; 2e-16 ***
+## gradeF              1.15e-01   7.59e-04  151.81  &lt; 2e-16 ***
+## gradeG              1.34e-01   1.52e-03   87.88  &lt; 2e-16 ***
+## term60              2.26e-03   1.45e-04   15.60  &lt; 2e-16 ***
+## dti                 1.20e-05   8.04e-06    1.50    0.134    
+## issue_d             6.54e-06   1.69e-07   38.67  &lt; 2e-16 ***
+## `loan_amnt:gradeB` -1.29e-11   2.40e-08    0.00    1.000    
+## `loan_amnt:gradeC` -1.21e-07   2.57e-08   -4.69  2.8e-06 ***
+## `loan_amnt:gradeD`  1.14e-07   2.75e-08    4.14  3.4e-05 ***
+## `loan_amnt:gradeE`  2.46e-07   2.96e-08    8.31  &lt; 2e-16 ***
+## `loan_amnt:gradeF`  3.01e-07   4.06e-08    7.42  1.2e-13 ***
+## `loan_amnt:gradeG`  1.58e-07   7.12e-08    2.22    0.026 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.0103 on 37852 degrees of freedom
+## Multiple R-squared:  0.923,  Adjusted R-squared:  0.923 
+## F-statistic: 2.85e+04 on 16 and 37852 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#The second model has a different linear time trend for each grade class
+time2&lt;-train(
+    int_rate ~ loan_amnt*grade+ term+ dti + issue_d*grade, #fill your variables here 
+    lc_clean,
+   method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(time2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.12043 -0.00661 -0.00015  0.00676  0.03076 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         2.86e-01   4.36e-03   65.62  &lt; 2e-16 ***
+## loan_amnt           3.03e-07   1.76e-08   17.24  &lt; 2e-16 ***
+## gradeB             -2.30e-01   5.81e-03  -39.55  &lt; 2e-16 ***
+## gradeC             -3.54e-01   6.18e-03  -57.27  &lt; 2e-16 ***
+## gradeD             -5.14e-01   7.20e-03  -71.47  &lt; 2e-16 ***
+## gradeE             -6.13e-01   9.91e-03  -61.93  &lt; 2e-16 ***
+## gradeF             -7.10e-01   1.61e-02  -44.08  &lt; 2e-16 ***
+## gradeG             -7.10e-01   3.31e-02  -21.43  &lt; 2e-16 ***
+## term60             -6.09e-04   1.30e-04   -4.68  2.9e-06 ***
+## dti                 5.76e-05   7.06e-06    8.15  3.7e-16 ***
+## issue_d            -1.44e-05   2.93e-07  -49.17  &lt; 2e-16 ***
+## `loan_amnt:gradeB` -1.56e-07   2.12e-08   -7.34  2.2e-13 ***
+## `loan_amnt:gradeC` -3.24e-07   2.28e-08  -14.18  &lt; 2e-16 ***
+## `loan_amnt:gradeD` -1.78e-07   2.43e-08   -7.32  2.5e-13 ***
+## `loan_amnt:gradeE` -1.72e-07   2.66e-08   -6.49  8.8e-11 ***
+## `loan_amnt:gradeF` -1.86e-07   3.68e-08   -5.06  4.1e-07 ***
+## `loan_amnt:gradeG` -2.96e-07   6.44e-08   -4.60  4.2e-06 ***
+## `gradeB:issue_d`    1.79e-05   3.90e-07   45.86  &lt; 2e-16 ***
+## `gradeC:issue_d`    2.81e-05   4.17e-07   67.36  &lt; 2e-16 ***
+## `gradeD:issue_d`    4.02e-05   4.85e-07   82.85  &lt; 2e-16 ***
+## `gradeE:issue_d`    4.80e-05   6.68e-07   71.84  &lt; 2e-16 ***
+## `gradeF:issue_d`    5.57e-05   1.09e-06   51.35  &lt; 2e-16 ***
+## `gradeG:issue_d`    5.70e-05   2.23e-06   25.54  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.00905 on 37846 degrees of freedom
+## Multiple R-squared:  0.941,  Adjusted R-squared:  0.941 
+## F-statistic: 2.75e+04 on 22 and 37846 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#Change the time trend to a quarter dummy variables.
+#zoo::as.yearqrt() creates quarter dummies 
+lc_clean_quarter&lt;-lc_clean %&gt;%
+  mutate(yq = as.factor(as.yearqtr(lc_clean$issue_d, format = &quot;%Y-%m-%d&quot;)))
+
+
+
+time3&lt;-train(
+    int_rate ~loan_amnt*grade+ term+ dti + yq ,#fill your variables here 
+    lc_clean_quarter,
+     method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(time3)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11593 -0.00541 -0.00025  0.00579  0.03760 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         3.83e-02   9.08e-03    4.22  2.5e-05 ***
+## loan_amnt           1.04e-07   1.75e-08    5.96  2.5e-09 ***
+## gradeB              3.66e-02   2.36e-04  155.13  &lt; 2e-16 ***
+## gradeC              6.25e-02   2.58e-04  241.95  &lt; 2e-16 ***
+## gradeD              8.10e-02   3.01e-04  269.10  &lt; 2e-16 ***
+## gradeE              9.70e-02   4.00e-04  242.54  &lt; 2e-16 ***
+## gradeF              1.15e-01   6.68e-04  172.74  &lt; 2e-16 ***
+## gradeG              1.34e-01   1.34e-03  100.00  &lt; 2e-16 ***
+## term60              4.58e-03   1.31e-04   35.03  &lt; 2e-16 ***
+## dti                 5.89e-06   7.07e-06    0.83  0.40459    
+## `yq2007 Q3`         1.91e-02   9.14e-03    2.09  0.03642 *  
+## `yq2007 Q4`         1.47e-02   9.10e-03    1.61  0.10648    
+## `yq2008 Q1`         2.11e-02   9.08e-03    2.33  0.01993 *  
+## `yq2008 Q2`         2.28e-02   9.09e-03    2.50  0.01232 *  
+## `yq2008 Q3`         2.39e-02   9.10e-03    2.63  0.00861 ** 
+## `yq2008 Q4`         3.18e-02   9.08e-03    3.50  0.00046 ***
+## `yq2009 Q1`         3.60e-02   9.08e-03    3.97  7.3e-05 ***
+## `yq2009 Q2`         3.79e-02   9.08e-03    4.17  3.0e-05 ***
+## `yq2009 Q3`         3.94e-02   9.08e-03    4.34  1.4e-05 ***
+## `yq2009 Q4`         3.97e-02   9.08e-03    4.37  1.3e-05 ***
+## `yq2010 Q1`         3.46e-02   9.08e-03    3.82  0.00014 ***
+## `yq2010 Q2`         3.34e-02   9.08e-03    3.68  0.00024 ***
+## `yq2010 Q3`         3.45e-02   9.07e-03    3.80  0.00015 ***
+## `yq2010 Q4`         2.57e-02   9.07e-03    2.84  0.00455 ** 
+## `yq2011 Q1`         2.79e-02   9.07e-03    3.07  0.00213 ** 
+## `yq2011 Q2`         3.30e-02   9.07e-03    3.64  0.00027 ***
+## `yq2011 Q3`         3.54e-02   9.07e-03    3.91  9.4e-05 ***
+## `yq2011 Q4`         4.17e-02   9.07e-03    4.59  4.4e-06 ***
+## `loan_amnt:gradeB` -1.08e-07   2.12e-08   -5.10  3.4e-07 ***
+## `loan_amnt:gradeC` -2.14e-07   2.27e-08   -9.45  &lt; 2e-16 ***
+## `loan_amnt:gradeD`  5.84e-08   2.42e-08    2.41  0.01590 *  
+## `loan_amnt:gradeE`  1.82e-07   2.61e-08    6.96  3.4e-12 ***
+## `loan_amnt:gradeF`  2.27e-07   3.57e-08    6.34  2.3e-10 ***
+## `loan_amnt:gradeG`  1.12e-07   6.26e-08    1.80  0.07260 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.00907 on 37835 degrees of freedom
+## Multiple R-squared:  0.941,  Adjusted R-squared:  0.941 
+## F-statistic: 1.82e+04 on 33 and 37835 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>#We specify one quarter dummy variable for each grade. This is going to be a large model as there are 19 quarters x 7 grades = 133 quarter-grade dummies.
+time4&lt;-train(
+    int_rate ~loan_amnt*grade+ term+ dti + yq*grade ,#fill your variables here 
+    lc_clean_quarter,
+     method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(time4)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.12043 -0.00493  0.00031  0.00467  0.03422 
+## 
+## Coefficients: (11 not defined because of singularities)
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         1.86e-02   7.58e-03    2.45  0.01412 *  
+## loan_amnt           2.97e-07   1.49e-08   19.98  &lt; 2e-16 ***
+## gradeB              4.31e-02   3.19e-04  134.93  &lt; 2e-16 ***
+## gradeC              6.97e-02   3.62e-04  192.59  &lt; 2e-16 ***
+## gradeD              9.70e-02   4.19e-04  231.67  &lt; 2e-16 ***
+## gradeE              1.18e-01   5.38e-04  218.71  &lt; 2e-16 ***
+## gradeF              1.39e-01   8.64e-04  160.91  &lt; 2e-16 ***
+## gradeG              1.60e-01   1.80e-03   89.03  &lt; 2e-16 ***
+## term60              1.73e-03   1.13e-04   15.32  &lt; 2e-16 ***
+## dti                 4.83e-05   5.92e-06    8.16  3.5e-16 ***
+## `yq2007 Q3`         5.48e-02   7.72e-03    7.09  1.3e-12 ***
+## `yq2007 Q4`         5.58e-02   7.71e-03    7.24  4.7e-13 ***
+## `yq2008 Q1`         5.95e-02   7.62e-03    7.81  6.0e-15 ***
+## `yq2008 Q2`         6.09e-02   7.65e-03    7.96  1.8e-15 ***
+## `yq2008 Q3`         6.03e-02   7.69e-03    7.84  4.7e-15 ***
+## `yq2008 Q4`         6.66e-02   7.62e-03    8.75  &lt; 2e-16 ***
+## `yq2009 Q1`         6.83e-02   7.60e-03    8.99  &lt; 2e-16 ***
+## `yq2009 Q2`         6.78e-02   7.59e-03    8.93  &lt; 2e-16 ***
+## `yq2009 Q3`         6.60e-02   7.59e-03    8.69  &lt; 2e-16 ***
+## `yq2009 Q4`         6.40e-02   7.59e-03    8.43  &lt; 2e-16 ***
+## `yq2010 Q1`         5.70e-02   7.59e-03    7.51  6.1e-14 ***
+## `yq2010 Q2`         5.49e-02   7.58e-03    7.24  4.7e-13 ***
+## `yq2010 Q3`         5.48e-02   7.58e-03    7.23  4.8e-13 ***
+## `yq2010 Q4`         4.38e-02   7.58e-03    5.78  7.7e-09 ***
+## `yq2011 Q1`         4.57e-02   7.58e-03    6.02  1.7e-09 ***
+## `yq2011 Q2`         4.66e-02   7.58e-03    6.14  8.3e-10 ***
+## `yq2011 Q3`         4.67e-02   7.58e-03    6.17  7.1e-10 ***
+## `yq2011 Q4`         5.37e-02   7.57e-03    7.09  1.3e-12 ***
+## `loan_amnt:gradeB` -2.45e-07   1.79e-08  -13.68  &lt; 2e-16 ***
+## `loan_amnt:gradeC` -3.71e-07   1.93e-08  -19.24  &lt; 2e-16 ***
+## `loan_amnt:gradeD` -2.12e-07   2.06e-08  -10.33  &lt; 2e-16 ***
+## `loan_amnt:gradeE` -2.25e-07   2.26e-08   -9.97  &lt; 2e-16 ***
+## `loan_amnt:gradeF` -2.49e-07   3.15e-08   -7.90  2.9e-15 ***
+## `loan_amnt:gradeG` -3.43e-07   5.65e-08   -6.07  1.3e-09 ***
+## `gradeB:yq2007 Q3` -2.31e-02   2.30e-03  -10.03  &lt; 2e-16 ***
+## `gradeC:yq2007 Q3` -3.55e-02   2.42e-03  -14.67  &lt; 2e-16 ***
+## `gradeD:yq2007 Q3` -5.15e-02   3.71e-03  -13.87  &lt; 2e-16 ***
+## `gradeE:yq2007 Q3` -5.69e-02   5.57e-03  -10.22  &lt; 2e-16 ***
+## `gradeF:yq2007 Q3` -6.13e-02   3.76e-03  -16.31  &lt; 2e-16 ***
+## `gradeG:yq2007 Q3`        NA         NA      NA       NA    
+## `gradeB:yq2007 Q4` -2.40e-02   1.95e-03  -12.34  &lt; 2e-16 ***
+## `gradeC:yq2007 Q4` -3.57e-02   1.80e-03  -19.82  &lt; 2e-16 ***
+## `gradeD:yq2007 Q4` -5.00e-02   2.07e-03  -24.18  &lt; 2e-16 ***
+## `gradeE:yq2007 Q4` -5.08e-02   2.72e-03  -18.68  &lt; 2e-16 ***
+## `gradeF:yq2007 Q4` -5.44e-02   7.72e-03   -7.05  1.9e-12 ***
+## `gradeG:yq2007 Q4`        NA         NA      NA       NA    
+## `gradeB:yq2008 Q1` -2.29e-02   9.84e-04  -23.32  &lt; 2e-16 ***
+## `gradeC:yq2008 Q1` -3.34e-02   1.05e-03  -31.84  &lt; 2e-16 ***
+## `gradeD:yq2008 Q1` -4.56e-02   1.18e-03  -38.68  &lt; 2e-16 ***
+## `gradeE:yq2008 Q1` -5.33e-02   1.65e-03  -32.21  &lt; 2e-16 ***
+## `gradeF:yq2008 Q1` -5.64e-02   2.84e-03  -19.83  &lt; 2e-16 ***
+## `gradeG:yq2008 Q1` -6.32e-02   5.52e-03  -11.45  &lt; 2e-16 ***
+## `gradeB:yq2008 Q2` -2.28e-02   1.36e-03  -16.70  &lt; 2e-16 ***
+## `gradeC:yq2008 Q2` -3.38e-02   1.39e-03  -24.24  &lt; 2e-16 ***
+## `gradeD:yq2008 Q2` -4.73e-02   1.65e-03  -28.72  &lt; 2e-16 ***
+## `gradeE:yq2008 Q2` -5.15e-02   2.91e-03  -17.69  &lt; 2e-16 ***
+## `gradeF:yq2008 Q2` -5.83e-02   3.59e-03  -16.22  &lt; 2e-16 ***
+## `gradeG:yq2008 Q2`        NA         NA      NA       NA    
+## `gradeB:yq2008 Q3` -2.03e-02   1.74e-03  -11.64  &lt; 2e-16 ***
+## `gradeC:yq2008 Q3` -3.12e-02   1.67e-03  -18.67  &lt; 2e-16 ***
+## `gradeD:yq2008 Q3` -4.50e-02   2.10e-03  -21.41  &lt; 2e-16 ***
+## `gradeE:yq2008 Q3` -4.67e-02   3.01e-03  -15.54  &lt; 2e-16 ***
+## `gradeF:yq2008 Q3` -5.67e-02   4.07e-03  -13.92  &lt; 2e-16 ***
+## `gradeG:yq2008 Q3`        NA         NA      NA       NA    
+## `gradeB:yq2008 Q4` -1.85e-02   1.02e-03  -18.13  &lt; 2e-16 ***
+## `gradeC:yq2008 Q4` -3.05e-02   1.05e-03  -28.96  &lt; 2e-16 ***
+## `gradeD:yq2008 Q4` -4.38e-02   1.29e-03  -34.02  &lt; 2e-16 ***
+## `gradeE:yq2008 Q4` -4.91e-02   1.68e-03  -29.30  &lt; 2e-16 ***
+## `gradeF:yq2008 Q4` -5.31e-02   3.91e-03  -13.59  &lt; 2e-16 ***
+## `gradeG:yq2008 Q4` -5.53e-02   5.54e-03   -9.99  &lt; 2e-16 ***
+## `gradeB:yq2009 Q1` -1.31e-02   9.32e-04  -14.04  &lt; 2e-16 ***
+## `gradeC:yq2009 Q1` -2.48e-02   8.18e-04  -30.24  &lt; 2e-16 ***
+## `gradeD:yq2009 Q1` -4.05e-02   9.19e-04  -44.06  &lt; 2e-16 ***
+## `gradeE:yq2009 Q1` -4.42e-02   1.25e-03  -35.36  &lt; 2e-16 ***
+## `gradeF:yq2009 Q1` -4.82e-02   2.81e-03  -17.16  &lt; 2e-16 ***
+## `gradeG:yq2009 Q1`        NA         NA      NA       NA    
+## `gradeB:yq2009 Q2` -1.35e-02   7.24e-04  -18.63  &lt; 2e-16 ***
+## `gradeC:yq2009 Q2` -2.42e-02   7.53e-04  -32.16  &lt; 2e-16 ***
+## `gradeD:yq2009 Q2` -4.05e-02   9.25e-04  -43.72  &lt; 2e-16 ***
+## `gradeE:yq2009 Q2` -4.48e-02   1.31e-03  -34.14  &lt; 2e-16 ***
+## `gradeF:yq2009 Q2` -5.32e-02   2.41e-03  -22.07  &lt; 2e-16 ***
+## `gradeG:yq2009 Q2` -5.70e-02   4.10e-03  -13.90  &lt; 2e-16 ***
+## `gradeB:yq2009 Q3` -1.14e-02   6.34e-04  -18.03  &lt; 2e-16 ***
+## `gradeC:yq2009 Q3` -2.04e-02   6.93e-04  -29.44  &lt; 2e-16 ***
+## `gradeD:yq2009 Q3` -3.29e-02   8.75e-04  -37.60  &lt; 2e-16 ***
+## `gradeE:yq2009 Q3` -3.72e-02   1.13e-03  -32.88  &lt; 2e-16 ***
+## `gradeF:yq2009 Q3` -4.27e-02   1.86e-03  -22.95  &lt; 2e-16 ***
+## `gradeG:yq2009 Q3` -4.76e-02   3.16e-03  -15.04  &lt; 2e-16 ***
+## `gradeB:yq2009 Q4` -8.48e-03   5.66e-04  -14.99  &lt; 2e-16 ***
+## `gradeC:yq2009 Q4` -1.67e-02   6.16e-04  -27.16  &lt; 2e-16 ***
+## `gradeD:yq2009 Q4` -2.82e-02   7.05e-04  -40.03  &lt; 2e-16 ***
+## `gradeE:yq2009 Q4` -3.37e-02   1.11e-03  -30.40  &lt; 2e-16 ***
+## `gradeF:yq2009 Q4` -3.64e-02   1.72e-03  -21.18  &lt; 2e-16 ***
+## `gradeG:yq2009 Q4` -3.77e-02   2.56e-03  -14.74  &lt; 2e-16 ***
+## `gradeB:yq2010 Q1` -1.07e-02   5.40e-04  -19.79  &lt; 2e-16 ***
+## `gradeC:yq2010 Q1` -1.15e-02   6.01e-04  -19.18  &lt; 2e-16 ***
+## `gradeD:yq2010 Q1` -2.16e-02   6.84e-04  -31.60  &lt; 2e-16 ***
+## `gradeE:yq2010 Q1` -2.50e-02   1.02e-03  -24.57  &lt; 2e-16 ***
+## `gradeF:yq2010 Q1` -3.07e-02   1.79e-03  -17.11  &lt; 2e-16 ***
+## `gradeG:yq2010 Q1` -2.98e-02   3.11e-03   -9.58  &lt; 2e-16 ***
+## `gradeB:yq2010 Q2` -9.92e-03   4.80e-04  -20.66  &lt; 2e-16 ***
+## `gradeC:yq2010 Q2` -8.57e-03   5.27e-04  -16.26  &lt; 2e-16 ***
+## `gradeD:yq2010 Q2` -1.87e-02   5.94e-04  -31.45  &lt; 2e-16 ***
+## `gradeE:yq2010 Q2` -2.30e-02   7.79e-04  -29.48  &lt; 2e-16 ***
+## `gradeF:yq2010 Q2` -2.84e-02   1.31e-03  -21.61  &lt; 2e-16 ***
+## `gradeG:yq2010 Q2` -2.82e-02   2.66e-03  -10.60  &lt; 2e-16 ***
+## `gradeB:yq2010 Q3` -7.45e-03   4.61e-04  -16.16  &lt; 2e-16 ***
+## `gradeC:yq2010 Q3` -5.01e-03   5.06e-04   -9.91  &lt; 2e-16 ***
+## `gradeD:yq2010 Q3` -1.70e-02   5.67e-04  -30.07  &lt; 2e-16 ***
+## `gradeE:yq2010 Q3` -2.37e-02   6.80e-04  -34.90  &lt; 2e-16 ***
+## `gradeF:yq2010 Q3` -2.74e-02   1.09e-03  -25.01  &lt; 2e-16 ***
+## `gradeG:yq2010 Q3` -2.54e-02   1.88e-03  -13.50  &lt; 2e-16 ***
+## `gradeB:yq2010 Q4` -7.63e-03   4.27e-04  -17.88  &lt; 2e-16 ***
+## `gradeC:yq2010 Q4` -9.65e-04   4.81e-04   -2.01  0.04495 *  
+## `gradeD:yq2010 Q4` -1.26e-02   5.56e-04  -22.75  &lt; 2e-16 ***
+## `gradeE:yq2010 Q4` -1.65e-02   6.72e-04  -24.59  &lt; 2e-16 ***
+## `gradeF:yq2010 Q4` -1.94e-02   1.05e-03  -18.43  &lt; 2e-16 ***
+## `gradeG:yq2010 Q4` -1.93e-02   1.69e-03  -11.42  &lt; 2e-16 ***
+## `gradeB:yq2011 Q1` -5.83e-03   4.11e-04  -14.18  &lt; 2e-16 ***
+## `gradeC:yq2011 Q1` -2.39e-03   4.73e-04   -5.05  4.4e-07 ***
+## `gradeD:yq2011 Q1` -1.07e-02   5.27e-04  -20.32  &lt; 2e-16 ***
+## `gradeE:yq2011 Q1` -1.57e-02   6.06e-04  -25.96  &lt; 2e-16 ***
+## `gradeF:yq2011 Q1` -1.82e-02   8.54e-04  -21.28  &lt; 2e-16 ***
+## `gradeG:yq2011 Q1` -2.12e-02   1.56e-03  -13.66  &lt; 2e-16 ***
+## `gradeB:yq2011 Q2` -1.32e-03   3.91e-04   -3.38  0.00071 ***
+## `gradeC:yq2011 Q2`  3.94e-04   4.42e-04    0.89  0.37291    
+## `gradeD:yq2011 Q2` -4.20e-03   4.94e-04   -8.50  &lt; 2e-16 ***
+## `gradeE:yq2011 Q2` -5.54e-03   5.85e-04   -9.48  &lt; 2e-16 ***
+## `gradeF:yq2011 Q2` -5.15e-03   8.43e-04   -6.12  9.6e-10 ***
+## `gradeG:yq2011 Q2` -1.10e-02   1.59e-03   -6.89  5.6e-12 ***
+## `gradeB:yq2011 Q3`  1.31e-03   3.65e-04    3.60  0.00032 ***
+## `gradeC:yq2011 Q3`  2.39e-03   4.22e-04    5.66  1.5e-08 ***
+## `gradeD:yq2011 Q3` -3.51e-04   4.75e-04   -0.74  0.45961    
+## `gradeE:yq2011 Q3`  1.61e-03   5.76e-04    2.79  0.00532 ** 
+## `gradeF:yq2011 Q3`  9.30e-04   8.59e-04    1.08  0.27871    
+## `gradeG:yq2011 Q3` -1.69e-03   1.64e-03   -1.03  0.30231    
+## `gradeB:yq2011 Q4`        NA         NA      NA       NA    
+## `gradeC:yq2011 Q4`        NA         NA      NA       NA    
+## `gradeD:yq2011 Q4`        NA         NA      NA       NA    
+## `gradeE:yq2011 Q4`        NA         NA      NA       NA    
+## `gradeF:yq2011 Q4`        NA         NA      NA       NA    
+## `gradeG:yq2011 Q4`        NA         NA      NA       NA    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.00756 on 37738 degrees of freedom
+## Multiple R-squared:  0.959,  Adjusted R-squared:  0.959 
+## F-statistic: 6.78e+03 on 130 and 37738 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>data.frame(
+  time1$results$RMSE,
+  time2$results$RMSE,
+  time3$results$RMSE,
+  time4$results$RMSE)</code></pre>
+<p><table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:time trends">
+<col><col><col><col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time1.results.RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time2.results.RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time3.results.RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time4.results.RMSE</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0103</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.00905</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.00908</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.00758</td></tr>
+</table>
+
+## Q8 Based on your analysis above, is there any evidence to suggest that interest rates change over time? Does including time trends /quarter dummies imrpove predictions? {-}</p>
+<blockquote>
+<p>Based on our model, there is the evidence to suggest that interest rate change over time is significant. Including time trends or quarter dummier does improve the predictions.</p>
+</blockquote>
+</div>
+<div id="using-bond-yields" class="section level1">
+<h1>Using Bond Yields</h1>
+<p>One concern with using time trends for forecasting is that in order to make predictions for future loans we will need to project trends to the future. This is an extrapolation that may not be reasonable, especially if macroeconomic conditions in the future change. Furthermore, if we are using quarter dummies, it is not even possible to estimate the coefficient of these dummy variables for future quarters.</p>
+<p>Instead, perhaps it’s better to find the reasons as to why different periods are different from one another. The csv file “MonthBondYields.csv” contains information on the yield of US Treasuries on the first day of each month. Can you use it to see if you can improve your predictions without using time dummies?</p>
+<pre class="r"><code>#load the data to memory as a dataframe
+bond_prices&lt;-readr::read_csv(&quot;~/Documents/LBS/Data Science/Session 03/MonthBondYields.csv&quot;)
+
+#make the date of the bond file comparable to the lending club dataset
+#for some regional date/number (locale) settings this may not work. If it does try running the following line of code in the Console
+#Sys.setlocale(&quot;LC_TIME&quot;,&quot;English&quot;)
+bond_prices &lt;- bond_prices %&gt;%
+  mutate(Date2=as.Date(paste(&quot;01&quot;,Date,sep=&quot;-&quot;),&quot;%d-%b-%y&quot;)) %&gt;%
+  select(-starts_with(&quot;X&quot;))
+
+#let&#39;s see what happened to bond yields over time. Lower bond yields mean the cost of borrowing has gone down.
+
+bond_prices %&gt;%
+  ggplot(aes(x=Date2, y=Price))+geom_point(size=0.1, alpha=0.5)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/bond%20yields-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#join the data using a left join
+lc_with_bonds&lt;-lc_clean %&gt;%
+  left_join(bond_prices, by = c(&quot;issue_d&quot; = &quot;Date2&quot;)) %&gt;%
+  arrange(issue_d) %&gt;%
+  filter(!is.na(Price)) #drop any observations where there re no bond prices available
+
+# investigate graphically if there is a relationship 
+lc_with_bonds%&gt;%
+  ggplot(aes(x=int_rate, y=Price))+geom_point(size=0.1, alpha=0.5)+geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/bond%20yields-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>lc_with_bonds%&gt;%
+  ggplot(aes(x=int_rate, y=Price, color=grade))+geom_point(size=0.1, alpha=0.5)+geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="/portfolio/project-01_files/figure-html/bond%20yields-3.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#let&#39;s train a model using the bond information
+
+
+plsFit&lt;-train(
+    int_rate ~loan_amnt*grade+ term+ dti + Price*grade , #fill your variables here 
+    lc_with_bonds,
+   method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(plsFit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11745 -0.00581 -0.00030  0.00649  0.04073 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         6.79e-02   5.36e-04  126.68  &lt; 2e-16 ***
+## loan_amnt           1.80e-07   1.86e-08    9.64  &lt; 2e-16 ***
+## gradeB              5.35e-02   6.99e-04   76.54  &lt; 2e-16 ***
+## gradeC              8.63e-02   7.84e-04  110.05  &lt; 2e-16 ***
+## gradeD              1.19e-01   8.94e-04  133.27  &lt; 2e-16 ***
+## gradeE              1.43e-01   1.17e-03  122.79  &lt; 2e-16 ***
+## gradeF              1.67e-01   1.79e-03   93.10  &lt; 2e-16 ***
+## gradeG              1.90e-01   3.46e-03   55.06  &lt; 2e-16 ***
+## term60              1.51e-03   1.32e-04   11.38  &lt; 2e-16 ***
+## dti                 2.80e-05   7.45e-06    3.76  0.00017 ***
+## Price               1.30e-03   1.63e-04    8.01  1.2e-15 ***
+## `loan_amnt:gradeB` -9.48e-08   2.25e-08   -4.21  2.5e-05 ***
+## `loan_amnt:gradeC` -2.20e-07   2.42e-08   -9.09  &lt; 2e-16 ***
+## `loan_amnt:gradeD` -1.99e-09   2.57e-08   -0.08  0.93842    
+## `loan_amnt:gradeE`  6.44e-08   2.79e-08    2.31  0.02083 *  
+## `loan_amnt:gradeF`  6.99e-08   3.84e-08    1.82  0.06869 .  
+## `loan_amnt:gradeG` -1.21e-07   6.77e-08   -1.78  0.07491 .  
+## `gradeB:Price`     -5.77e-03   2.18e-04  -26.47  &lt; 2e-16 ***
+## `gradeC:Price`     -8.00e-03   2.43e-04  -32.93  &lt; 2e-16 ***
+## `gradeD:Price`     -1.27e-02   2.79e-04  -45.59  &lt; 2e-16 ***
+## `gradeE:Price`     -1.53e-02   3.61e-04  -42.29  &lt; 2e-16 ***
+## `gradeF:Price`     -1.67e-02   5.36e-04  -31.10  &lt; 2e-16 ***
+## `gradeG:Price`     -1.78e-02   9.98e-04  -17.83  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.00958 on 37845 degrees of freedom
+## Multiple R-squared:  0.934,  Adjusted R-squared:  0.934 
+## F-statistic: 2.43e+04 on 22 and 37845 DF,  p-value: &lt;2e-16</code></pre>
+<div id="q9.-do-bond-yields-have-any-explanatory-power" class="section level2">
+<h2>Q9. Do bond yields have any explanatory power?</h2>
+<blockquote>
+<p>Answer here: From the above, after including in our model “Price”, we can infer that the bonds have the explanatory power. However, the explanatory power increases our Adjusted R-squared less than the time trend/quarter variables.</p>
+</blockquote>
+</div>
+<div id="q10.-choose-a-model-and-describe-your-methodology" class="section level2 unnumbered">
+<h2>Q10. Choose a model and describe your methodology</h2>
+<p>Feel free to investigate more models with different features using the methodologies covered so far. Present the model you believe predicts interest rates the best. Describe how good it is (including the approximate length of the 95% Confidence Interval of predictions that use this model) and what features it uses. What methodology did you use to choose it? (Do not use time trends or quarter dummies in your model as the first cannot be extrapolated into the future reliably and the second cannot be even estimated for future quarters.)</p>
+<blockquote>
+<p>We were tryinig to add even more variables to our model, however, many of them turned out not to be significant. Our final model can be observed below. It has an explanatory power with adjusted R-squared of 93.57%. Tt has a Confidence Interval at 95% of ±0.01852592%. It can be used to accuratley predict the mean. We used the linear model with method of stepwise k-fold cross validation.</p>
+</blockquote>
+<pre class="r"><code>lc_with_yq_bonds&lt;- lc_with_bonds %&gt;% 
+  mutate(yq = as.factor(as.yearqtr(issue_d, format = &quot;%Y-%m-%d&quot;)))
+
+model_wild_west &lt;- train(
+    int_rate ~loan_amnt*grade+ term+ dti + poly(Price, 3)*grade, #fill your variables here 
+    lc_with_yq_bonds,
+   method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(model_wild_west)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11490 -0.00611  0.00008  0.00634  0.04152 
+## 
+## Coefficients:
+##                           Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)               7.17e-02   2.06e-04  347.71  &lt; 2e-16 ***
+## loan_amnt                 1.77e-07   1.84e-08    9.64  &lt; 2e-16 ***
+## gradeB                    3.69e-02   2.47e-04  149.48  &lt; 2e-16 ***
+## gradeC                    6.34e-02   2.71e-04  233.59  &lt; 2e-16 ***
+## gradeD                    8.28e-02   3.16e-04  262.05  &lt; 2e-16 ***
+## gradeE                    9.98e-02   4.24e-04  235.13  &lt; 2e-16 ***
+## gradeF                    1.19e-01   7.10e-04  167.76  &lt; 2e-16 ***
+## gradeG                    1.40e-01   1.44e-03   97.07  &lt; 2e-16 ***
+## term60                    1.68e-03   1.32e-04   12.70  &lt; 2e-16 ***
+## dti                       2.67e-05   7.36e-06    3.62  0.00029 ***
+## `poly(Price, 3)1`         1.64e-01   1.90e-02    8.61  &lt; 2e-16 ***
+## `poly(Price, 3)2`         3.28e-01   1.89e-02   17.37  &lt; 2e-16 ***
+## `poly(Price, 3)3`        -5.33e-02   1.80e-02   -2.97  0.00298 ** 
+## `loan_amnt:gradeB`       -1.06e-07   2.22e-08   -4.76  1.9e-06 ***
+## `loan_amnt:gradeC`       -2.27e-07   2.39e-08   -9.54  &lt; 2e-16 ***
+## `loan_amnt:gradeD`       -2.77e-08   2.55e-08   -1.09  0.27665    
+## `loan_amnt:gradeE`        3.50e-08   2.77e-08    1.27  0.20554    
+## `loan_amnt:gradeF`        4.85e-08   3.82e-08    1.27  0.20426    
+## `loan_amnt:gradeG`       -1.69e-07   6.74e-08   -2.50  0.01227 *  
+## `gradeB:poly(Price, 3)1` -6.95e-01   2.55e-02  -27.22  &lt; 2e-16 ***
+## `gradeC:poly(Price, 3)1` -9.35e-01   2.85e-02  -32.78  &lt; 2e-16 ***
+## `gradeD:poly(Price, 3)1` -1.54e+00   3.28e-02  -46.93  &lt; 2e-16 ***
+## `gradeE:poly(Price, 3)1` -1.83e+00   4.30e-02  -42.66  &lt; 2e-16 ***
+## `gradeF:poly(Price, 3)1` -1.97e+00   6.32e-02  -31.09  &lt; 2e-16 ***
+## `gradeG:poly(Price, 3)1` -2.21e+00   1.33e-01  -16.53  &lt; 2e-16 ***
+## `gradeB:poly(Price, 3)2` -1.28e-01   2.58e-02   -4.97  6.6e-07 ***
+## `gradeC:poly(Price, 3)2` -4.49e-01   2.74e-02  -16.38  &lt; 2e-16 ***
+## `gradeD:poly(Price, 3)2` -2.99e-01   3.26e-02   -9.15  &lt; 2e-16 ***
+## `gradeE:poly(Price, 3)2` -2.61e-01   4.50e-02   -5.81  6.4e-09 ***
+## `gradeF:poly(Price, 3)2` -3.54e-01   6.09e-02   -5.80  6.6e-09 ***
+## `gradeG:poly(Price, 3)2`  5.94e-02   1.74e-01    0.34  0.73290    
+## `gradeB:poly(Price, 3)3` -8.69e-02   2.55e-02   -3.41  0.00066 ***
+## `gradeC:poly(Price, 3)3` -1.70e-01   2.66e-02   -6.39  1.7e-10 ***
+## `gradeD:poly(Price, 3)3` -3.55e-01   3.38e-02  -10.50  &lt; 2e-16 ***
+## `gradeE:poly(Price, 3)3` -3.43e-01   4.44e-02   -7.73  1.1e-14 ***
+## `gradeF:poly(Price, 3)3` -2.34e-01   5.34e-02   -4.39  1.1e-05 ***
+## `gradeG:poly(Price, 3)3` -4.18e-01   1.82e-01   -2.29  0.02213 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.00945 on 37831 degrees of freedom
+## Multiple R-squared:  0.936,  Adjusted R-squared:  0.936 
+## F-statistic: 1.53e+04 on 36 and 37831 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>0.009452*1.96</code></pre>
+<pre><code>## [1] 0.0185</code></pre>
+</div>
+<div id="q11.-optional-use-other-publicly-available-datasets-to-further-improve-performance-e.g.-quarterly-data-on-us-inflation-or-cpi.-explain-why-you-think-the-additional-data-will-make-a-difference-and-check-if-it-does." class="section level2 unnumbered">
+<h2>Q11. (optional) Use other publicly available datasets to further improve performance (e.g., quarterly data on US inflation or <a href="https://fred.stlouisfed.org/series/CPALTT01USQ657N">CPI</a>). Explain why you think the additional data will make a difference and check if it does.</h2>
+<blockquote>
+<p>Changes in CPI should correlate to changes in inflation, therefore such a variable can better explain behaviour of interest rates in the market as behaviour of inlfation partially explaines the behaviour of loan takers and actions of investors/government.</p>
+</blockquote>
+<pre class="r"><code>CPI_df &lt;- read_csv(&quot;~/Documents/LBS/Data Science/Session 03/CPALTT01USM657N.csv&quot;) %&gt;%  clean_names() # use janitor::clean_names()
+
+glimpse(CPI_df)</code></pre>
+<pre><code>## Rows: 727
+## Columns: 2
+## $ date            &lt;date&gt; 1960-01-01, 1960-02-01, 1960-03-01, 1960-04-01, 1960…
+## $ cpaltt01usm657n &lt;dbl&gt; -0.340, 0.341, 0.000, 0.340, 0.000, 0.339, 0.000, 0.0…</code></pre>
+<pre class="r"><code>lc_with_CPI&lt;-lc_with_bonds %&gt;%
+  left_join(CPI_df, by = c(&quot;issue_d&quot; = &quot;date&quot;)) %&gt;%
+  arrange(issue_d)
+
+glimpse(lc_with_CPI)</code></pre>
+<pre><code>## Rows: 37,868
+## Columns: 27
+## $ int_rate            &lt;dbl&gt; 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.08, 0…
+## $ loan_amnt           &lt;dbl&gt; 5750, 5000, 5000, 5000, 5000, 5000, 5000, 5400, 5…
+## $ dti                 &lt;dbl&gt; 0.27, 2.55, 0.00, 3.83, 2.29, 0.31, 3.72, 3.00, 5…
+## $ delinq_2yrs         &lt;fct&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0…
+## $ annual_inc          &lt;dbl&gt; 125000, 40000, 150000, 95000, 120000, 85000, 2000…
+## $ grade               &lt;chr&gt; &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;,…
+## $ emp_length          &lt;fct&gt; 10+ years, 6 years, 8 years, 7 years, 8 years, 1 …
+## $ home_ownership      &lt;chr&gt; &quot;MORTGAGE&quot;, &quot;RENT&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORT…
+## $ verification_status &lt;chr&gt; &quot;Not Verified&quot;, &quot;Not Verified&quot;, &quot;Not Verified&quot;, &quot;…
+## $ issue_d             &lt;date&gt; 2007-07-01, 2007-07-01, 2007-07-01, 2007-07-01, …
+## $ zip_code            &lt;chr&gt; &quot;020xx&quot;, &quot;547xx&quot;, &quot;303xx&quot;, &quot;017xx&quot;, &quot;017xx&quot;, &quot;537…
+## $ addr_state          &lt;chr&gt; &quot;MA&quot;, &quot;WI&quot;, &quot;GA&quot;, &quot;MA&quot;, &quot;MA&quot;, &quot;WI&quot;, &quot;MD&quot;, &quot;GA&quot;, &quot;…
+## $ loan_status         &lt;chr&gt; &quot;Fully Paid&quot;, &quot;Fully Paid&quot;, &quot;Fully Paid&quot;, &quot;Fully …
+## $ desc                &lt;chr&gt; &quot;consolidate debt on several credit cards.&quot;, &quot;Hel…
+## $ purpose             &lt;chr&gt; &quot;debt_consolidation&quot;, &quot;car&quot;, &quot;home_improvement&quot;, …
+## $ title               &lt;chr&gt; &quot;consolidate debt&quot;, &quot;$5000 car loan to be paid ba…
+## $ term                &lt;fct&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
+## $ term_months         &lt;dbl&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
+## $ installment         &lt;dbl&gt; 178.7, 155.4, 155.4, 155.4, 155.4, 155.4, 155.4, …
+## $ emp_title           &lt;chr&gt; &quot;FDA&quot;, &quot;Norman G. Olson Insurance&quot;, &quot;Oracle Corpo…
+## $ Date                &lt;chr&gt; &quot;Jul-07&quot;, &quot;Jul-07&quot;, &quot;Jul-07&quot;, &quot;Jul-07&quot;, &quot;Jul-07&quot;,…
+## $ Price               &lt;dbl&gt; 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4…
+## $ Open                &lt;dbl&gt; 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4…
+## $ High                &lt;dbl&gt; 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4…
+## $ Low                 &lt;dbl&gt; 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4.73, 4…
+## $ `Change %`          &lt;chr&gt; &quot;-5.85%&quot;, &quot;-5.85%&quot;, &quot;-5.85%&quot;, &quot;-5.85%&quot;, &quot;-5.85%&quot;,…
+## $ cpaltt01usm657n     &lt;dbl&gt; -0.0254, -0.0254, -0.0254, -0.0254, -0.0254, -0.0…</code></pre>
+<pre class="r"><code>model_wild_west2 &lt;- train(
+    int_rate ~loan_amnt*grade+ term+ dti + poly(Price, 3)*grade+cpaltt01usm657n*grade , #fill your variables here 
+    lc_with_CPI,
+   method = &quot;lm&quot;,
+    trControl = control
+   )</code></pre>
+<pre><code>## + Fold01: intercept=TRUE 
+## - Fold01: intercept=TRUE 
+## + Fold02: intercept=TRUE 
+## - Fold02: intercept=TRUE 
+## + Fold03: intercept=TRUE 
+## - Fold03: intercept=TRUE 
+## + Fold04: intercept=TRUE 
+## - Fold04: intercept=TRUE 
+## + Fold05: intercept=TRUE 
+## - Fold05: intercept=TRUE 
+## + Fold06: intercept=TRUE 
+## - Fold06: intercept=TRUE 
+## + Fold07: intercept=TRUE 
+## - Fold07: intercept=TRUE 
+## + Fold08: intercept=TRUE 
+## - Fold08: intercept=TRUE 
+## + Fold09: intercept=TRUE 
+## - Fold09: intercept=TRUE 
+## + Fold10: intercept=TRUE 
+## - Fold10: intercept=TRUE 
+## Aggregating results
+## Fitting final model on full training set</code></pre>
+<pre class="r"><code>summary(model_wild_west2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11468 -0.00596  0.00022  0.00618  0.03999 
+## 
+## Coefficients:
+##                           Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)               7.30e-02   2.10e-04  347.86  &lt; 2e-16 ***
+## loan_amnt                 1.76e-07   1.81e-08    9.72  &lt; 2e-16 ***
+## gradeB                    3.64e-02   2.53e-04  143.79  &lt; 2e-16 ***
+## gradeC                    6.22e-02   2.76e-04  225.17  &lt; 2e-16 ***
+## gradeD                    8.15e-02   3.22e-04  253.11  &lt; 2e-16 ***
+## gradeE                    9.83e-02   4.29e-04  228.85  &lt; 2e-16 ***
+## gradeF                    1.18e-01   7.19e-04  164.23  &lt; 2e-16 ***
+## gradeG                    1.39e-01   1.46e-03   95.54  &lt; 2e-16 ***
+## term60                    1.95e-03   1.32e-04   14.82  &lt; 2e-16 ***
+## dti                       2.94e-05   7.26e-06    4.05  5.1e-05 ***
+## `poly(Price, 3)1`         4.06e-01   2.10e-02   19.29  &lt; 2e-16 ***
+## `poly(Price, 3)2`         3.06e-01   1.87e-02   16.42  &lt; 2e-16 ***
+## `poly(Price, 3)3`        -1.34e-01   1.80e-02   -7.45  9.6e-14 ***
+## cpaltt01usm657n          -8.30e-03   3.25e-04  -25.52  &lt; 2e-16 ***
+## `loan_amnt:gradeB`       -1.15e-07   2.19e-08   -5.26  1.4e-07 ***
+## `loan_amnt:gradeC`       -2.32e-07   2.35e-08   -9.85  &lt; 2e-16 ***
+## `loan_amnt:gradeD`       -3.01e-08   2.51e-08   -1.20  0.23104    
+## `loan_amnt:gradeE`        3.32e-08   2.73e-08    1.21  0.22467    
+## `loan_amnt:gradeF`        5.77e-08   3.78e-08    1.53  0.12701    
+## `loan_amnt:gradeG`       -1.68e-07   6.65e-08   -2.53  0.01130 *  
+## `gradeB:poly(Price, 3)1` -7.78e-01   2.81e-02  -27.68  &lt; 2e-16 ***
+## `gradeC:poly(Price, 3)1` -1.13e+00   3.12e-02  -36.17  &lt; 2e-16 ***
+## `gradeD:poly(Price, 3)1` -1.75e+00   3.59e-02  -48.68  &lt; 2e-16 ***
+## `gradeE:poly(Price, 3)1` -2.07e+00   4.87e-02  -42.39  &lt; 2e-16 ***
+## `gradeF:poly(Price, 3)1` -2.05e+00   7.63e-02  -26.84  &lt; 2e-16 ***
+## `gradeG:poly(Price, 3)1` -2.30e+00   1.44e-01  -15.96  &lt; 2e-16 ***
+## `gradeB:poly(Price, 3)2` -1.28e-01   2.55e-02   -5.03  4.9e-07 ***
+## `gradeC:poly(Price, 3)2` -4.33e-01   2.71e-02  -15.98  &lt; 2e-16 ***
+## `gradeD:poly(Price, 3)2` -2.78e-01   3.23e-02   -8.61  &lt; 2e-16 ***
+## `gradeE:poly(Price, 3)2` -2.34e-01   4.45e-02   -5.27  1.4e-07 ***
+## `gradeF:poly(Price, 3)2` -3.47e-01   6.04e-02   -5.75  9.2e-09 ***
+## `gradeG:poly(Price, 3)2`  8.95e-02   1.72e-01    0.52  0.60201    
+## `gradeB:poly(Price, 3)3` -6.12e-02   2.55e-02   -2.40  0.01655 *  
+## `gradeC:poly(Price, 3)3` -1.01e-01   2.66e-02   -3.81  0.00014 ***
+## `gradeD:poly(Price, 3)3` -2.80e-01   3.37e-02   -8.31  &lt; 2e-16 ***
+## `gradeE:poly(Price, 3)3` -2.61e-01   4.44e-02   -5.87  4.3e-09 ***
+## `gradeF:poly(Price, 3)3` -1.88e-01   5.37e-02   -3.51  0.00045 ***
+## `gradeG:poly(Price, 3)3` -3.84e-01   1.82e-01   -2.11  0.03460 *  
+## `gradeB:cpaltt01usm657n`  2.91e-03   4.29e-04    6.79  1.1e-11 ***
+## `gradeC:cpaltt01usm657n`  6.80e-03   4.65e-04   14.61  &lt; 2e-16 ***
+## `gradeD:cpaltt01usm657n`  7.51e-03   5.37e-04   14.00  &lt; 2e-16 ***
+## `gradeE:cpaltt01usm657n`  8.29e-03   6.71e-04   12.36  &lt; 2e-16 ***
+## `gradeF:cpaltt01usm657n`  4.54e-03   1.11e-03    4.08  4.4e-05 ***
+## `gradeG:cpaltt01usm657n`  4.67e-03   1.66e-03    2.82  0.00486 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.00932 on 37824 degrees of freedom
+## Multiple R-squared:  0.937,  Adjusted R-squared:  0.937 
+## F-statistic: 1.32e+04 on 43 and 37824 DF,  p-value: &lt;2e-16</code></pre>
+</div>
+</div>
