@@ -1,8 +1,8 @@
 ---
 author: Agnieszka Prawda
 date: "2019-12-24T13:45:06+06:00"
-feature_image: images/blog/blog-details-image.jpg
-image: images/blog/cover_meetable.png
+feature_image: images/blog/cover_meetable.jpg
+image: images/blog/cover_meetable.jpg
 title: 'Oxford Hack 2020 - Meetable MVP'
 ---
 ### Oxford Hack 2020 - Meetable
@@ -17,16 +17,16 @@ As an Executive Committee member of the Entrepreneurship Club at London Business
 Therefore, last weekend I joined my first hackathon organised by the University of Oxford - #OxfordHack2020 and created a marvelous team with Yash Dandavate, Samuel Ola, and Jason Zhao.
 
 
-![Meetable](vid/Meetable_1.mp4)
 
-[!Meetable](https://i.imgur.com/vKb2F1B.png)](https://youtu.be/vt5fpE0bzSY)
-
-
-[![Meetable](https://img.youtu.be/vt5fpE0bzSY/0.jpg)](https://youtu.be/vt5fpE0bzSY)
-
-[![Meetable](image/blog/1.png)](https://youtu.be/vt5fpE0bzSY)
+[![Meetable](/images/blog/blog_post_01.jpg)](https://youtu.be/4A4NiSxpHXk)
 
 
+
+[![Meetable](https://img.youtube.com/vi/4A4NiSxpHXk/0.jpg)](https://youtu.be/4A4NiSxpHXk)
+
+
+https://img.youtube.com/vi/4A4NiSxpHXk/maxresdefault.jpg
+https://img.youtube.com/vi/4A4NiSxpHXk/hqdefault.jpg
 
 We spent 36 h working on the creation of the MVP - including the development of the UI & UX, logistics behind the product, ways of gaining revenue, and coding the backend & frontend of the app.
 
@@ -36,7 +36,7 @@ Within a few hours, we managed to conduct the survey and get 54 responses that c
 
 It was an absolute pleasure to work with such fantastic, creative, and open people! Thank you so much team once again for making this experience so priceless and amusing!
 
-![meetable_logo](blog/1.png)
+![meetable_logo](/images/blog/blog_post_01.jpg)
 
 Black Lines wants it to be as easy to serve a Negroni as it is a pint of lager. The drinks company is seeking to revolutionise the bar experience by serving cocktails by draught with a changing menu of drinks (as well as same favourite stand-bys). A pink grapefruit spritz was served through the summer while a new pear and white tea fizz joins the line-up for winter.
 
