@@ -1,8 +1,8 @@
 enable  : false
-title   : My Profile:
-members  :
+title   : Team that makes the difference.
+members :
   - image       : images/team/team-member-one.jpg
-    name        : Agnieszka Prawda
+    name        : PABLO ESCOBAR
     designation : Creative Director
     medium      : https://www.medium.com/
     linkedIn    : https://www.linkedin.com/
