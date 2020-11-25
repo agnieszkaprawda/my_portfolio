@@ -14,9 +14,6 @@ sections:
   path: data/clients.yml
   label: Clients
 - type: document
-  path: data/testimonial.yml
-  label: Testimonials
-- type: document
   path: config.toml
   label: Configuration
 - type: directory
