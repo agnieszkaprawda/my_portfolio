@@ -6,10 +6,37 @@
     <description>Recent content on Roxo | Creative Design Agency</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 23 Nov 2020 13:45:06 +0600</lastBuildDate>
+    <lastBuildDate>Wed, 25 Nov 2020 15:58:10 +0600</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Predicting interest rates at the Lending Club</title>
+      <link>/portfolio/project-01/</link>
+      <pubDate>Wed, 25 Nov 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/portfolio/project-01/</guid>
+      <description>In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding.</description>
+    </item>
+    
+    <item>
+      <title>TEST PROJECT</title>
+      <link>/about/project-02/</link>
+      <pubDate>Wed, 25 Nov 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/about/project-02/</guid>
+      <description>In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding.</description>
+    </item>
+    
+    <item>
+      <title>TEST PROJECT</title>
+      <link>/portfolio/project-02/</link>
+      <pubDate>Wed, 25 Nov 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/portfolio/project-02/</guid>
+      <description>In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding.</description>
+    </item>
     
     <item>
       <title>Oxford Hack 2020 - Meetable MVP</title>
@@ -27,16 +54,6 @@
       
       <guid>/design-inspiration-the-best-projects-from-november/</guid>
       <description>Black Lines brand identity, by &amp;amp; Smith Black Lines wants it to be as easy to serve a Negroni as it is a pint of lager.</description>
-    </item>
-    
-    <item>
-      <title>KIO-TAPE BRAND</title>
-      <link>/portfolio/kio-tape-2/</link>
-      <pubDate>Mon, 23 Dec 2019 20:56:42 +0600</pubDate>
-      
-      <guid>/portfolio/kio-tape-2/</guid>
-      <description>The “Seamless Watch” watch has all the features that users expect in a digital watch, and some unusual features.
-The watch has the following features:</description>
     </item>
     
     <item>

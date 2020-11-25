@@ -1,0 +1,46 @@
+---
+category:
+- Data Science
+date: "2020-11-25T15:58:10+06:00"
+image: images/projects/project-thumb-one.jpg
+project_images:
+- images/projects/project-details-image-one.jpg
+- images/projects/project-details-image-two.jpg
+title: TEST PROJECT
+type: portfolio
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r, load_libraries, include = FALSE}
+library(tidyverse) # the usual stuff: dplyr, readr, and other goodies
+library(lubridate) # to handle dates
+library(GGally) # for correlation-scatterplot matrix
+library(car) # vif() function to check for multicolinearity
+library(ggfortify) # to produce residual diagnostic plots
+library(rsample) # to split dataframe in training- & testing sets
+library(here) # to read files and organise data
+library(janitor) # clean_names()
+library(broom) # use broom:augment() to get tidy table with regression output, residuals, etc
+library(huxtable) # to get summary table of all models produced
+library(caret) # to train more advanced models (k-fold cross-validation, stepwise regression, LASSO)
+library(zoo) #to allow for timeseries operations
+
+```
+
+
+In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, we will first build a linear regression model

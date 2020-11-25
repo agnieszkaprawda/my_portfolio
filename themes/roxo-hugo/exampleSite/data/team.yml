@@ -1,6 +1,6 @@
 enable  : true
 title   : Team that makes the difference.
-members  :
+members :
   - image       : images/team/team-member-one.jpg
     name        : PABLO ESCOBAR
     designation : Creative Director

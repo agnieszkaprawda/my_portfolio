@@ -1,16 +1,14 @@
 ---
-categories:
-- ""
-- ""
-date: "2017-10-31T21:28:43-05:00"
-description: ""
-draft: false
-keywords: ""
-slug: project2
-title: "Predicting interest rates at the Lending Club"
-image: project02.jpg
+category:
+- Data Science
+date: "2020-11-25T15:58:10+06:00"
+image: images/projects/project-thumb-one.jpg
+project_images:
+- images/projects/project-details-image-one.jpg
+- images/projects/project-details-image-two.jpg
+title: Predicting interest rates at the Lending Club
+type: portfolio
 ---
-
 ```{r, setup, include=FALSE}
 knitr::opts_chunk$set(
   message = FALSE, 
