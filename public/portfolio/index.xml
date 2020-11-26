@@ -69,5 +69,32 @@ The watch has the following features:</description>
 The watch has the following features:</description>
     </item>
     
+    <item>
+      <title>Predicting AirBnb Prices in Munich</title>
+      <link>/portfolio/munich_airbnb_2214/</link>
+      <pubDate>Mon, 23 Dec 2019 15:44:46 +0600</pubDate>
+      
+      <guid>/portfolio/munich_airbnb_2214/</guid>
+      <description>Airbnb is a prime example of a disruptive innovation, that is now one of the largest marketplaces for accomodation with over 7 million properties in more than 220 countries.</description>
+    </item>
+    
+    <item>
+      <title>Problem Set2</title>
+      <link>/portfolio/problem_set_2/</link>
+      <pubDate>Mon, 23 Dec 2019 15:44:46 +0600</pubDate>
+      
+      <guid>/portfolio/problem_set_2/</guid>
+      <description>Let’s begin Hello, my name is Agnieszka, I am going to visualise three data visualisations basing on the Stop &amp;amp; Search dataset. You can find more on the topic here: https://www.</description>
+    </item>
+    
+    <item>
+      <title>Stop &amp; Search Data</title>
+      <link>/portfolio/worst_graph/</link>
+      <pubDate>Mon, 23 Dec 2019 15:44:46 +0600</pubDate>
+      
+      <guid>/portfolio/worst_graph/</guid>
+      <description>R Markdown Kick Off This is a Problem Set 1 document created by Agnieszka Prawda. It includes data on thw worst possible grpah and graphs on the “Seek and Search” Problem.</description>
+    </item>
+    
   </channel>
 </rss>

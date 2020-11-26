@@ -1,0 +1,814 @@
+---
+category:
+- DATA SCIENCE
+date: "2019-12-23T15:44:46+06:00"
+image: images/projects/project-thumb-four.jpg
+project_images:
+- images/projects/project-details-image-one.jpg
+- images/projects/project-details-image-two.jpg
+title: Predicting AirBnb Prices in Munich
+type: portfolio
+---
+
+Airbnb is a prime example of a disruptive innovation, that is now one of the largest marketplaces for accomodation with over 7 million properties in more than 220 countries*. With this project we sought to utilize scraped data from Airbnb listings to carry out statistical analyses and ultimately predict the total cost for two people staying four nights in the city of Munich, Germany.
+After initial cleaning and wrangling of the dataset, an exploratory data analysis (EDA) was carried out to investigate existing relationships between variables, especially within and between price, neighbourhood / region, room and property type, as well as reviews and cancellation policy. As will be explained in greater detail below, we grouped the neighbourhoods within zones based on both personal experience and an official map of zones based on accomodation quality and price from the city of Munich. Key observations within our EDA were that there is a heavily right skewed distribution of price and reviews, and that no linear relationship regarding price could be observed; this led us to use the log of the total price for 4 days going forward with our regression.
+We progressively improved our model of regression by investigating the effect of all variables as displayed through t- and p-values. Our final and best model includes the most extensive list of variables, including for example the addition of logical variables for the only two significant amenities (elevator and shampoo). We ultimately arrived at an adjusted R-squared value of around 40%. Given that the correlation matrix and other early analyses showed rather weak / limited relationships between variables, we believe this is a good result based on the given dataset. Lastly, plots of residuals (i.e. QQ-plot, residuals vs. fitted) as well as variation inflation factor analyses showed that all assumptions of a linear regression (L-I-N-E) were met.
+*[Source](https://news.airbnb.com/about-us/)
+
+(Chunk 1: Introduction of project)
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+Importing original data and libraries we need:
+```{r libraries_imported}
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(skimr)
+library(janitor)
+library(broom)
+library(infer)
+library(vroom)
+library(stringr)
+library(leaflet)
+library(broom)
+library(huxtable)
+library(ggfortify)
+library(rsample)
+```
+
+
+```{r dl_data,echo=TRUE, results='hide'}
+listings <- vroom("http://data.insideairbnb.com/germany/bv/munich/2020-06-20/data/listings.csv.gz") %>% 
+    clean_names()
+#glimpse(listings) # checking variable headers
+
+```
+
+# Data Preprocessing
+
+## Selecting variables and changing to the relevant type
+
+We first select all potentially relevant variables from our data frame. The data is cleaned into number or factor to begin Exploratory Data Analysis (EDA). The raw dataset we create here is called "munich_listings".
+
+```{r variable_selection}
+#Selecting all the relevant variables
+munich_listings<- listings %>% 
+  select(id, 
+         host_is_superhost,
+         host_listings_count,
+         neighbourhood_cleansed,
+         latitude,
+         longitude,
+         property_type,
+         room_type,
+         accommodates,
+         bathrooms,
+         bedrooms,
+         beds,
+         bed_type,
+          #square_feet, we noticed that a lot of values are missing so excluded this variable
+         price,
+         security_deposit,
+         cleaning_fee,
+         guests_included,
+         extra_people,
+         minimum_nights,
+         maximum_nights,
+         number_of_reviews,
+         reviews_per_month,
+         review_scores_rating,
+         review_scores_accuracy,
+         review_scores_cleanliness,
+         review_scores_checkin,
+         review_scores_communication,
+         review_scores_location,
+         review_scores_value,
+         is_location_exact,
+         amenities,
+         instant_bookable,
+         cancellation_policy,
+         availability_365,
+         availability_90,
+         last_review,
+         listing_url,
+         last_scraped) %>% 
+#Converting characters to "doubles" and factors where appropriate
+  mutate(neighbourhood_cleansed=factor(neighbourhood_cleansed),
+         property_type,
+         room_type=factor(room_type),
+         price=parse_number(price),
+         security_deposit=parse_number(security_deposit),
+         cleaning_fee=parse_number(cleaning_fee),
+         extra_people=parse_number(extra_people),
+         cancellation_policy=factor(cancellation_policy),
+         bed_type=factor(bed_type),
+         amenities_count= str_count(listings$amenities, ","))
+
+
+
+#Inspecting data frame to make sure all the variables are correctly attributed
+glimpse(munich_listings) 
+```
+
+In "munich_listing", we have 11172 items and 46 columns. Here are some noticeable changes we made: 
+1. neighbourhood_cleansed, room_type, cancellation_policy and bed_type are changed into factors.
+1. price, security_deposit, cleaning_fee, extra_people and amenities_count are changed into numbers.
+
+So now we have:
+host_is_superhost, is_location_exact, instant_bookable as logical variable
+neighbourhood_cleansed, room_type, bed_type, cancellation_policy as factor variable
+amenitiesm, property_type as character variable
+
+
+## Data cleaning
+
+We now create a new data frame called "munich_listings_cleaned" to do some required changes. Here, we deal with missing values/NAs, and clean the data for property type. Also, we filter the items upon min/max nights and accommodates for the 2 people to live for 4 nights.
+```{r}
+#Filter dataset for two people and 4 nights
+#Clean dataset for cleaning_fee, security_deposit, property_type, minimum_nights and accommodates
+munich_listings_cleaned <- munich_listings %>%
+  mutate(cleaning_fee = case_when(      #considering cleaning_fee as 0 if displayed as NA
+    is.na(cleaning_fee) ~ 0, 
+    TRUE ~ cleaning_fee),
+    security_deposit = case_when(      #considering security_deposit as 0 if displayed as NA
+    is.na(security_deposit) ~ 0, 
+    TRUE ~ security_deposit),
+    prop_type_simplified = case_when(   #regrouping of property_types: put all less popular property types into "Other"
+    property_type %in% c("Apartment",
+                         "House",
+                         "Condominium",
+                         "Loft")~ property_type , 
+    TRUE ~ "Other"),
+    prop_type_simplified=factor(prop_type_simplified)) %>% #creating factors
+  filter(minimum_nights<=4, 
+         maximum_nights>=4, 
+         accommodates>=2) #filtering dataframe for 2 people and 4 nights
+
+#Visually inspecting cleaned data set
+#glimpse(munich_listings_cleaned)
+#skim(munich_listings_cleaned)
+```
+
+For the NAs:
+We assume NA as 0 in cleaning fee and security deposit, which means we can book Airbnb without paying for these 2 services. So we didn't make deletion here.
+
+For property_type: 
+We arranged the data set and find the top 5 kinds of Airbnbs in Munich, which are Apartment, House, Condominium, Loft and others. We transferred the variable into factors.
+
+Filtering:
+We filter the room with minimum_night and maximum_night so that they can be booked for a 4-night stay. Also, the room should accommodate at least 2 people.
+
+## Calculating total price
+
+Then, we construct the formula for the total price of 4 days into data frame munich_listings_total_price:
+We create `total_price_4_days` as our target variable for regression representing total price of 4-night stay of two people. Note that the `if_else` statement allows us to include the option of adding 1 extra guest to an AirBnB that has accommodates = 1. The final multiplier of 1.142 is the 14.2% (service fee)[https://www.airbnb.co.uk/help/article/1857/what-are-airbnb-service-fees#:~:text=Host%20service%20fee&text=This%20fee%20is%20calculated%20from,deducted%20from%20the%20host%20payout] for AirBnB bookings that the company charges per booking. 
+
+```{r}
+
+munich_listings_total_price<-munich_listings_cleaned %>% 
+  mutate(total_price_4_days=price*4+ #calculating the total price for 4 days 2 guests
+           cleaning_fee+
+           if_else(guests_included==1, 
+                   extra_people*4,0))
+```
+
+## Creating a new data frame for further analysis
+
+We now create a new data frame called "munich_listings_region" grouping the Airbnbs geographically and making some changes for the subsequent analysis.
+
+Three variable classes are created: 
+region: grouped into 5 by the average price of each neighborhood
+rating_group: grouped into 3 by whether the rating is over 90
+Amenities: Many different amenity words were checked for significance, only two remained. Interestingly theyre shampoo and elevator.
+```{r}
+munich_listings_region <- munich_listings_total_price %>% 
+  mutate(
+region = case_when( #creating variable that clusters neighbourhoods for further analysis
+      neighbourhood_cleansed=="Altstadt-Lehel"~"zone_1",
+      neighbourhood_cleansed=="Ludwigsvorstadt-Isarvorstadt"~"zone_1",
+      neighbourhood_cleansed=="Maxvorstadt"~"zone_1",
+      neighbourhood_cleansed=="Schwabing-West"~"zone_2",
+      neighbourhood_cleansed=="Au-Haidhausen"~"zone_2",
+      neighbourhood_cleansed=="Sendling"~"zone_2",
+      neighbourhood_cleansed=="Sendling-Westpark"~"zone_2",
+      neighbourhood_cleansed=="Schwanthalerhöhe"~"zone_1",
+      neighbourhood_cleansed=="Neuhausen-Nymphenburg"~"zone_3",
+      neighbourhood_cleansed=="Moosach"~"zone_5",
+      neighbourhood_cleansed=="Milbertshofen-Am Hart"~"zone_5",
+      neighbourhood_cleansed=="Schwabing-Freimann"~"zone_3",
+      neighbourhood_cleansed=="Bogenhausen"~"zone_4",
+      neighbourhood_cleansed=="Berg am Laim"~"zone_4",
+      neighbourhood_cleansed=="Tudering-Riem"~"zone_1",
+      neighbourhood_cleansed=="Ramersdorf-Perlach"~"zone_5",
+      neighbourhood_cleansed=="Obergiesing"~"zone_2",
+      neighbourhood_cleansed=="Untergiesing-Harlaching"~"zone_4",
+      neighbourhood_cleansed=="Thalkirchen-Obersendling-Forstenried-Fürstenried-Solln"~"zone_3",
+      neighbourhood_cleansed=="Hadern"~"zone_5",
+      neighbourhood_cleansed=="Pasing-Obermenzing"~"zone_3",
+      neighbourhood_cleansed=="Aubing-Lochhausen-Langwied"~"zone_4",
+      neighbourhood_cleansed=="Allach-Untermenzing"~"zone_3",
+      neighbourhood_cleansed=="Feldmoching-Hasenbergl"~"zone_3",
+      neighbourhood_cleansed=="Laim"~"zone_5"
+      ),
+rating_group= case_when( #clustering review_scores_rating to 2 groups
+  review_scores_rating <90 ~ "Under 90",
+  TRUE ~ "Over 90"),
+# is_pool=case_when(
+#   grepl("Pool", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_gym=case_when(
+#   grepl("Gym", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_private_entrance=case_when(
+#   grepl("Private entrance", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_balcony=case_when(
+#   grepl("balcony", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_kitchen=case_when(
+#   grepl("Kitchen", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+is_elevator=case_when( # turned out to be significant
+  grepl("Elevator", 
+        amenities, 
+        fixed=TRUE) ~ TRUE,
+  TRUE ~FALSE),
+# is_washer=case_when(
+#   grepl("Washer", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_dryer=case_when(
+#   grepl("Dryer", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_free_parking=case_when(
+#   grepl("Free parking on premises", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_paid_parking=case_when(
+#   grepl("Paid parking off premises", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_essentials=case_when(
+#   grepl("Essentials", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+is_shampoo=case_when( #turned out to be significant
+  grepl("Shampoo", 
+        amenities, 
+        fixed=TRUE) ~ TRUE,
+  TRUE ~FALSE))
+# is_host_greets_you=case_when(
+#   grepl("Host greets you", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE),
+# is_garden=case_when(
+#   grepl("Garden or backyard", amenities, fixed=TRUE) ~ TRUE,
+#   TRUE ~FALSE))
+
+
+munich_listings_region <- munich_listings_region %>%  #cleaning dataframe from all the missing values
+ na.omit()
+
+```
+
+## Key variable descriptions
+Here are description of the key variables in our dataset:
+
+dependent variable: 
+
+`total_price_4_days`
+
+independent variable: 
+
+`property_type`: type of accommodation (House, Apartment, etc.) 
+
+`room_type`:
+- Entire home/apt (guests have entire place to themselves) 
+
+- Private room (Guests have private room to sleep, all other rooms shared) 
+
+- Shared room (Guests sleep in room shared with others) 
+
+`number_of_reviews`: Total number of reviews for the listing 
+
+`review_scores_rating`: Average review score (0 - 100) 
+
+`longitude , latitude`: geographical coordinates to help us locate the listing
+
+`region`: factor. Region the Airbnb is at grouping by house price. factored 1-5 from high price to low price 
+
+`prop_type_simplified`: type of accommodation (House, Apartment, Loft, Condominium)
+
+`room_type`:Entire home/apt, Private room, Shared room
+
+`number_of_reviews`: Total number of reviews for the listing
+
+`reviews_per_month`: Number of reviews per month
+
+`review_scores_`: Rating for in reviews in different aspects
+
+`rating_group`: Average review score (0 - 100) grouped by 90
+
+`longitude , latitude`: geographical coordinates to help us locate the listing
+
+`region`: factor. Region the Airbnb is at grouping by house price. factored 1-5 from high price to low price
+
+`availability_365`: Available days in the last 365 days
+
+`is_elevator` and `is_shampoo`: Whether there is elevator or shampoo facilitated
+
+# Exploratory Data Analysis
+
+Now that we have cleaned our data sets for our specific target (4 nights, 2 people) we will conduct a exploratory data analysis. 
+
+##Summary statistics and favstats
+
+```{r}
+#summary to check for NA's and general statistics
+summary(munich_listings_region)
+
+
+
+#running favstats on some interesting variable combinations and keeping the most interesting ones
+favstats(price~accommodates, data=munich_listings_region) 
+favstats(price~neighbourhood_cleansed, data=munich_listings_region)
+favstats(price~host_is_superhost, data=munich_listings_region)
+favstats(price~prop_type_simplified, data=munich_listings_region)
+favstats(price~minimum_nights, data=munich_listings_region)
+```
+## Correlation Matrix
+
+From the summary and favstats investigations, we have decided to conduct further exploratory data analysis through ggplot2. We will first build a correlation martix to spot the relationships between the particular variables.
+
+```{r fig.height=14,fig.width=22}
+munich_listing_is_numeric<-munich_listings_region[,sapply(munich_listings_region,is.numeric),with=FALSE]%>%
+  na.omit() #We have created a dataframe that contains only numerical variables from our original dataframe in order to build the Correlation Matrix.
+
+corMatrix <- as.data.frame(cor(munich_listing_is_numeric))
+corMatrix$var1 <- rownames(corMatrix)
+corMatrix2 <- corMatrix %>%
+  gather(key = var2, value = r, 1:28) # selecting coloumns from dataframe
+ggplot(corMatrix2,aes(x = var1, y = var2, fill = r)) +
+  geom_tile() +
+  geom_text(aes(label = round(r, 2)), size = 6) +
+  scale_fill_gradient2(low = "#ff585d", #adding colour to matrix
+                       high = "#00bf6f", 
+                       mid = "white") +
+  labs(title = "Correlation Matrix") +
+  theme(axis.text.x = element_text(angle = 90, 
+                                   hjust = 1,
+                                   size=16),
+        axis.text.y=element_text(size=16))
+```
+## Further analysis for collinear variables
+
+```{r fig.width=9,fig.height=6}
+munich_listing_is_numeric[,18:24]%>% #We tried to spot the correlation between the review-related variables using ggpairs plot
+  ggpairs()
+
+munich_listing_is_numeric%>% #We used the ggpairs plot to further analyse the bottom left part of our correlation matrix
+  select(accommodates,bathrooms,
+         bedrooms,
+         beds,
+         cleaning_fee,
+         extra_people,
+         guests_included,
+         total_price_4_days,
+         security_deposit)%>%
+  ggpairs()
+```
+
+The correlation matrix above displays two key ‘green zones’ where there are moderate to strong correlations present between variables. In the upper right corner, the plot illustrates the positive correlations between the various review score components, indicating that when an Airbnb scores well on one criterium it will tend to also have a higher rating on the other criteria. The strongest correlatio here is between the total review score and the review score for accuracy, at a level of 0.74. In the lower left corner we can see positive correlations between variables ranging from weak to strong. As one would expect, the number of people an Airbnb in Munich accomodates has a strong positive correlation with the number of beds and the number of bedrooms. There is a moderatore positive correlation between the total accomodated and the cleaning fee. Lastly, there is a moderate positive correlation between the cleaning fee and the security deposit, likely attributable to the fact that these properties are of a higher standard, as is mentioned on Airbnb’s website (deposits are usually based on a home’s features).
+
+Looking at our independent variable of interest for this project, the total price for a 4-day stay for two people, we only find weak positive correlations when disregarding the obvious connection to daily price. With a level of 0.29 there is a weak to moderate positive correlation between the total price and the number of people an Airbnb can accommodate; this is further supported by weak correlations (0.22) between total price and the number of bedrooms and beds. We will now continue to investigate relationships between our variables, in particular categorical variables not included in the above matrix.
+
+## Informative visualisations
+
+```{r fig.width= 9}
+ggplot(listings,aes(x=number_of_reviews))+
+  geom_histogram(binwidth = 4)+
+    xlim(0,250)+
+    ylim(0,1000)+
+     labs(title="Most of the airbnb accomodations have up to 20 reviews", 
+          x="Number of Reviews", 
+          y="Quantity")+
+  theme_bw()
+
+ggplot(munich_listing_is_numeric,
+       aes(x=extra_people,y=total_price_4_days))+
+  geom_point()+
+  geom_smooth(method="lm")+
+    ylim(0,3000)+
+    xlim(0,100)+
+      labs(title="Higher the Extra People Charge, the Higher the Overall Price", 
+           x="Price per extra person", 
+           y="Total price for 4 nights")+
+  theme_bw()
+
+#heavily right-skewed
+ggplot(munich_listings_region, aes(x=total_price_4_days))+
+  geom_density(bins=20)+
+  xlim(0,4000) +
+  labs(title="The density plot of total price for 4 nights is heavily right-skwed", 
+       x="Density",  
+       y="Total price for 4 nights")+
+  theme_bw()
+
+#log also heavily right skewed
+ggplot(munich_listings_total_price, aes(x=total_price_4_days))+
+  geom_density(bins=20)+
+  scale_x_log10()+
+  xlim(0,2500) +
+  labs(title="Logarithmic Total Price Shows Nature of Price Clusters", 
+       x="Density",  
+       y="Total price for 4 nights")+
+  theme_bw()
+
+#histogram to show frequency
+ggplot(munich_listings_total_price, aes(x=total_price_4_days))+
+  geom_histogram(bins=100)+
+  xlim(0,2500)+
+  labs(title="Most Airbnbs cost around €300 for 4 Nights", 
+       x="Total price for 4 nights", 
+       y= "Quantity")+
+  theme_bw()
+
+munich_listings_region %>%
+  group_by(room_type) %>%
+  summarize(mean_price_roomtype = mean(total_price_4_days)) %>%
+  arrange(desc(mean_price_roomtype)) %>%
+  ggplot(aes(y=reorder(room_type, mean_price_roomtype), x = mean_price_roomtype)) + 
+    geom_col() +
+      labs(title="What are The Most Expensive Airbnb's in Munich?",
+          subtitle="Hotels! who would have thought?", 
+           x="Average price for 4 nights per room",  
+           y="Room type")+
+  theme_bw()
+#Calculated mean price for 4 nights per room type
+
+munich_listings_region %>%
+  group_by(neighbourhood_cleansed) %>%
+  summarize(mean_price_neighbourhood = mean(total_price_4_days)) %>%
+  arrange(desc(mean_price_neighbourhood)) %>%
+  ggplot(aes(y=reorder(neighbourhood_cleansed, mean_price_neighbourhood), x=mean_price_neighbourhood)) +
+    geom_col()+
+     labs(title="Average price for 4 nights per in particular neighbourhoods", 
+          x="Average price for per room",  
+          y="Neighbourhood")+
+  theme_bw()
+
+#Calculated mean price for 4 nights per neighbourhood
+munich_listings_region %>%
+  group_by(prop_type_simplified) %>%
+  summarize(mean_price_property = mean(total_price_4_days)) %>%
+  arrange(desc(mean_price_property)) %>%
+  ggplot(aes(y=reorder(prop_type_simplified, mean_price_property), x = mean_price_property)) + 
+    geom_col() +
+      labs(title="Lofts Come at a Premium in Munich, Houses Present a Good Value Proposition", 
+           x="Average price for per room",  
+           y="Property type")+
+  theme_bw()
+
+#Calculated mean price for 4 nights per property type
+munich_listings_region %>%
+  group_by(prop_type_simplified) %>%
+  mutate(count_property=count("Apartment")) %>%
+  arrange((count_property)) %>%
+  ggplot(aes(x=reorder(prop_type_simplified, desc(count_property)), y = count_property)) + 
+    geom_col() +
+      labs(title="Apartments Dominate Airbnb's Listings", 
+           x="Property type",  
+           y="Quantity")+
+  theme_bw()
+#Calculated count of particular property types
+
+munich_listings_region %>%
+ group_by(cancellation_policy) %>%
+  ggplot(aes(x=reorder(cancellation_policy,total_price_4_days ), y = total_price_4_days)) + 
+    geom_boxplot() +
+      labs(title="Average prices per 4 nights for an Airbnb according to particular cancellation policies", 
+           y="Price",  
+           x="Cancellation policy")+
+  scale_y_log10(limits=c(100,10000))+
+  theme_bw()
+#Calculated average price for particular cancellation policies
+
+```
+## Mapping
+
+Now, we will conduct the mapping of our locations on the Munich map. We decided to colour our data in regards to a particular zone they are located in, to have a better sense of the density of the accommodation in these zones. The zones were grouped by highest mean rental price, since it created the largest significance in our models later on.
+
+```{r}
+
+pallette <- colorFactor(c("red", "blue", "green", "yellow","purple"), domain = c("zone_1", "zone_2", "zone_3", "zone_4","zone_5"))
+
+
+    leaflet(data = munich_listings_region) %>% 
+  addProviderTiles("OpenStreetMap.Mapnik") %>% 
+  addCircleMarkers(lng = ~longitude, 
+                   lat = ~latitude, 
+                 radius = 2,
+                 color = ~pallette(region),
+                   fillColor = ~region,
+                   group = ~ region,
+                   clusterId=~region,
+                   fillOpacity = 0.4,
+                   popup = ~listing_url, 
+                   label = ~paste( prop_type_simplified, "Min nights", "=", minimum_nights))
+    
+
+
+```
+
+# Regression
+
+Now we will start building our models. We will start from models with only a few variables and we will gradually try to build the model with the best fitting data and the biggest possible adjusted R-squared value. Running each model, we will as well check the colinearity analysis to cut confounding variables. For that reason we will use `car::vif(model_x)`` to calculate the Variance Inflation Factor (VIF) for our predictors. A general guideline is that a VIF larger than 5 or 10 is large, and our model may suffer from colinearity. We will remove the variable in question and run our model again without it if such a VIF occurs.
+
+For our models we will use the log value of total_prices_4_days since the distribution of it is more bell shaped than the regular value and thus will be better descried by our model.
+
+
+## Model 1
+
+We will fit our first regression model called model1 with the following explanatory variables: prop_type_simplified, number_of_reviews, and review_scores_rating.
+```{r}
+#Regression using log because normally distributed.
+model1 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              review_scores_rating, 
+            data=munich_listings_region)
+msummary(model1)
+car::vif(model1)
+#Noticed that variable review_scores_rating and "Other" and "House" categories in prop_type_simplified are also insignificant. Dropping review_scores_rating.
+```
+After running model1, we can notice, that "review_scores_rating" is insignificant for our linear regression model as the p-value is bigger than 0.05.Therefore we will drop it. Our dummy variable "prop_type_simplified" turned out to be insignificant for Houses and Other property types. Anyway, we will keep the variable prop_type_simplified as some of it's variables are important for our model. Our Adjusted R-squared in this model is only 2,25%. We will try to fit more variables in our model in order to increase the accuracy.
+
+We will add as well an example of interpretation of our data in logarithmic lm model.
+
+The coefficient interpretation of review_scores_rating in regards to total_price_4_days is as follows: If the review_scores_rating increases by one, the total_price_4_days decreases by 0,0003%.
+
+The coefficient interpretation of prop_type_simplified in regards to total_price_4_days is as follows: In regards to a particular property type the total_price_4_days behaves as follows:
+- (property type: Apartment) : total_price_4_days just takes the "Intercept" variable and increases by 6,08%.
+- (property type: Condominium) : prop_type_simplifiedCondominium=1; total_price_4_days increases by 0.18%.
+- (property type: House): prop_type_simplifiedHouse=1; total_price_4_days decreases by 0,065%.
+- (property type: Loft): prop_type_simplifiedLoft=1; total_price_4_days increases by 0.301%.
+- (property type: Other): prop_type_simplifiedOther=1; total_price_4_days increases by 0.06%.
+
+## Model 2
+
+We want to determine if room_type is a significant predictor of the cost for 4 nights, given everything else in the model. We will fit a regression model that includes all of the explanatory variables in model1 plus room_type.
+```{r}
+model2 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              review_scores_rating+
+              room_type, 
+            data=munich_listings_region)
+msummary(model2)
+car::vif(model2)
+```
+The room_type has increased our adjusted R-squared up to 0.13. The p-value for each room type is less than 0,05, thus the room type variable is important and we will keep it in our model.
+
+
+## Model 3
+
+Are the number of bathrooms, bedrooms, beds, or size of the house (accommodates) significant predictors of price_4_nights?
+```{r}
+model3 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              room_type+
+              bathrooms+
+              bedrooms+
+              beds+
+              accommodates, 
+            data=munich_listings_region)
+msummary(model3)
+car::vif(model3)
+```
+All the variables in our model apart from "beds" variable ware significant as t-value of these variables is more than 2. In our further models we will keep "bedrooms", "bathrooms" and "accommodates", however we will drop the "beds".
+
+
+## Model 4
+
+Do superhosts (host_is_superhost) command a pricing premium, after controlling for other variables?
+```{r}
+model4 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              room_type+
+              bathrooms+
+              bedrooms+
+              accommodates+
+              host_is_superhost, 
+            data=munich_listings_region)
+msummary(model4)
+car::vif(model4)
+```
+Superhosts do not command a pricing premium in Munich, therefore we will drop this variable in our further models. We can see that the VIF for bedrooms and accommodates has a bit higher VIF, however it is still not high enough to worry about it.
+
+
+## Model 5
+
+Most owners advertise the exact location of their listing (is_location_exact == TRUE), while a non-trivial proportion don’t. After controlling for other variables, is a listing’s exact location a significant predictor of price_4_nights?
+```{r}
+model5 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              room_type+bathrooms+
+              bedrooms+accommodates+
+              is_location_exact, 
+            data=munich_listings_region)
+msummary(model5)
+car::vif(model5)
+```
+The variable "is_location_exact" does not have a significant influence on the price of an Airbnb in Munich (p-value bigger than 0.05). Therefore, we will drop it.
+
+
+## Model 6
+
+Now we will use a variable that we created - "region" that clusters all the neighbourhood to 5 zones and we will see how the location affects the price for Airbnb in our model.
+```{r}
+model6 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              room_type+
+              bathrooms+
+              bedrooms+
+              accommodates+
+              region, 
+            data=munich_listings_region)
+msummary(model6)
+car::vif(model6)
+```
+The region of Munich has a significant influence on the price. T-value of all the zone is way more than |2| and our adjusted R-squared went up - it suggests that model 6 better describes the real data than our previous models.
+
+## Model 7
+
+What is the effect of cancellation_policy on price_4_nights, after we control for other variables?
+```{r}
+model7 <-lm(log(total_price_4_days)~prop_type_simplified+
+              number_of_reviews+
+              room_type+
+              bathrooms+
+              bedrooms+
+              accommodates+
+              region+
+              cancellation_policy, 
+            data=munich_listings_region)
+msummary(model7)
+car::vif(model7)
+```
+The cancellation policy of 14 days seems to have a significant impact on the price for 4 nights. This is why we will keep the variable "cancellation policy" in our model. Our Adjusted R-squared again went up by one percent. Let us keep trying adding more variables that may turn out significant for our model.
+
+
+## Final Model
+
+Now we will create the model with numerous significant data that we checked to be relevant and significant to create our best fitting regression model.
+```{r}
+model_wild_west<-lm(log10(total_price_4_days)~ #predicting total_price_4_days on variables below
+                      prop_type_simplified+
+                      number_of_reviews* #multiplied because of colinearity
+                      reviews_per_month+
+                      room_type*  # multiplied because of colinearity 
+                      bedrooms+
+                      bathrooms+
+                      accommodates+
+                      region+
+                      cancellation_policy+
+                      review_scores_value+
+                      review_scores_cleanliness+
+                      review_scores_checkin+
+                      review_scores_location+
+                      security_deposit+
+                      rating_group+
+                      instant_bookable+
+                      availability_365+
+                      availability_90+
+                      maximum_nights+
+                      minimum_nights+
+                      is_elevator+
+                      is_shampoo,
+                    data=munich_listings_region)
+msummary(model_wild_west) 
+model_wild_west_colinear<-lm(log10(total_price_4_days)~ #predicting total_price_4_days on variables below
+                      prop_type_simplified+
+                      number_of_reviews+ #linearised for colinearity
+                      reviews_per_month+
+                      room_type+  # linearised for colinearity 
+                      bedrooms+
+                      bathrooms+
+                      accommodates+
+                      region+
+                      cancellation_policy+
+                      review_scores_value+
+                      review_scores_cleanliness+
+                      review_scores_checkin+
+                      review_scores_location+
+                      security_deposit+
+                      rating_group+
+                      instant_bookable+
+                      availability_365+
+                      availability_90+
+                      maximum_nights+
+                      minimum_nights+
+                      is_elevator+
+                      is_shampoo,
+                    data=munich_listings_region)
+car::vif(model_wild_west_colinear) # car VIF struggles with multiplied variables so a new unmultiplied model is used to check.
+
+```
+In our final model we tested variables from the previous models that were significant and tested much more variables that in our opinion could as well affect the total_price_4_days. We tested the variables connected to review scores - i.e. review_scores_value, review_scores_cleanliness, review_scores_checking_ review_scores_location etc. Only the ones mentioned turned out to be significant for the model. Afterwards we check for security_deposit, rating_group, instants_bookable and availability variables. Two of them (availability_60 and availability_30) turned out to be insignificant, so we decided to drop them. Thereafter, we added host_listings_count as we believe that the number of properties the host has may affect the standard, build some economies of scales perhaps and therefore affect somehow the price. This factor as well turned out to be significant. Later we tested maximum_nights and minimum_nights. In the next step we were testing whether particular types of amenities have any significant impact on the price. It turned out that two of them - elevator and shampoo (as they are always part of some welcome packs) are also significant for the price's prediction. Moreover, we added two interaction variables - room_type&bedrooms and number_of_reviews&review_per_month as we believe there is much interaction happening between them. Our final model has adjusted R-squared at the level of 38.7% and a RSE at the level of 0.2. Checking the VIF throughout, we can see that the GVIF value is well below 5 and we can be assured that the colinearity is not affecting our model significantly.
+
+# Diagnostics 
+
+## Checking Residuals 
+
+In the next step we will plot residuals, analyze their behaviour and check whether they are distributed within the norms. Afterwards we will compare all the models and compare how our models evolved.
+```{r}
+#plotting residuals
+autoplot(model_wild_west)+
+  theme_bw()
+
+# comparing significance of variables among model iterations
+huxreg(model2, 
+       model3, 
+       model6, 
+       model7, 
+       model_wild_west)
+
+```
+The residuals behave in an appropriate way, hence we assume that the model is correct. Though there is a slight gradient in Scale-Location, and slight tendency in Residuals vs Fitted. The Leverage tends around the mean and the normal Q-Q is linear for the most part. These slight issues are due to the quality of the data scraper.
+
+From the table comparing all the models we can spot, that our R-squared went up through out the process of finding the best solution. We can as well spot which variables were added and dropped at which stages.
+
+
+##Model applyinh and predicting the outcome
+
+Now, we will find a price of the Airbnbs that are apartment with a private room, have at least 10 reviews, and an average rating of at least 90. 
+
+We are using our logarithmic model log(total_price_4_days) in the predict function since our regression is based in the log(total_price_4_days). First, we will create a new table that we will filter according to the conditions above. In the next step, we will anti-log our model_wild_west. At the end, we will predict the prices for our filtered accommodations and we will create for them the Confidence Intervals. We will do it in two ways in order to compare our scores.
+```{r}
+munich_listings_predict<- munich_listings_region %>%
+  mutate(price=log(total_price_4_days)) %>% #converting to log form for prediction
+  filter(room_type=="Private room" &
+           number_of_reviews>=10 & 
+           rating_group=="Over 90")
+
+
+predict_df<-10^predict(model_wild_west, # converting from log form to nominal
+                    newdata = munich_listings_predict, 
+                    interval= "confidence")
+#sanity check
+summary(predict_df)
+
+#using broom augment
+model_prediction <- broom::augment(model_wild_west, 
+                                   newdata= munich_listings_predict)
+model_prediction <- model_prediction %>% 
+  mutate(lower_95=10^.fitted-1.96*abs(10^(.resid)),#creating 95% confidence interval
+         upper_95=10^.fitted+1.96*abs(10^(.resid))) %>% 
+  select(.fitted,
+         lower_95,
+         upper_95, 
+         total_price_4_days) %>% 
+  mutate(.fitted=10^.fitted)
+#sanity check
+summary(model_prediction)
+
+```
+Using the predict and augment function we observe a mean price of around 315, which is close to the actual total mean price of 327. We also see that the 1st and 3rd quartiles for both of the prediction methods all line up. Differences appear in the lower and upper confidence level boundaries between the two functions, where the predict function's interval actually captures the true mean, the augment misses it by €10. Despite this we can get a sense of confidence for our linear regression's accuracy due to the tight spread and capturing of the true mean. The next step is conducting a sanity check by checking the RMSE of our model.
+
+##Data Training and RMSE
+In the next step we will split our data into two parts. We will train one part and later test another one. In the next step we will compare the results.
+```{r}
+set.seed(1234)
+train_test_split <- initial_split(munich_listings_predict, prop=0.7) # splitting dataset
+munich_train<- training(train_test_split)
+munich_test<- testing(train_test_split)
+
+rmse_train <- munich_train %>%  #training portion for RMSE
+  mutate(predictions=predict(model_wild_west,.)) %>% 
+  summarise(sqrt(sum(predictions-log(total_price_4_days))**2/n())) %>% 
+  pull()
+rmse_train
+
+rmse_test <- munich_test %>% 
+  mutate(predictions=predict(model_wild_west,.)) %>% 
+  summarise(sqrt(sum(predictions-log(total_price_4_days))**2/n())) %>% 
+  pull()
+rmse_test
+
+```
+We can see that the RMSE is an order of magnitude below our prices, which confirms that though our R^2 is low, our accuracy is very high.
+
+Thank you for your interest in our study project. We hope you found it interesting.
+
+Authors Magdalena Cloppenburg, Yichun Hou, Derek Leung, Malay Memani, Samy Mohamad, Agnieszka Prawda.
+

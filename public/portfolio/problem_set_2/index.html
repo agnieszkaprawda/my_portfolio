@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+  <meta charset="utf-8" />
+  <title>Problem Set2</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  
+  <meta name="author" content="StaticMania">
+  
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <!-- Bootstrap -->
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <!-- font-awesome -->
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css" />
+  <!-- Main Stylesheets -->
+  
+  <link href="/scss/style.min.css" rel="stylesheet" />
+
+  
+  <link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon" />
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+</head><body><nav class="navbar navbar-expand-lg site-navigation">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <img src="/images/logo.png" alt="logo" />
+    </a>
+    <button
+      class="navbar-toggler collapsed"
+      type="button"
+      data-toggle="collapse"
+      data-target="#sitenavbar"
+    >
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenavbar">
+      <ul class="navbar-nav ml-auto main-nav">
+         
+         
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/"
+              >Home</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about"
+              >About</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/portfolio"
+              >Portfolio</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/blog"
+              >Other Projects</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a
+              class="nav-link btn btn-sm btn-primary btn-sm-rounded"
+              href="/contact"
+            >
+              <span class="btn-area">
+                <span data-text="Get in touch">
+                  Get in touch
+                </span>
+              </span>
+            </a>
+          </li>
+           
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+<main>
+
+<section class="site-project-single-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="site-project-single">
+          <h1>
+            Problem Set2
+          </h1>
+          <div class="site-project-single-description">
+            
+
+
+<div id="lets-begin" class="section level1">
+<h1>Let’s begin</h1>
+<p>Hello, my name is Agnieszka, I am going to visualise three data visualisations basing on the Stop &amp; Search dataset. You can find more on the topic here:
+<a href="https://www.met.police.uk/stopandsearch/" class="uri">https://www.met.police.uk/stopandsearch/</a> (Links to an external site.)
+<a href="https://www.theguardian.com/law/2019/jan/26/met-police-disproportionately-use-stop-and-search-powers-on-black-people" class="uri">https://www.theguardian.com/law/2019/jan/26/met-police-disproportionately-use-stop-and-search-powers-on-black-people</a></p>
+<div id="loading-many-csv-files" class="section level2">
+<h2>Loading many csv files</h2>
+<p>Let’s have a look on our data</p>
+<table>
+<caption><span id="tab:pressure">Table 1: </span>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">stop_search_all</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">692231</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">20</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">character</td>
+<td align="left">10</td>
+</tr>
+<tr class="odd">
+<td align="left">factor</td>
+<td align="left">1</td>
+</tr>
+<tr class="even">
+<td align="left">logical</td>
+<td align="left">4</td>
+</tr>
+<tr class="odd">
+<td align="left">numeric</td>
+<td align="left">4</td>
+</tr>
+<tr class="even">
+<td align="left">POSIXct</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">min</th>
+<th align="right">max</th>
+<th align="right">empty</th>
+<th align="right">n_unique</th>
+<th align="right">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">source</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">142</td>
+<td align="right">142</td>
+<td align="right">0</td>
+<td align="right">36</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">type</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">13</td>
+<td align="right">25</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">gender</td>
+<td align="right">9160</td>
+<td align="right">0.99</td>
+<td align="right">4</td>
+<td align="right">6</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">age_range</td>
+<td align="right">90885</td>
+<td align="right">0.87</td>
+<td align="right">5</td>
+<td align="right">8</td>
+<td align="right">0</td>
+<td align="right">5</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">self_defined_ethnicity</td>
+<td align="right">8971</td>
+<td align="right">0.99</td>
+<td align="right">13</td>
+<td align="right">84</td>
+<td align="right">0</td>
+<td align="right">17</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">officer_defined_ethnicity</td>
+<td align="right">13594</td>
+<td align="right">0.98</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">0</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">legislation</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">30</td>
+<td align="right">55</td>
+<td align="right">0</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">object_of_search</td>
+<td align="right">1800</td>
+<td align="right">1.00</td>
+<td align="right">8</td>
+<td align="right">35</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">outcome</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">6</td>
+<td align="right">39</td>
+<td align="right">0</td>
+<td align="right">14</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">month_year</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">8</td>
+<td align="right">8</td>
+<td align="right">0</td>
+<td align="right">37</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: factor</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="left">ordered</th>
+<th align="right">n_unique</th>
+<th align="left">top_counts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">month_name</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">TRUE</td>
+<td align="right">12</td>
+<td align="left">May: 77301, Apr: 64254, Jun: 63850, Aug: 61721</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: logical</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="left">count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">part_of_a_policing_operation</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="left">FAL: 692231</td>
+</tr>
+<tr class="even">
+<td align="left">policing_operation</td>
+<td align="right">692231</td>
+<td align="right">0</td>
+<td align="right">NaN</td>
+<td align="left">:</td>
+</tr>
+<tr class="odd">
+<td align="left">outcome_linked_to_object_of_search</td>
+<td align="right">692231</td>
+<td align="right">0</td>
+<td align="right">NaN</td>
+<td align="left">:</td>
+</tr>
+<tr class="even">
+<td align="left">removal_of_more_than_just_outer_clothing</td>
+<td align="right">692231</td>
+<td align="right">0</td>
+<td align="right">NaN</td>
+<td align="left">:</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">lat</td>
+<td align="right">87290</td>
+<td align="right">0.87</td>
+<td align="right">51.51</td>
+<td align="right">0.06</td>
+<td align="right">51.26</td>
+<td align="right">51.47</td>
+<td align="right">51.5</td>
+<td align="right">51.55</td>
+<td align="right">53.30</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">lng</td>
+<td align="right">87290</td>
+<td align="right">0.87</td>
+<td align="right">-0.11</td>
+<td align="right">0.14</td>
+<td align="right">-2.93</td>
+<td align="right">-0.19</td>
+<td align="right">-0.1</td>
+<td align="right">-0.03</td>
+<td align="right">1.73</td>
+<td align="left">▁▁▅▇▁</td>
+</tr>
+<tr class="odd">
+<td align="left">month</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">6.20</td>
+<td align="right">3.29</td>
+<td align="right">1.00</td>
+<td align="right">4.00</td>
+<td align="right">6.0</td>
+<td align="right">9.00</td>
+<td align="right">12.00</td>
+<td align="left">▇▆▆▆▆</td>
+</tr>
+<tr class="even">
+<td align="left">year</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">2019.05</td>
+<td align="right">0.86</td>
+<td align="right">2017.00</td>
+<td align="right">2018.00</td>
+<td align="right">2019.0</td>
+<td align="right">2020.00</td>
+<td align="right">2020.00</td>
+<td align="left">▁▅▁▇▇</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: POSIXct</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="left">min</th>
+<th align="left">max</th>
+<th align="left">median</th>
+<th align="right">n_unique</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">date</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">2017-09-30 23:10:00</td>
+<td align="left">2020-09-30 22:55:00</td>
+<td align="left">2019-08-16 15:20:00</td>
+<td align="right">334484</td>
+</tr>
+</tbody>
+</table>
+<pre><code>## # A tibble: 4 x 2
+##   gender      n
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 Male   636838
+## 2 Female  45848
+## 3 &lt;NA&gt;     9160
+## 4 Other     385</code></pre>
+<pre><code>## # A tibble: 9 x 2
+##   object_of_search                         n
+##   &lt;chr&gt;                                &lt;int&gt;
+## 1 Controlled drugs                    418103
+## 2 Offensive weapons                   119754
+## 3 Stolen goods                         74515
+## 4 Evidence of offences under the Act   32438
+## 5 Anything to threaten or harm anyone  24843
+## 6 Articles for use in criminal damage  14474
+## 7 Firearms                              4583
+## 8 &lt;NA&gt;                                  1800
+## 9 Fireworks                             1721</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   officer_defined_ethnicity      n
+##   &lt;chr&gt;                      &lt;int&gt;
+## 1 Black                     274058
+## 2 White                     257779
+## 3 Asian                     118568
+## 4 Other                      28232
+## 5 &lt;NA&gt;                       13594</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   age_range      n
+##   &lt;chr&gt;      &lt;int&gt;
+## 1 10-17     116893
+## 2 18-24     235540
+## 3 25-34     144190
+## 4 over 34   104597
+## 5 under 10     126
+## 6 &lt;NA&gt;       90885</code></pre>
+<pre><code>## Geometry set for 133784 features 
+## geometry type:  POINT
+## dimension:      XY
+## bbox:           xmin: -0.896 ymin: 51.3 xmax: 0.302 ymax: 51.7
+## geographic CRS: WGS 84
+## First 5 geometries:</code></pre>
+<pre><code>## Geometry set for 657 features 
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 504000 ymin: 156000 xmax: 562000 ymax: 201000
+## projected CRS:  OSGB 1936 / British National Grid
+## First 5 geometries:</code></pre>
+<pre><code>## Geometry set for 657 features 
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: -0.51 ymin: 51.3 xmax: 0.334 ymax: 51.7
+## geographic CRS: WGS 84
+## First 5 geometries:</code></pre>
+</div>
+</div>
+<div id="graphs" class="section level1">
+<h1>Graphs</h1>
+<p>Let’s kick off with our graphs</p>
+<div id="st-graph-barplots" class="section level2">
+<h2>1st Graph Barplots</h2>
+<pre class="r"><code>stop_search_offence_object&lt;- stop_search_offence_sf %&gt;% 
+    filter(month!=&quot;10&quot; &amp; month!=&quot;11&quot; &amp; month!=&quot;12&quot; &amp; year!=&quot;2017&quot;) %&gt;% 
+  group_by(year, object_of_search, gender,officer_defined_ethnicity) %&gt;% 
+  select(year, object_of_search, gender,officer_defined_ethnicity) %&gt;%
+  filter(gender==&quot;Male&quot; || gender==&quot;Female&quot;) %&gt;% 
+  filter(officer_defined_ethnicity==&quot;White&quot;|| officer_defined_ethnicity==&quot;Black&quot; ||officer_defined_ethnicity==&quot;Asian&quot;) %&gt;%
+  summarise(count = n())
+
+stop_search_offence_object$object_of_search &lt;- stop_search_offence_object$object_of_search %&gt;% factor(levels= c(&quot;Offensive weapons&quot;, &quot;Stolen goods&quot;, &quot;Controlled drugs&quot;))
+
+
+my_colours2 &lt;- c(&quot;grey70&quot;,&quot;grey80&quot;,&quot;tomato&quot;)
+
+stop_percent&lt;-stop_search_offence_object %&gt;% 
+group_by(year, object_of_search) %&gt;% 
+ mutate(percent_by_type=count/sum(count))
+  
+ggplot(stop_percent,aes(x=year,y=count, fill=object_of_search )) +
+  geom_bar(stat=&quot;identity&quot;, alpha=0.7) +
+  facet_grid(gender~officer_defined_ethnicity, scales=&quot;free&quot;)+
+  theme_classic() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;tomato&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;tomato&quot;, face=&quot;plain&quot;,size= 10,family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))+
+    labs(title = &quot;Number of crimes in London increased steadily from 2018 to 2020 - \nthe main driver of increase were crimes connected to controlled drugs smugling&quot;, subtitle= &quot;Number of crime types from Jan to Sep by year, gender &amp; ethnicity&quot;, x=&quot;Year&quot;, y=&quot;Count&quot;, caption=&quot;Source:  https://data.police.uk/data/&quot;) +
+  scale_y_continuous()+
+  scale_fill_manual(values = my_colours2)</code></pre>
+<p><img src="/portfolio/Problem_Set_2_files/figure-html/options(tigris_use_cache=TRUE)-1.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="nd-graph---map" class="section level2">
+<h2>2nd Graph - Map</h2>
+<pre class="r"><code>stop_search_offence_2020&lt;- stop_search_offence_sf %&gt;% 
+  filter(year==2020)  %&gt;% 
+ filter(object_of_search==&quot;Offensive weapons&quot;)
+ #options(tigris_class = &quot;sf&quot;)
+# Count how many S&amp;S happened inside each ward
+london_wgs85 &lt;- london_wgs84 %&gt;%
+  mutate(count = lengths(
+    st_contains(london_wgs84, 
+                stop_search_offence_2020))) 
+
+p1&lt;- ggplot(data = london_wgs85, aes(fill = count)) +
+   geom_sf() +
+   scale_fill_gradient(low = &quot;beige&quot;, high = &quot;#660000&quot;,limits=c(0,400)) +
+    theme_minimal()+
+theme( plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+       plot.subtitle = element_text(color = &quot;grey40&quot;, face=&quot;plain&quot;,size= 10,family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0), axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))+
+    labs(title = &quot;In 2020, the most drug smuggling cases were tackled in\nthe city of Westminster, Newham, and Croydan &quot;, subtitle= &quot;Number of crimes in particular districts of London &quot;, x=&quot;&quot;, y=&quot;&quot;, caption=&quot;Source:  https://data.police.uk/data/&quot;)
+
+stop_search_offence_2020s&lt;- stop_search_offence_sf %&gt;% 
+  filter(year==2020)  %&gt;% 
+ filter(object_of_search==&quot;Stolen goods&quot;)
+ #options(tigris_class = &quot;sf&quot;)
+# Count how many S&amp;S happened inside each ward
+london_wgs85s &lt;- london_wgs84 %&gt;%
+  mutate(count = lengths(
+    st_contains(london_wgs84, 
+                stop_search_offence_2020s))) 
+
+p2&lt;- ggplot(data = london_wgs85s, aes(fill = count)) +
+   geom_sf() +
+   scale_fill_gradient(low = &quot;beige&quot;, high = &quot;#660000&quot;, breaks=50,limits=c(0,400)) +
+    theme_minimal()+
+theme( plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+       plot.subtitle = element_text(color = &quot;grey40&quot;, face=&quot;plain&quot;,size= 10,family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0), axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))+
+    labs(title = &quot;In 2020, the most drug smuggling cases were tackled in\nthe city of Westminster, Newham, and Croydan &quot;, subtitle= &quot;Number of crimes in particular districts of London &quot;, x=&quot;&quot;, y=&quot;&quot;, caption=&quot;Source:  https://data.police.uk/data/&quot;)
+
+
+stop_search_offence_2020c&lt;- stop_search_offence_sf %&gt;% 
+  filter(year==2020)  %&gt;% 
+ filter(object_of_search==&quot;Controlled drugs&quot;)
+ #options(tigris_class = &quot;sf&quot;)
+# Count how many S&amp;S happened inside each ward
+london_wgs85c &lt;- london_wgs84 %&gt;%
+  mutate(count = lengths(
+    st_contains(london_wgs84, 
+                stop_search_offence_2020c))) 
+
+p3&lt;- ggplot(data = london_wgs85c, aes(fill = count)) +
+   geom_sf() +
+   scale_fill_gradient(low = &quot;beige&quot;, high = &quot;#660000&quot;,limits=c(0,400)) +
+    theme_minimal()+
+theme( plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+       plot.subtitle = element_text(color = &quot;grey40&quot;, face=&quot;plain&quot;,size= 10,family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0), axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))+
+    labs(title = &quot;In 2020, the most drug smuggling cases were tackled in\nthe city of Westminster, Newham, and Croydan &quot;, subtitle= &quot;Number of crimes in particular districts of London &quot;, x=&quot;&quot;, y=&quot;&quot;, caption=&quot;Source:  https://data.police.uk/data/&quot;)
+
+library(ggpubr)
+ ggarrange(p1, p2, p3, 
+          ncol = 1, nrow = 3)</code></pre>
+<p><img src="/portfolio/Problem_Set_2_files/figure-html/unnamed-chunk-1-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>map_of_london_file &lt;- image_read(&quot;http://ontheworldmap.com/uk/city/london/map-of-london.jpg&quot;) #loading an image
+
+image_ggplot(map_of_london_file )+
+  theme( plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;,vjust=270, family= &quot;Montserrat&quot;))+
+  ggtitle(&quot;Map of London for comparison&quot;)</code></pre>
+<p><img src="/portfolio/Problem_Set_2_files/figure-html/unnamed-chunk-1-2.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="rd-graph---density-plots" class="section level2">
+<h2>3rd Graph - Density plots</h2>
+<pre class="r"><code>library(showtext)
+font_add_google(&quot;Montserrat&quot;, &quot;Montserrat&quot;) #downloading fonts from Google
+showtext_auto()
+
+
+my_colours3 &lt;- c(&quot;tomato&quot;,&quot;greenyellow&quot;,&quot;cornflowerblue&quot;)
+my_colours4 &lt;- c(&quot;gray70&quot;, &quot;firebrick2&quot;)
+
+stop_search_offence_3&lt;- stop_search_offence_sf %&gt;% 
+ filter(year!=2017) %&gt;% 
+  group_by(month_name,object_of_search) %&gt;% 
+ mutate(count= n()) %&gt;% 
+mutate(
+    was_may = ifelse(month_name == &quot;May&quot;, TRUE, FALSE))
+
+
+
+ggplot(data =stop_search_offence_3 , aes(x= count, fill = object_of_search, colour=was_may, y=month_name))+
+ geom_density_ridges(alpha = 4/8)+
+  facet_grid(year~.)+
+   theme_minimal()+
+theme( plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+       plot.subtitle = element_text(color = &quot;grey40&quot;, face=&quot;plain&quot;,size= 10,family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0), legend.title = element_text(face = &quot;bold&quot;) )+
+    labs(title = &quot;In May in each year the number of crimes was the highest \n especially in crimes connected to controlled drugs issues &quot;, subtitle= &quot;Denisty plots oh cases by month &amp; object of search particular years&quot;, x=&quot;&quot;, y=&quot;&quot;, fill = &quot;Object of search&quot;, colour = &quot;Was it May?&quot;,caption=&quot;Source:  https://data.police.uk/data/&quot;)+
+   scale_fill_manual(values = my_colours3)+
+scale_colour_manual(values = my_colours4)</code></pre>
+<p><img src="/portfolio/Problem_Set_2_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>Let me write a short memo on my work and describe the story behind each graph.</p>
+<p>In the first data visualization I tried to find the most frequent object of search – which is the problem of smuggling drugs. The crime has been increasing throughout recent years not only overall but also in all ethnic groups and across both genders.</p>
+<p>In the second graph, I focused on locating the areas of London wherein the year 2020 all the crime connected to drug smuggling was the biggest problem. It turns out that most cases happened in the City of Westminster, Newnham, and Croydon.</p>
+<p>In the third graph, I found the time of the year, when all the crimes (especially “Controlled drugs” crimes) are most frequent. It turns out that throughout the time, the most popular season for the raise of cases in May.</p>
+<p>In my work, I tried to implement all of the C.R.A.P. principles. I applied <strong><em>Contrast</em></strong> through adjusting colours to the type of graph – using different colours for different categories or to highlight a particular event, using hue to show the frequency of crimes in a particular location. <strong><em>Repetition</em></strong> – where needed the colours to stay consistent and repetitive for the most important messages on the graph to stand out. <strong><em>Alignment</em></strong> – I tried to allocate the information on my graphs clearly and transparently, so the visualization is easily understandable for the reader. <strong><em>Proximity</em></strong> – I tried to make the graphs in such a form that the similar clusters of cases are allocated similarly.</p>
+<p>I also tried to implement all of Alberto Cairo’s five qualities of great visualisaiton.
+1. First of all, my graphs are <strong>truthful</strong>, not confusing, when it comes to colours as they tend to be the same throughout the whole file. I tried to use appropriate types of graphs to address different problems.
+2. Second of all, my grpahs are <strong>functional</strong> and does not contain unnecessary information that could confuse the reader.
+3. Moreover, I tried to make my graphs <strong>beautiful</strong> to make them easier to read – I used pleasant colours, fonts, and themes.
+4. What’s more, thanks to the <strong>insightful</strong> aspect of the graphs, we can discover new pieces of information on crimes in London &amp; build our knowledge on the topic.
+5. Finally, I tried to make the whole story <strong>enlightening</strong> and coherent so that the reader is interested in the data presented.</p>
+<p>Thank you!</p>
+</div>
+
+          </div>
+          <div class="site-project-single-image">
+            
+            <img src="/images/projects/project-details-image-one.jpg" alt="project image">
+            
+            <img src="/images/projects/project-details-image-two.jpg" alt="project image">
+            
+          </div>
+          
+          <div class="site-project-single-action">
+            <a href="/portfolio/munich_airbnb_2214/">
+              <span class="link-area">
+                <span data-text="Next Project">
+                  Next Project
+                </span>
+              </span>
+              <img src="/images/to-top.svg" alt="next project">
+            </a>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  
+  <section class="site-cta" style='background-image: url("/images/backgrounds/cta-background.jpg");'>
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h1 class="site-cta-title">Contact me</h1>
+          <ul class="site-cta-buttons">
+            <li>
+              <a href="/contact" class="btn btn-secondary">
+                <span class="btn-area">
+                  <span data-text="Send an email">
+                    Send an email
+                  </span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="/portfolio" class="btn btn-primary">
+                <span class="btn-area">
+                  <span data-text="See more portfolio">
+                    See more portfolio
+                  </span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+
+
+        </main><footer class="site-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="site-footer-logo"><a href="/"><img src="/images/logo-footer.png" alt="logo-footer"></a></div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Contact Info</h5>
+          <p class="site-footer-widget-description">
+            Regent's Park, London NW1 4SA
+            <br>
+            <a href="tel:&#43;447762727403">&#43;447762727403</a>
+            <br>
+            <a href="mailto:aprawda.mam2021@london.edu">aprawda.mam2021@london.edu</a>
+          </p>
+        </div>
+      </div>
+      
+      
+      
+      <div class="col-lg-2 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Social Media</h5>
+          <ul class="site-footer-widget-links">
+            
+              <li><a href="https://www.linkedin.com/in/agnieszka-prawda/">Linkedin</a></li>
+            
+          </ul>
+        </div>
+      </div>
+      
+      
+      <div class="col-lg-2 col-12">
+        <a href="#top" class="site-footer-widget-top">
+          <img src="/images/to-top.svg" alt="back-to-top">
+          <p>
+            I want to 
+            <br>
+            visit again
+          </p>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script src="/js/formhandler.min.js"></script>
+
+<script src="/js/vendor.min.js"></script>
+
+<script src="/js/script.min.js"></script></body>
+</html>
