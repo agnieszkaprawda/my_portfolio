@@ -1,13 +1,3 @@
----
-category:
-- Data Science in R
-date: "2020-10-27T15:58:10+06:00"
-image: images/projects/airbnb1.png
-project_images:
-title: 
-type: portfolio
----
-
 
 
 <div id="introduction" class="section level1">
@@ -192,18 +182,18 @@ type: portfolio
 <pre class="r"><code>#bar chart of defaults
 def_vis1&lt;-ggplot(data=lc_clean, aes(x=default)) +geom_bar(aes(y = (..count..)/sum(..count..))) + labs(x=&quot;Default, 1=Yes, 0=No&quot;, y=&quot;relative frequencies&quot;) +scale_y_continuous(labels=scales::percent) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= &quot;count&quot;,vjust=-0.5) 
 def_vis1</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/visualization%20of%20defaults-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#bar chart of defaults per loan grade
 def_vis2&lt;-ggplot(data=lc_clean, aes(x=default), group=grade) +geom_bar(aes(y = (..count..)/sum(..count..), fill = factor(..x..)), stat=&quot;count&quot;)  + labs(title=&quot;Defaults by Grade&quot;, x=&quot;Default, 1=Yes, 0=No&quot;, y=&quot;relative frequencies&quot;) +scale_y_continuous(labels=scales::percent) +facet_grid(~grade) + theme(legend.position = &quot;none&quot;) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= &quot;count&quot;,vjust=-0.5) 
 def_vis2</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/visualization%20of%20defaults-2.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#bar chart of defaults per number of Delinquencies
 def_vis3&lt;-lc_clean %&gt;%
   filter(as.numeric(delinq_2yrs)&lt;4) %&gt;%
   ggplot(aes(x=default), group=delinq_2yrs) +geom_bar(aes(y = (..count..)/sum(..count..), fill = factor(..x..)), stat=&quot;count&quot;)  + labs(title=&quot;Defaults by Number of Delinquencies&quot;, x=&quot;Default, 1=Yes, 0=No&quot;, y=&quot;relative frequencies&quot;)  +scale_y_continuous(labels=scales::percent) +facet_grid(~delinq_2yrs) + theme(legend.position = &quot;none&quot;) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= &quot;count&quot;,vjust=-0.5)
 
 def_vis3</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-3.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/visualization%20of%20defaults-3.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#scatter plots 
 
 #We select 2000 random loans to display only to make the display less busy. 
@@ -216,12 +206,12 @@ reduced&lt;-lc_clean[sample(0:nrow(lc_clean), 2000, replace = FALSE),]%&gt;%
 def_vis4&lt;-ggplot(data=reduced, aes(y=default,x=I(loan_amnt/1000)))  + labs(y=&quot;Default, 1=Yes, 0=No&quot;, x=&quot;Loan Amnt (1000 $)&quot;) +geom_jitter(width=0, height=0.05, alpha=0.7) #We use jitter to offset the display of defaults/non-defaults to make the data easier to interpert. We have also changed the amount to 1000$ to reduce the number of zeros on the horizontal axis.
 
 def_vis4</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-4.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/visualization%20of%20defaults-4.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#scatter plot of defaults against loan amount.
 def_vis5&lt;-ggplot(data=reduced, aes(y=default,x=I(annual_inc/1000)))   + labs(y=&quot;Default, 1=Yes, 0=No&quot;, x=&quot;Annual Income(1000 $)&quot;) +geom_jitter(width=0, height=0.05, alpha=0.7) +  xlim(0,400)
 
 def_vis5</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-5.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/visualization%20of%20defaults-5.png" width="648" style="display: block; margin: auto;" /></p>
 <p>We can also estimate a correlation table between defaults and other continuous variables.</p>
 <pre class="r"><code># correlation table using GGally::ggcor()
 # this takes a while to plot
@@ -230,7 +220,7 @@ lc_clean %&gt;%
     mutate(default=as.numeric(default)-1)%&gt;%
   select(loan_amnt, dti, annual_inc, default) %&gt;% #keep Y variable last
  ggcorr(method = c(&quot;pairwise&quot;, &quot;pearson&quot;), label_round=2, label = TRUE)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/correlation%20table-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/correlation%20table-1.png" width="648" style="display: block; margin: auto;" /></p>
 <blockquote>
 <p>Q1. Add one more visualization of your own. Describe what it shows and what you learn from it in 1-2 lines.</p>
 </blockquote>
@@ -240,12 +230,12 @@ ggplot(lc_clean, aes(x= loan_amnt,y= default, colour=term)) +
   geom_boxplot() +
   facet_wrap(~grade) +
   labs(title= &quot;Average annual income across all the grades for term 36 and 60&quot;, y=&quot;Default&quot;, x=&quot;Annual Income(1000 $)&quot;)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-1-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-1-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>lc_clean %&gt;% 
   select(grade, int_rate, default) %&gt;% 
            ggpairs(aes(colour=default), alpha=1)+
   theme_bw()</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-1-2.png" width="648" style="display: block; margin: auto;" />
+<p><img src="project-05_files/figure-html/unnamed-chunk-1-2.png" width="648" style="display: block; margin: auto;" />
 &gt; ANSWER:</p>
 <p>From the graph it is interesting to observe that across particular loan grades from A to G the loan amount tends to increase in both terms for 36 months and 60 months. However, the loan amount for 36 months always stays slower disregard grade or default.</p>
 <p>From the ggpairs plot, we can draw a few conclusions. First of all, the amount of data on default=1 is much smaller than the smount of data on default=0. Second of all, the biggest group by grade is group B, and groups that mostly tend to default are B, C or D. Intrestingly, the interest rate tends to be bigger for people who fail to pay the loan back. Also the interest rate is the lowest for grade A and increases across the grades.</p>
@@ -300,7 +290,7 @@ summary(logistic1)</code></pre>
 ## 
 ## Number of Fisher Scoring iterations: 5</code></pre>
 <pre class="r"><code>ggplot(data=reduced, aes(x=I(annual_inc/1000), y=default)) + geom_smooth(method=&quot;lm&quot;, se=0, aes(color=&quot;OLS&quot;))+ geom_smooth(method = &quot;glm&quot;, method.args = list(family = &quot;binomial&quot;),  se=0, aes(color=&quot;Logistic&quot;))+ labs(y=&quot;Prob of Default&quot;, x=&quot;Annual Income(1000 $)&quot;)+  xlim(0,450)+scale_y_continuous(labels=scales::percent)+geom_jitter(width=0, height=0.05, alpha=0.7) + scale_colour_manual(name=&quot;Fitted Model&quot;, values=c(&quot;blue&quot;, &quot;red&quot;))</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/linear%20and%20logisitc%20regression%20with%20binary%20response%20variable-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/linear%20and%20logisitc%20regression%20with%20binary%20response%20variable-1.png" width="648" style="display: block; margin: auto;" /></p>
 <blockquote>
 <p>Q2. Which model is more suitable for predicting probability of default, the linear regression or the logistic? Why?</p>
 </blockquote>
@@ -384,13 +374,13 @@ g0&lt;-ggplot( lc_clean, aes( prob_default2 ) )+
   geom_density( size=1)+
   ggtitle( &quot;Predicted Probability with Logistic 2&quot; )+  xlab(&quot;Estimated Probability&quot;)
 g0</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#plot 2: Density of predictions by default
 g1&lt;-ggplot( lc_clean, aes( prob_default2, color=default) ) +
   geom_density( size=1)+
   ggtitle( &quot;Predicted Probability with Logistic 2 by default&quot; )+  xlab(&quot;Estimated Probability&quot;)
 g1</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-2-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-2-2.png" width="648" style="display: block; margin: auto;" /></p>
 <div id="from-probability-to-classification" class="section level2">
 <h2>From probability to classification</h2>
 <p>The logistic regression model gives us a sense of how likely defaults are; it gives us a probability estimate. To convert this into a prediction, we need to choose a cutoff probability and classify every loan with a predicted probability of default above the cutoff as a prediction of default (and vice versa for loans with a predicted probability below this cutoff).</p>
@@ -464,7 +454,7 @@ AUC2&lt;-round(auc(lc_clean$default,prob_default2)*100, digits=2)
 ROC2&lt;-ggroc(ROC_logistic2,  alpha = 0.5)+ ggtitle(paste(&quot;Model Logistic 2: AUC=&quot;,round(auc(lc_clean$default,prob_default2)*100, digits=2),&quot;%&quot;))  + geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)+geom_segment(aes(x = 1, xend = 1, y = 0, yend = 1), color=&quot;black&quot;, linetype=&quot;dashed&quot;)+geom_segment(aes(x = 1, xend = 0, y = 1, yend = 1), color=&quot;black&quot;, linetype=&quot;dashed&quot;)
 
 ROC2</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/ROC%20curves-1.png" width="648" style="display: block; margin: auto;" />
+<p><img src="project-05_files/figure-html/ROC%20curves-1.png" width="648" style="display: block; margin: auto;" />
 Provide comments here:
 The ROC curve shows for any given level of True Positives, what level of True Negatives we can expect.The stright line shows the situation in which instead of a model we were using the probability of 0.5. Anything about the line is better than the random prediction. We aim for the ROC to be as close to the (1.00,1.00) point as possible. The AUC measure measures the area under the curve. Again for random prediciton (stright line) the AUC=0.5. The better the AUC the better the model. We expect the AUC of any predictive model to be between 0.5 and 1 as we expect is to be better than the random prediciton based on 0.5 chance. In case of a bad model, the AUC could be equal to the number below 0.5. However, in that case, we should immediately drop the model, as it means, that our model predictions are worse that the random chance of being correct. The AUC cannot be equal to the number above 1, as in case AUC=1, the model predictions are already 100% correct.</p>
 <blockquote>
@@ -498,7 +488,7 @@ AUC_logistic2_out &lt;- round(auc(testing$default,p_out)*100, digits=2)
 #plot in the same figure both ROC curves and print the AUC of both curves in the title
 ggroc(list(&quot;Logistic 2 in-sample&quot;=ROC_logistic2_in, &quot;Logistic 2 out-of-sample&quot;=ROC_logistic2_out))+ggtitle(paste(&quot;Model Logistic 2 in-sample AUC=&quot;,round(auc(training$default,p_in)*100, digits=2),&quot;%\nModel Logistic 2 out-of-sample AUC=&quot;,round(auc(testing$default,p_out)*100, digits=2),&quot;%&quot;))    +
 geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/out-of-sample%20ROC%20curve-1.png" width="648" style="display: block; margin: auto;" />
+<p><img src="project-05_files/figure-html/out-of-sample%20ROC%20curve-1.png" width="648" style="display: block; margin: auto;" />
 Provide comments here:
 There is a very weak evidence in overfitting, because the ROC curve and AUC statistic has remained roughly the same in both in-sample and out-of-sample cases. Therefore we can assume that overfitting does not occur in our model.</p>
 </div>
@@ -567,7 +557,7 @@ for(i in 1:100) {
 }
 
 ggplot(as.data.frame(threshold), aes(x=threshold,y=profit)) + geom_smooth(method = &#39;loess&#39;, se=0) +labs(title=&quot;Profit curve with logistic 2 based on validation set, &quot;)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>paste0(&quot;Based on the validation set: Maximum profit per loan is $&quot;, round(max(profit)/nrow(validation),2), &quot; achieved at a threshold of &quot;, threshold[which.is.max(profit)]*100,&quot;%.&quot;)</code></pre>
 <pre><code>## [1] &quot;Based on the validation set: Maximum profit per loan is $5.55 achieved at a threshold of 17%.&quot;</code></pre>
 <pre class="r"><code>#calculate probability of default out of sample 
@@ -586,7 +576,7 @@ for(i in 1:100) {
 }
 
 ggplot(as.data.frame(thresholdt), aes(x=thresholdt,y=profitt)) + geom_smooth(method = &#39;loess&#39;, se=0) +labs(title=&quot;Profit curve with logistic 2 based on testing set, &quot;)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>paste0(&quot;Based on the testing set: Maximum profit per loan is $&quot;, round(max(profitt)/nrow(testing),2), &quot; achieved at a threshold of &quot;, thresholdt[which.is.max(profitt)]*100,&quot;%.&quot;)</code></pre>
 <pre><code>## [1] &quot;Based on the testing set: Maximum profit per loan is $5.62 achieved at a threshold of 17.75%.&quot;</code></pre>
 <p>Insert your comments here:
@@ -861,7 +851,7 @@ AUC_logistic_wild_out &lt;- round(auc(testing$default,p_wild_out)*100, digits=2)
 #plot in the same figure both ROC curves and print the AUC of both curves in the title
 ggroc(list(&quot;Logistic Wild in-sample&quot;=ROC_logistic_wild, &quot;Logistic Wild out-of-sample&quot;=ROC_logistic_wild_out))+ggtitle(paste(&quot;Model Logistic Wild in-sample AUC=&quot;,round(auc(training$default,p_wild_in)*100, digits=2),&quot;%\nModel Logistic Wild out-of-sample AUC=&quot;,round(auc(testing$default,p_wild_out)*100, digits=2),&quot;%&quot;))    +
 geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-8-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-8-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#very weak evidence of overfitting, we can compare now our model logistic_wild to logistic2
   
 logistic2_in&lt;-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family=&quot;binomial&quot;, training)
@@ -876,7 +866,7 @@ AUC_logistic2_in&lt;-round(auc(training$default,p_in)*100, digits=2)
 #plot in the same figure both ROC curves and print the AUC of both curves in the title
 ggroc(list(&quot;Logistic 2&quot;=ROC_logistic2_in, &quot;Logistic Wild&quot;=ROC_logistic_wild))+ggtitle(paste(&quot;Model Logistic 2 on training set AUC=&quot;,round(auc(training$default,p_in)*100, digits=2),&quot;%\nModel Logistic Wild on training set AUC=&quot;,round(auc(training$default,p_wild_in)*100, digits=2),&quot;%&quot;))    +
 geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)</code></pre>
-<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-8-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="project-05_files/figure-html/unnamed-chunk-8-2.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#calculate probability of default in the training sample 
 p_wild_val&lt;-predict(logistic_wild, validation, type = &quot;response&quot;)
 expected_return60l &lt;- p_wild_val*(-0.6)+(1-p_wild_val)*(validation$term_months*validation$installment/validation$loan_amnt-1)
