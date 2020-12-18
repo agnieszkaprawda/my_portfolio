@@ -293,7 +293,7 @@ textarea.form-control {
     font-weight: 700; }
 
 .site-project, .site-blog {
-  padding: 120px 0;
+  padding: 20px 0;
   overflow: hidden; }
   .site-project-item, .site-blog-post {
     position: relative;
@@ -305,12 +305,12 @@ textarea.form-control {
       position: absolute;
       background: #F7F9FF;
       width: 100%;
-      padding: 45px 50px;
+      padding: 20px 20px;
       bottom: 0;
       transition: all 0.3s cubic-bezier(0.36, 0.03, 0, 0.91); }
       @media (max-width: 767px) {
         .site-project-item-content, .site-blog-post-content {
-          padding: 30px;
+          padding: 20px;
           padding-bottom: 75px; } }
       .site-project-item-content span, .site-blog-post-content span {
         font-family: "Montserrat", sans-serif;
@@ -364,11 +364,11 @@ textarea.form-control {
         transform: scaleX(1);
         transform-origin: left; }
   .site-project-header {
-    padding: 170px 0 100px;
+    padding: 20px 0 20px;
     background: #F7F9FF; }
     @media (max-width: 767px) {
       .site-project-header {
-        padding: 120px 0 80px; } }
+        padding: 20px 0 20px; } }
     .site-project-header-content h1 {
       font-size: 55px; }
       .site-project-header-content h1 span {
@@ -420,10 +420,10 @@ textarea.form-control {
         opacity: 0.3;
         cursor: not-allowed; }
   .site-project-single-section {
-    padding: 250px 0 100px; }
+    padding: 20px 0 20px; }
     @media (max-width: 767px) {
       .site-project-single-section {
-        padding: 100px 0; } }
+        padding: 2-px 0; } }
   .site-project-single h1 {
     font-size: 40px;
     font-weight: 500;
