@@ -12,21 +12,21 @@
     
     
     <item>
-      <title>Predicting interest rates using K-fold CV,LASSO &amp; OLS regression</title>
-      <link>/portfolio/project-01/</link>
-      <pubDate>Wed, 25 Nov 2020 15:58:10 +0600</pubDate>
-      
-      <guid>/portfolio/project-01/</guid>
-      <description>In this piece I will analyse the data on interest rates in the Lendign Club. First I will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding.</description>
-    </item>
-    
-    <item>
-      <title></title>
+      <title>Interest rate analysis in R using logistic models</title>
       <link>/portfolio/project-05/</link>
       <pubDate>Tue, 27 Oct 2020 15:58:10 +0600</pubDate>
       
       <guid>/portfolio/project-05/</guid>
       <description>Introduction Welcome to the second workshop. We will continue working with the lending club data. In this workshop we will take the perspective of an investor to the lending club.</description>
+    </item>
+    
+    <item>
+      <title>Predicting interest rates using K-fold CV,LASSO &amp; OLS regression</title>
+      <link>/portfolio/project-01/</link>
+      <pubDate>Sun, 11 Oct 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/portfolio/project-01/</guid>
+      <description>In this piece I will analyse the data on interest rates in the Lendign Club. First I will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding.</description>
     </item>
     
     <item>
