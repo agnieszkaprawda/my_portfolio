@@ -1,7 +1,7 @@
 # Site settings
 baseURL       = "https://agnieszkaprawdaportfolio.netlify.app/"
 languageCode  = "en-us"
-title         = "Roxo | Creative Design Agency"
+title         = "Agnieszka Prawda - Portfolio"
 theme = "roxo-hugo"
 summarylength = 25
 
