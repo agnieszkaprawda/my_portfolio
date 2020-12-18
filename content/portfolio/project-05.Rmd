@@ -1,0 +1,676 @@
+---
+category:
+- Data Science in R
+date: "2020-10-27T15:58:10+06:00"
+image: images/projects/airbnb1.png
+project_images:
+title: 
+type: portfolio
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+```{r, load_libraries, include = FALSE}
+library(tidyverse) # the usual stuff: dplyr, readr, and other goodies
+library(lubridate) # to handle dates
+library(GGally) # for correlation-scatter plot matrix
+library(ggfortify) # to produce residual diagnostic plots
+library(rsample) # to split dataframe in training- & testing sets
+library(janitor) # clean_names()
+library(broom) # use broom:augment() to get tidy table with regression output, residuals, etc
+library(huxtable) # to get summary table of all models produced
+library(caret) # to train more advanced models (k-fold cross-validation, stepwise regression, LASSO)
+library(nnet) # to calculate the maximum value of a vector
+library(pROC) # to plot ROC curves
+library(MLmetrics) #for caret LASSO logistic regression
+
+```
+
+
+# Introduction
+
+Welcome to the second workshop. We will continue working with the lending club data. In this workshop we will take the perspective of an investor to the lending club. Our goal is to select a subset of the most promising loans to invest. We will do so using the method of logistic regression. Feel free to consult the R markdown file of session 4.
+
+For this workshop please submit a knitted (html) rmd file and a csv file containing your investment choices (see question 14) by the deadline posted on canvas. 25% of your grade will depend on the performance of your investment choices (i.e., question 14). The rest of the questions are equally weighted. 
+
+In answering the questions below be succinct but provide complete answers with quantitative evidence as far as possible. Feel free to discuss methods with each other and with the tutors during the workshop. As this is an individual assignment, *do not collaborate* in answering the questions below or in making investment choices. 
+
+After you have submitted your report I will upload a screen cast that discusses the performance of your chosen portfolios. I will also use this screen cast to illustrate the "wisdom of the crowd" principle. So please make sure you watch it.
+
+Enjoy the workshop!
+
+## Load the data
+
+First we need to start by loading the data.
+```{r, load_data, warning=FALSE, message=FALSE}
+
+lc_raw <- read_csv("~/Documents/LBS/Data Science/Session 03/LendingClub Data.csv",  skip=1) %>%  #since the first row is a title we want to skip it. 
+  clean_names() # use janitor::clean_names()
+```
+
+# ICE the data: Inspect, Clean, Explore
+
+Any data science engagement starts with ICE. Inspecting, Clean and Explore the data. 
+
+## Inspect the data
+
+Inspect the data to understand what different variables mean. Variable definitions can be found in the excel version of the data.
+```{r, Inspect}
+glimpse(lc_raw)
+```
+
+## Clean the data
+Are there any redundant columns and rows? Are all the variables in the correct format (e.g., numeric, factor, date)? Lets fix it. 
+
+The variable "loan_status" contains information as to whether the loan has been repaid or charged off (i.e., defaulted). Let's create a binary factor variable for this. This variable will be the focus of this workshop.
+
+```{r, clean data}
+lc_clean<- lc_raw %>%
+  dplyr::select(-x20:-x80) %>% #delete empty columns
+  filter(!is.na(int_rate)) %>%   #delete empty rows
+  mutate(
+    issue_d = mdy(issue_d),  # lubridate::mdy() to fix date format
+    term = factor(term_months),     # turn 'term' into a categorical variable
+    delinq_2yrs = factor(delinq_2yrs) # turn 'delinq_2yrs' into a categorical variable
+  ) %>% 
+  mutate(default = dplyr::recode(loan_status, 
+                      "Charged Off" = "1", 
+                      "Fully Paid" = "0"))%>%
+    mutate(default = as.factor(default)) %>%
+  dplyr::select(-emp_title,-installment, -term_months, everything()) #move some not-so-important variables to the end. 
+    
+```
+
+## Explore the data
+
+Let's explore loan defaults by creating different visualizations. We start with examining how prevalent defaults are, whether the default rate changes by loan grade or number of delinquencies, and a couple of scatter plots of defaults against loan amount and income.
+
+
+```{r, visualization of defaults, warning=FALSE}
+#bar chart of defaults
+def_vis1<-ggplot(data=lc_clean, aes(x=default)) +geom_bar(aes(y = (..count..)/sum(..count..))) + labs(x="Default, 1=Yes, 0=No", y="relative frequencies") +scale_y_continuous(labels=scales::percent) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= "count",vjust=-0.5) 
+def_vis1
+
+#bar chart of defaults per loan grade
+def_vis2<-ggplot(data=lc_clean, aes(x=default), group=grade) +geom_bar(aes(y = (..count..)/sum(..count..), fill = factor(..x..)), stat="count")  + labs(title="Defaults by Grade", x="Default, 1=Yes, 0=No", y="relative frequencies") +scale_y_continuous(labels=scales::percent) +facet_grid(~grade) + theme(legend.position = "none") +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= "count",vjust=-0.5) 
+def_vis2
+
+#bar chart of defaults per number of Delinquencies
+def_vis3<-lc_clean %>%
+  filter(as.numeric(delinq_2yrs)<4) %>%
+  ggplot(aes(x=default), group=delinq_2yrs) +geom_bar(aes(y = (..count..)/sum(..count..), fill = factor(..x..)), stat="count")  + labs(title="Defaults by Number of Delinquencies", x="Default, 1=Yes, 0=No", y="relative frequencies")  +scale_y_continuous(labels=scales::percent) +facet_grid(~delinq_2yrs) + theme(legend.position = "none") +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= "count",vjust=-0.5)
+
+def_vis3
+
+#scatter plots 
+
+#We select 2000 random loans to display only to make the display less busy. 
+set.seed(1234)
+reduced<-lc_clean[sample(0:nrow(lc_clean), 2000, replace = FALSE),]%>%
+  mutate(default=as.numeric(default)-1) # also convert default to a numeric {0,1} to make it easier to plot.
+
+          
+# scatter plot of defaults against loan amount                         
+def_vis4<-ggplot(data=reduced, aes(y=default,x=I(loan_amnt/1000)))  + labs(y="Default, 1=Yes, 0=No", x="Loan Amnt (1000 $)") +geom_jitter(width=0, height=0.05, alpha=0.7) #We use jitter to offset the display of defaults/non-defaults to make the data easier to interpert. We have also changed the amount to 1000$ to reduce the number of zeros on the horizontal axis.
+
+def_vis4
+
+#scatter plot of defaults against loan amount.
+def_vis5<-ggplot(data=reduced, aes(y=default,x=I(annual_inc/1000)))   + labs(y="Default, 1=Yes, 0=No", x="Annual Income(1000 $)") +geom_jitter(width=0, height=0.05, alpha=0.7) +  xlim(0,400)
+
+def_vis5
+
+```
+
+We can also estimate a correlation table between defaults and other continuous variables.
+
+```{r, correlation table, warning=FALSE, message=FALSE}
+
+# correlation table using GGally::ggcor()
+# this takes a while to plot
+
+lc_clean %>% 
+    mutate(default=as.numeric(default)-1)%>%
+  select(loan_amnt, dti, annual_inc, default) %>% #keep Y variable last
+ ggcorr(method = c("pairwise", "pearson"), label_round=2, label = TRUE)
+
+```
+
+
+> Q1. Add one more visualization of your own. Describe what it shows and what you learn from it in 1-2 lines. 
+
+ 
+Insert your code here:
+```{r}
+# My visualizations
+ggplot(lc_clean, aes(x= loan_amnt,y= default, colour=term)) +
+  geom_boxplot() +
+  facet_wrap(~grade) +
+  labs(title= "Average annual income across all the grades for term 36 and 60", y="Default", x="Annual Income(1000 $)")
+
+lc_clean %>% 
+  select(grade, int_rate, default) %>% 
+           ggpairs(aes(colour=default), alpha=1)+
+  theme_bw()
+  
+```
+> ANSWER: 
+
+From the graph it is interesting to observe that across particular loan grades from A to G the loan amount tends to increase in both terms for 36 months and 60 months. However, the loan amount for 36 months always stays slower disregard grade or default.
+
+From the ggpairs plot, we can draw a few conclusions. First of all, the amount of data on default=1 is much smaller than the smount of data on default=0. Second of all, the biggest group by grade is group B, and groups that mostly tend to default are B, C or D. Intrestingly, the interest rate tends to be bigger for people who fail to pay the loan back. Also the interest rate is the lowest for grade A and increases across the grades.
+
+# Linear vs. logistic regression for binary response variables
+
+It is certainly possible to use the OLS approach to find the line that minimizes the sum of square errors when the dependent variable is binary (i.e., default no default). In this case, the predicted values take the interpretation of a probability. We can also estimate a logistic regression instead. We do both below.
+
+
+```{r, linear and logisitc regression with binary response variable, warning=FALSE}
+
+model_lm<-lm(as.numeric(default)~I(annual_inc/1000), lc_clean)
+summary(model_lm)
+
+
+logistic1<-glm(default~I(annual_inc/1000), family="binomial", lc_clean)
+summary(logistic1)
+
+
+ggplot(data=reduced, aes(x=I(annual_inc/1000), y=default)) + geom_smooth(method="lm", se=0, aes(color="OLS"))+ geom_smooth(method = "glm", method.args = list(family = "binomial"),  se=0, aes(color="Logistic"))+ labs(y="Prob of Default", x="Annual Income(1000 $)")+  xlim(0,450)+scale_y_continuous(labels=scales::percent)+geom_jitter(width=0, height=0.05, alpha=0.7) + scale_colour_manual(name="Fitted Model", values=c("blue", "red"))
+
+
+
+
+```
+
+> Q2. Which model is more suitable for predicting probability of default, the linear regression or the logistic? Why? 
+
+Answer here: Logistic model in the case when real y (default) takes values equal to 0 or 1 is much better than OLS. It is because it avoids the negative values for probability, which are impossible to achieve empirically and not explainable.
+
+# Multivariate logistic regression
+
+We can estimate logistic regression with multiple explanatory variables as well. Let's use annual_inc, term, grade, and loan amount as features. Let's call this model logistic 2.
+
+```{r, multivariate logistic regression}
+logistic2<-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family="binomial", lc_clean)
+summary(logistic2)
+
+#compare the fit of logistic 1 and logistic 2
+anova(logistic1,logistic2)
+
+```
+
+> Q3. Based on logistic 2, explain the following:
+
+a. Estimated Coefficient
+The Estimated Coeffiecient explains how a change in a particular varaible influence directly the risk factor decrease/increase. Risk factor is connected to the outcome y (probability) though the logistic function in the model. Sign of the coefficient has a general interpretation - if negative, the change in variable by 1 will cause decrease in the probability. If coeffiecient is positive, the change in variable by 1 will cause increase in probability.
+
+b. Standard error of coefficient
+The magnitude of the standard error estimates how estimated coefficient would be affected if different data are fed in the model. It is also useful when constructing the 95% Confidence Interval for the true coefficients.
+
+c. p-value of coefficient
+The p-value of the coefficient is connected to the Z-score in the Z-test. If the p-value is smaller than 0.05, the coeffieint is signifficant. The p-value describes the probability of the coeffiecient's value falling inside the 95% confidence interval.
+
+d. Deviance
+Deviance (or -2 log-likelihood (-2LL) statistic) is a goodness-of-fit statistic for a statistical model. We often use it for statistical hypothesis testing. Deviance is a generalization of the idea of using the sum of squares of residuals in ordinary least squares to cases where model-fitting is achieved by maximum likelihood. It tells us how much unexplained variation there is in our logistic regression model - the higher the value the less accurate the model.
+
+e. AIC
+The Akaike Information Critetion rectifies deviance by penalizing number of coefficients. In other words AIC is an estimator of out-of-sample prediction error. The furmula is as follows: =-2log(L)+2k, where k is the number of coefficients. Again, the lower the score, the more accurate our model. AIC is used most frequently in situations when one is not able to easilty test model's performance with use of machine learning (when having a small dataset or time series). 
+f. Null Deviance
+It is the outcome of Deviance,  when model depends only on intercept.
+
+g. Is Logistic 2 a better model than logistic 1? Why or why not? 
+Yes, Logistic 2 model is better than logistic 1 model as both deviance and AIC are lower.
+
+
+>Q4. Calculate the predicted probabilities associated with logistic2 and plot them as a density chart. Also plot the density of the predictions for those loans that did default, and for the loans that did not (on the same chart).
+
+Insert your code here:
+```{r}
+#Predict the probability of default
+prob_default2<-predict(logistic2, lc_clean, type="response")
+
+#plot 1: Density of predictions
+g0<-ggplot( lc_clean, aes( prob_default2 ) )+
+  geom_density( size=1)+
+  ggtitle( "Predicted Probability with Logistic 2" )+  xlab("Estimated Probability")
+g0
+#plot 2: Density of predictions by default
+g1<-ggplot( lc_clean, aes( prob_default2, color=default) ) +
+  geom_density( size=1)+
+  ggtitle( "Predicted Probability with Logistic 2 by default" )+  xlab("Estimated Probability")
+g1
+```
+
+## From probability to classification
+
+The logistic regression model gives us a sense of how likely defaults are; it gives us a probability estimate. To convert this into a prediction, we need to choose a cutoff probability and classify every loan with a predicted probability of default above the cutoff as a prediction of default (and vice versa for loans with a predicted probability below this cutoff).
+
+Let's choose a threshold of 20%. Of course some of our predictions will turn out to be right but some will turn out to be wrong -- you can see this in the density figures of the previous section. Let's call "default" the "positive" class since this is the class we are trying to predict. We could be making two types of mistakes. False positives (i.e., predict that a loan will default when it will not) and false negatives (I.e., predict that a loan will not default when it does). These errors are summarized in the confusion matrix. 
+
+>Q5. Produce the confusion matrix for the model logistic 2 for a cutoff of 18%
+
+Insert your code here:
+```{r, From probability to classification}
+#using the logistic 2 model predict default probabilities
+prob_default2<- predict(logistic2, lc_clean, type="response")
+  
+#Call any loan with probability more than 18% as default and any loan with lower probability as non-default. Make sure your prediction is a factor with the same levels as the default variable in the lc_clean data frame
+p_class<-factor(ifelse(prob_default2>0.18,"1","0"),levels=levels(lc_clean$default))
+  
+#produce the confusion matrix and set default as the positive outcome
+con2<-confusionMatrix(p_class,lc_clean$default,positive="1") 
+
+#print the confusion matrix
+con2
+
+
+```
+
+>Q6. Using the confusion matrix, explain the following and show how they are calculated
+
+
+For each of this explain what they mean in the context of the lending club and the goal of predicting loan defaults.
+
+Answer here:
+a. Accuracy
+Percentage of status correctly predicted, regardless of default status.
+(2611+24674)/(2611+2818+24674+7766)=0.7205
+b. Sensitivity
+Proportion of good loans correctly identified as non-default.
+2611/(2611+2818)=0.48094
+c. Specificity
+Proportion of bad loans correctly identified as default.
+24674/(24674+7766)=0.76060
+
+>Q7. Using the model logistic 2 produce the ROC curve and calculate the AUC measure. Explain what the ROC shows and what the AUC measure means. Why do we expect the AUC of any predictive model to be between 0.5 and 1? Could the AUC ever be below 0.5 or above 1? 
+
+Insert your code here:
+```{r, ROC curves, warning=FALSE}
+#estimate the ROC curve for Logistic 2
+ROC_logistic2 <- roc(lc_clean$default,prob_default2)
+
+#estimate the AUC for Logistic 2 and round it to two decimal places
+AUC2<-round(auc(lc_clean$default,prob_default2)*100, digits=2)
+#Plot the ROC curve and display the AUC in the title
+ROC2<-ggroc(ROC_logistic2,  alpha = 0.5)+ ggtitle(paste("Model Logistic 2: AUC=",round(auc(lc_clean$default,prob_default2)*100, digits=2),"%"))  + geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")+geom_segment(aes(x = 1, xend = 1, y = 0, yend = 1), color="black", linetype="dashed")+geom_segment(aes(x = 1, xend = 0, y = 1, yend = 1), color="black", linetype="dashed")
+
+ROC2
+```
+Provide comments here: 
+The ROC curve shows for any given level of True Positives, what level of True Negatives we can expect.The stright line shows the situation in which instead of a model we were using the probability of 0.5. Anything about the line is better than the random prediction. We aim for the ROC to be as close to the (1.00,1.00) point as possible. The AUC measure measures the area under the curve. Again for random prediciton (stright line) the AUC=0.5. The better the AUC the better the model. We expect the AUC of any predictive model to be between 0.5 and 1 as we expect is to be better than the random prediciton based on 0.5 chance. In case of a bad model, the AUC could be equal to the number below 0.5. However, in that case, we should immediately drop the model, as it means, that our model predictions are worse that the random chance of being correct. The AUC cannot be equal to the number above 1, as in case AUC=1, the model predictions are already 100% correct.
+
+>Q8. So far we have only worked in-sample. Split the data into training and testing and estimate the models ROC curve and AUC measure out of sample. Is there any evidence of over fitting?
+
+Insert your code here::
+```{r, out-of-sample ROC curve}
+# splitting the data into training and testing
+set.seed(1234)
+train_test_split <- initial_split(lc_clean, prop = 0.8)
+testing <- testing(train_test_split) #20% of the data is set aside for testing
+training <- training(train_test_split) #80% of the data is set aside for training
+
+# run logistic 2 on the training set 
+logistic2_in<-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family="binomial", training)
+
+#calculate probability of default in the training sample 
+p_in<-predict(logistic2_in, training, type = "response")
+  
+#ROC curve using in-sample predictions
+ROC_logistic2_in <- roc(training$default,p_in)
+#AUC using in-sample predictions
+AUC_logistic2_in<-round(auc(training$default,p_in)*100, digits=2)
+  
+#calculate probability of default out of sample 
+p_out<-predict(logistic2_in, testing, type = "response")
+
+#ROC curve using out-of-sample predictions
+ROC_logistic2_out <- roc(testing$default,p_out)
+#AUC using out-of-sample predictions
+AUC_logistic2_out <- round(auc(testing$default,p_out)*100, digits=2)
+#plot in the same figure both ROC curves and print the AUC of both curves in the title
+ggroc(list("Logistic 2 in-sample"=ROC_logistic2_in, "Logistic 2 out-of-sample"=ROC_logistic2_out))+ggtitle(paste("Model Logistic 2 in-sample AUC=",round(auc(training$default,p_in)*100, digits=2),"%\nModel Logistic 2 out-of-sample AUC=",round(auc(testing$default,p_out)*100, digits=2),"%"))    +
+geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
+```
+Provide comments here: 
+There is a very weak evidence in overfitting, because the ROC curve and AUC statistic has remained roughly the same in both in-sample and out-of-sample cases. Therefore we can assume that overfitting does not occur in our model.
+
+## Selecting loans to invest using the model Logistic 2.
+
+Before we look for a better model than logistic 2 let's see how we can use this model to select loans to invest. Let's make the simplistic assumption that every loan generates \$20 profit if it is paid off and \$100 loss if it is charged off for an investor. Let’s use a cut-off value to determine which loans to invest in, that is, if the predicted probability of default for a loan is below this value then we invest in that loan and not if it is above. 
+
+To do this we split the data in three parts: training, validation, and testing. Feel free to experiment with different seeds but please use the seeds provided below for your submission.
+
+```{r}
+# splitting the data into training and testing
+set.seed(121)
+train_test_split <- initial_split(lc_clean, prop = 0.6)
+training <- training(train_test_split) #60% of the data is set aside for training
+remaining <- testing(train_test_split) #40% of the data is set aside for validation & testing
+set.seed(121)
+train_test_split <- initial_split(remaining, prop = 0.5)
+validation<-training(train_test_split) #50% of the remaining data (20% of total data) will be used for validation
+testing<-testing(train_test_split) #50% of the remaining data (20% of total data) will be used for testing
+```
+
+
+>Q9. Train logistic 2 on the training set above. Use the trained model to determine the optimal cut-off threshold based on the validation test. What is the optimal cutoff threshold? How much profit does it generate? Using the testing set, what is the profit per loan associated with the cutoff? 
+
+Insert your code here:
+```{r}
+logistic2_in<-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family="binomial", training)
+summary(logistic2_in)
+
+p_val<-predict(logistic2_in, validation, type = "response") #predict probability of default on the validation set
+
+#we select the cutoff threshold using the estimated model and the validation set
+profit=0
+threshold=0
+for(i in 1:100) {
+  threshold[i]=i/400
+  one_or_zero_search<-ifelse(p_val>threshold[i],"1","0")
+  p_class_search<-factor(one_or_zero_search,levels=levels(validation$default))
+
+  con_search<-confusionMatrix(p_class_search,validation$default,positive="1")
+  profit[i]=con_search$table[1,1]*20-con_search$table[1,2]*100
+}
+
+ggplot(as.data.frame(threshold), aes(x=threshold,y=profit)) + geom_smooth(method = 'loess', se=0) +labs(title="Profit curve with logistic 2 based on validation set, ")
+
+paste0("Based on the validation set: Maximum profit per loan is $", round(max(profit)/nrow(validation),2), " achieved at a threshold of ", threshold[which.is.max(profit)]*100,"%.")
+
+#calculate probability of default out of sample 
+p_out<-predict(logistic2_in, testing, type = "response")
+
+#we select the cutoff threshold using the estimated model and the testing set
+profitt=0
+thresholdt=0
+for(i in 1:100) {
+  thresholdt[i]=i/400
+  one_or_zero_search_t<-ifelse(p_out>thresholdt[i],"1","0")
+  p_class_search_t<-factor(one_or_zero_search_t,levels=levels(testing$default))
+
+  con_search_t<-confusionMatrix(p_class_search_t,testing$default,positive="1")
+  profitt[i]=con_search_t$table[1,1]*20-con_search_t$table[1,2]*100
+}
+
+ggplot(as.data.frame(thresholdt), aes(x=thresholdt,y=profitt)) + geom_smooth(method = 'loess', se=0) +labs(title="Profit curve with logistic 2 based on testing set, ")
+
+paste0("Based on the testing set: Maximum profit per loan is $", round(max(profitt)/nrow(testing),2), " achieved at a threshold of ", thresholdt[which.is.max(profitt)]*100,"%.")
+```
+Insert your comments here:
+Based on the validation set, we can observe that the maximum profit per loan is $5.55  achieved at a threshold of 17% optimal cutoff. In case of using the testing set, we obtain also the cutoff point of 17.5%, however the maximum profit per loan amount to $5.62.
+
+# More realistic revenue model
+
+Let’s build a more realistic profit and loss model. Each loan has different terms (e.g., different interest rate and different duration) and therefore a different return if fully paid. For example, a 36 month loan of \$5000 with installment of \$163 per month would generate a return of `163*36/5000-1` if there was no default. Let’s assume that it would generate a loss of -60% if there was a default (the loss is not 100% because the loan may not default immediately and/or the lending club may be able to recover part of the loan). 
+
+>Q10. Under these assumptions, how much return would you get if you invested \$1 in each loan in the validation set? Express your answer as a % return.
+
+Insert your code here:
+```{r}
+validation2<-validation%>%
+  mutate(default1=as.numeric(default)-1,
+         return= ifelse (default1==1, -0.6, term_months*installment/loan_amnt-1))
+
+validation2 %>% 
+  summarize(total_return_percent = sum(return)/n()*100)
+
+  
+summary(validation2)
+
+```
+Insert comments here:
+
+According to the assumption above, we reach a return of 11.45%.
+
+Unfortunately, we cannot use the realized return to select loans to invest (as at the time we make the investment decision we do not know which loan will default). Instead, we can calculate an expected return using the estimated probabilities of default -- expected return = return if not default * (1-prob(default)) + return if default * prob(default). 
+
+
+> Q11. Calculate the expected return of the loans in the validation set using the logistic 2 model trained in the training set. Can you use the expected return metric to select a portfolio of the $n$ most promising loans to invest in ($n$ is an integer number)? How does the realized return vary as you change $n$? What is the profit for $n=800$? 
+
+Insert your code here:
+```{r}
+expected_return <- p_val*(-0.6)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return <-as.data.frame(expected_return) %>% 
+  arrange(-expected_return) 
+  
+expected_return_800<-expected_return %>% head(800)
+
+expected_return_800%>% 
+  summarize(expected_return_in_percent = sum(expected_return)/800*100)
+
+expected_return_2000<-expected_return %>% head(1500)
+
+expected_return_2000%>% 
+  summarize(expected_return_in_percent =sum(expected_return)/1500*100)
+
+expected_return_2000<-expected_return %>% head(8000)
+
+expected_return_2000%>% 
+  summarize(expected_return_in_percent =sum(expected_return)/8000*100)
+
+expected_return_2000<-expected_return %>% head(80)
+
+expected_return_2000%>% 
+  summarize(expected_return_in_percent =sum(expected_return)/80*100)
+```
+
+Insert comments here:
+In case n=800, our expected return amount to 23.64%. In case of increasing n, the perctange value of expected return decreases. If we decrease $n$, then the expected return in percent increases. We can use the expected return metric as one of the means to select a portfolio, however we should not rely only on this measure. The less loans we choose, the less nominal profit we will obtain. Therefore, it would be smart to use other measures to complement this approach.
+
+
+>Q12. For $n=800$, how sensitive is your answer to the assumption that if a loan defaults you lose 60% of the value? To answer this question assess how the realized return of the 800 loans chosen in your portfolio change if the loss proportion varies from 20%-80%?
+
+Insert your code here:
+```{r}
+expected_return20 <- p_val*(-0.2)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return20 <-as.data.frame(expected_return20) %>% 
+  arrange(-expected_return20) 
+  
+expected_return_800_20<-expected_return20 %>% head(800)
+
+expected_return_800_20%>% 
+  summarize(sum(expected_return20)/800*100)
+
+expected_return80 <- p_val*(-0.8)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return80 <-as.data.frame(expected_return80) %>% 
+  arrange(-expected_return80) 
+  
+expected_return_800_80<-expected_return80 %>% head(800)
+
+expected_return_800_80%>% 
+  summarize(sum(expected_return80)/800*100)
+
+expected_return40 <- p_val*(-0.4)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return40 <-as.data.frame(expected_return40) %>% 
+  arrange(-expected_return40) 
+  
+expected_return_800_40<-expected_return40 %>% head(800)
+
+expected_return_800_40%>% 
+  summarize(sum(expected_return40)/800*100)
+  
+  
+```
+
+
+Insert comments here:
+
+If we lose 20% on default loans, we have expected return on the 800 loans as 33.36%.
+If we lose 80% on default loans, we have expected return on the 800 loans as 19.44%.
+The return changes but we still gain profit from it. The expected return increases more if the loss is small. It means that our answer is not this much sensitive to the assupmtion that if the loan defaults, we lose 60% of the value.
+
+>Q13. Experiment with different models using more features, interactions, and non-linear transformations. You may also want to try to estimate models using regularization (e.g., LASSO regression). Feel free to use data from other sources but make sure your model does not use information that would not be available at the time the loan is extended (e.g., for a 4-year loan given in January 2008, you can't use macro-economic indicators for 2008 or 2009 to predict whether the loan will default). Present below your best model ONLY and explain why you have chosen it (at the very least comment on AUC of your model against other models, e.g. logistic 2. Even better if you can compare your new model against logistic 2 on the realized return of 800 loans chosen out-of-sample from a data set of similar size to the validation set above.)
+
+Insert your code here:
+```{r}
+#showing best model
+#splitting the data again
+set.seed(121)
+train_test_split <- initial_split(lc_clean, prop = 0.6)
+training <- training(train_test_split) #60% of the data is set aside for training
+remaining <- testing(train_test_split) 
+
+train_test_split <- initial_split(remaining, prop = 0.5)
+validation<-training(train_test_split)
+testing<-testing(train_test_split) 
+
+logistic_wild<-glm(default~
+                     poly(I(annual_inc/1000),3)+
+                     term+
+                     grade+
+                     poly(int_rate,3):loan_amnt+
+                     issue_d*grade, family="binomial", training)
+summary(logistic_wild)
+
+#calculate probability of default in the training sample 
+p_wild_in<-predict(logistic_wild, training, type = "response")
+
+#ROC curve using in-sample predictions
+ROC_logistic_wild <- roc(training$default,p_wild_in)
+#AUC using in-sample predictions
+AUC_logistic_wild<-round(auc(training$default,p_wild_in)*100, digits=2)
+
+#quick check for overfitting
+
+#calculate probability of default out of sample 
+p_wild_out<-predict(logistic_wild, testing, type = "response")
+
+#ROC curve using out-of-sample predictions
+ROC_logistic_wild_out <- roc(testing$default,p_wild_out)
+#AUC using out-of-sample predictions
+AUC_logistic_wild_out <- round(auc(testing$default,p_wild_out)*100, digits=2)
+#plot in the same figure both ROC curves and print the AUC of both curves in the title
+ggroc(list("Logistic Wild in-sample"=ROC_logistic_wild, "Logistic Wild out-of-sample"=ROC_logistic_wild_out))+ggtitle(paste("Model Logistic Wild in-sample AUC=",round(auc(training$default,p_wild_in)*100, digits=2),"%\nModel Logistic Wild out-of-sample AUC=",round(auc(testing$default,p_wild_out)*100, digits=2),"%"))    +
+geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
+
+#very weak evidence of overfitting, we can compare now our model logistic_wild to logistic2
+  
+logistic2_in<-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family="binomial", training)
+
+#calculate probability of default in the training sample of model logistic2_in
+p_in<-predict(logistic2_in, training, type = "response")
+  
+#ROC curve using in-sample predictions
+ROC_logistic2_in <- roc(training$default,p_in)
+#AUC using in-sample predictions
+AUC_logistic2_in<-round(auc(training$default,p_in)*100, digits=2)
+#plot in the same figure both ROC curves and print the AUC of both curves in the title
+ggroc(list("Logistic 2"=ROC_logistic2_in, "Logistic Wild"=ROC_logistic_wild))+ggtitle(paste("Model Logistic 2 on training set AUC=",round(auc(training$default,p_in)*100, digits=2),"%\nModel Logistic Wild on training set AUC=",round(auc(training$default,p_wild_in)*100, digits=2),"%"))    +
+geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color="grey", linetype="dashed")
+```
+
+```{r}
+#calculate probability of default in the training sample 
+p_wild_val<-predict(logistic_wild, validation, type = "response")
+expected_return60l <- p_wild_val*(-0.6)+(1-p_wild_val)*(validation$term_months*validation$installment/validation$loan_amnt-1)
+
+expected_return60l <-as.data.frame(expected_return60l) %>% 
+  arrange(-expected_return60l) 
+
+expected_return_800_60l<-expected_return60l %>% head(800)
+
+expected_return_800_60l%>% 
+  summarize(expected_return_in_percent= sum(expected_return60l)/800*100)
+p_val<-predict(logistic2_in, validation, type = "response")
+expected_return <- p_val*(-0.6)+(1-p_val)*(validation$term_months*validation$installment/validation$loan_amnt-1)
+
+expected_return <-as.data.frame(expected_return) %>% 
+  arrange(-expected_return) 
+
+expected_return_800<-expected_return %>% head(800)
+
+expected_return_800%>% 
+  summarize(expected_return_in_percent = sum(expected_return)/800*100)
+```
+Insert comments here:
+
+My best model is model logistic_wild. I managed to achieve the AIC at the level of 17420 and AUC of the model accounting to 68,43%.When it comes to expected returns, the ones based on model logistic_wild bring return amounting to 24,34% (in comparison to 23,70% from model logistic2) basing it on the validation set. When searching the model, I tried the LASSO method on training split, I tried as well to add variables on inflation and price, however, they would increase my AIC and decrease the AUC. Therefore, I sticked to model logistic_wild.
+
+>Q14. The file "Assessment Data_2020.csv" contains information on almost 1800 new loans. Use your best model (see previous question) to choose 200 loans to invest. For this question assume that the loss proportion is 60%. Your grade on this question will be based on the actual performance of your choices.
+
+The submitted output should be a csv file "firstname_lastname.csv" containing only two columns: column A should have the loan number. Column B should have your name on top and then the number 1 for loans you would like to invest in and number zero otherwise. For example, if “Nicos Savva” wanted to invest in loans 2 and 4 but not in loans 1, 3, or 5, his submission should be named "nicos_savva.csv" and if opened in Excel should look like this:
+
+![Sample Submission](sample file.jpg "Sample submission")
+
+(If you can't see the picture make sure you download it from canvas in your working directory.)
+
+
+Please follow these instructions closely. For example, do not change the order of the loans, do not submit a list of the loan numbers you would invest in, do not invest in more (or fewer) than 200 loans, make sure the loan numbers are in column A and the choices in column B, start in cell A1, don’t forget to add your name, etc. For loans you do not want to invest you can write “0” or leave the cell empty. *Before you submit, open your file in EXCEL to make sure it looks like the sample above. Also check that the file size is not more that a few kilobytes. If it's more you are doing something wrong.*
+
+Add to the code below to do this:
+```{r}
+lc_assessment<- read_csv("~/Documents/LBS/Data Science/Session 05/Assessment_Data_2020.csv") 
+ lc_assessment<-  lc_assessment %>% 
+   clean_names() %>% # use janitor::clean_names() 
+  mutate(
+    issue_d = mdy(issue_d),  # lubridate::mdy() to fix date format
+    term = factor(term_months),     # turn 'term' into a categorical variable
+    delinq_2yrs = factor(delinq_2yrs)) # turn 'delinq_2yrs' into a categorical variable
+ 
+  lc_assessment %>% head(10)
+  
+ p_assessment<-predict(logistic_wild, lc_assessment, type = "response")
+
+  p_assessment %>% head(10)
+ 
+   expected_return_assessment <- p_assessment*(-0.6)+(1-p_assessment)*(lc_assessment$term_months*lc_assessment$installment/lc_assessment$loan_amnt-1)
+
+lc_assessment_total<- lc_assessment %>% 
+  mutate(expected_return=expected_return_assessment ) %>% 
+arrange(-expected_return ) 
+
+lc_assessment_total_200 <- lc_assessment_total %>%  
+  head(200) %>% 
+  mutate( agnieszka_prawda= 1)
+
+
+
+merged_assessment<- merge(x = lc_assessment_total, y = lc_assessment_total_200, by = "loan_number", all.x = TRUE) %>% 
+  select(loan_number, agnieszka_prawda) 
+  
+merged_assessment<- replace_na(merged_assessment,list(agnieszka_prawda=0))
+
+
+write.csv(merged_assessment, "agnieszka_prawda.csv",row.names=TRUE)
+
+
+
+
+```
+
+After you have submitted your report I will upload a screen cast that discusses the performance of your chosen portfolios. I will also use this screen cast to illustrate the "wisdom of the crowd" principle. So please make sure you watch it.
+
+# Critique
+
+No data science engagement is perfect. Before finishing a project is always important to reflect on the limitations of the analysis and suggest ways for future improvement.
+
+> Q15. Provide a critique of your work. What would you want to add to this analysis before you use it in practice? 
+
+Insert comments here: First of all, I believe collecting some more historical data on all the loan takers, on how they coped with their liabilities and credit history. I tried to use models on inflation and on bond prices however, the data did not improve my model, so I decided to drop it. Before using it in practice, I would like to try and find true value of the return in case of default instead of 60% assumed. I would also try to run Rigde regression and see how is compares to LASSO ( the best model in the homework).
+
+>Q16. In our analysis we did not use information about the applicants race or gender. Why do you think this is the case? Should we have done? 
+
+
+Insert comments here: We do not include data on race or gender as our model could become bias and disciminate poeple of particular sex or skin color. It is an aesthetic approach to data and modelling. We need to remember that when using machine learning methods, the models may sometimes take spourious values as significant ones and become sexist or racist.
+
+
+
+Please submit an html knitted version of your rmd file. Before you submit, please check that the file has knitted correctly and it is not too large (e.g., you are not printing the whole data set or your investment choices!). Also, please submit on time -- delayed submissions will be penalized according to the course policy. 

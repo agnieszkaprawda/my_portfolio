@@ -1,7 +1,7 @@
 ---
 category:
 - Applied Statistics in R
-date: "2020-11-25T15:58:10+06:00"
+date: "2020-09-25T15:58:10+06:00"
 image: images/projects/airbnb1.png
 project_images:
 title: Predicting Prices for Munich Airbnb
