@@ -1,5 +1,5 @@
 .site-project{
-  padding: 120px 0;
+  padding: 20px 0;
   overflow: hidden;
   &-item{
     position: relative;
@@ -97,7 +97,7 @@
     }
   }
   &-header{
-    padding: 170px 0 100px;
+    padding: 20px 0 20px;
     background: $gray;
     @include tablet{
       padding: 120px 0 80px;
@@ -173,7 +173,7 @@
   }
   &-single{
     &-section{
-      padding: 250px 0 100px;
+      padding: 20px 0 20px;
       @include tablet{
         padding: 100px 0;
       }
