@@ -4,7 +4,7 @@ category:
 date: "2020-09-19T15:58:10+06:00"
 image: images/projects/gapminder2.jpg
 project_images:
-title: Gapminder Data Analisys
+title: Gapminder Data Analisys - Data & Correlation Analysis
 type: portfolio
 ---
 ```{r, setup, include=FALSE}
