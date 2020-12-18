@@ -2,9 +2,9 @@
 category:
 - Applied Statistics
 date: "2020-09-19T15:58:10+06:00"
-image: images/projects/gapminder1.jpg
+image: images/projects/gapminder2.jpg
 project_images:
-title: GAPMINDER DATA ANALYSIS
+title: Gapminder Data Analisys
 type: portfolio
 ---
 ```{r, setup, include=FALSE}

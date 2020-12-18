@@ -2,109 +2,26 @@
 category:
 - Data Science
 date: "2020-11-25T15:58:10+06:00"
-image: images/projects/project-thumb-one.jpg
+image: images/projects/lendingclub1.jpg
 project_images:
-- images/projects/project-details-image-one.jpg
-- images/projects/project-details-image-two.jpg
 title: Predicting interest rates at the Lending Club
 type: portfolio
 ---
 
 
 
-<p>In this piece we will analyse the data on interest rates in the Lednign Club. First we will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, we will first build a linear regression model</p>
+<p>In this piece I will analyse the data on interest rates in the Lendign Club. First I will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, I will first build a linear regression model</p>
 <div id="load-and-prepare-the-data" class="section level1">
 <h1>Load and prepare the data</h1>
-<p>We start by loading the data to R in a dataframe.</p>
+<p>I start by loading the data to R in a dataframe.</p>
 <pre class="r"><code>lc_raw &lt;- read_csv(&quot;~/Documents/LBS/Data Science/Session 03/LendingClub Data.csv&quot;,  skip=1) %&gt;%  clean_names() # use janitor::clean_names()</code></pre>
 </div>
 <div id="ice-the-data-inspect-clean-explore" class="section level1">
 <h1>ICE the data: Inspect, Clean, Explore</h1>
 <p>Any data science engagement starts with ICE. Inspect, Clean and Explore the data. For this workshop I have cleaned the data for you.</p>
-<pre class="r"><code>glimpse(lc_raw) </code></pre>
-<pre><code>## Rows: 42,538
-## Columns: 80
-## $ int_rate            &lt;dbl&gt; 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0…
-## $ loan_amnt           &lt;dbl&gt; 8000, 6000, 6500, 8000, 5500, 6000, 10200, 15000,…
-## $ term_months         &lt;dbl&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
-## $ installment         &lt;dbl&gt; 241.3, 181.0, 196.0, 241.3, 165.9, 181.0, 307.6, …
-## $ dti                 &lt;dbl&gt; 2.11, 5.73, 17.68, 22.71, 5.75, 21.92, 18.62, 9.7…
-## $ delinq_2yrs         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
-## $ annual_inc          &lt;dbl&gt; 50000, 52800, 35352, 79200, 240000, 89000, 110000…
-## $ grade               &lt;chr&gt; &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;,…
-## $ emp_title           &lt;chr&gt; NA, &quot;coral graphics&quot;, NA, &quot;Honeywell&quot;, &quot;O T Plus,…
-## $ emp_length          &lt;chr&gt; &quot;5 years&quot;, &quot;&lt; 1 year&quot;, &quot;n/a&quot;, &quot;n/a&quot;, &quot;10+ years&quot;,…
-## $ home_ownership      &lt;chr&gt; &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;…
-## $ verification_status &lt;chr&gt; &quot;Verified&quot;, &quot;Source Verified&quot;, &quot;Not Verified&quot;, &quot;V…
-## $ issue_d             &lt;chr&gt; &quot;9/1/2011&quot;, &quot;9/1/2011&quot;, &quot;9/1/2011&quot;, &quot;9/1/2011&quot;, &quot;…
-## $ zip_code            &lt;chr&gt; &quot;977xx&quot;, &quot;228xx&quot;, &quot;864xx&quot;, &quot;322xx&quot;, &quot;278xx&quot;, &quot;760…
-## $ addr_state          &lt;chr&gt; &quot;OR&quot;, &quot;VA&quot;, &quot;AZ&quot;, &quot;FL&quot;, &quot;NC&quot;, &quot;TX&quot;, &quot;CT&quot;, &quot;WA&quot;, &quot;…
-## $ loan_status         &lt;chr&gt; &quot;Fully Paid&quot;, &quot;Charged Off&quot;, &quot;Fully Paid&quot;, &quot;Fully…
-## $ desc                &lt;chr&gt; &quot;Borrower added on 09/08/11 &gt; Consolidating debt …
-## $ purpose             &lt;chr&gt; &quot;debt_consolidation&quot;, &quot;vacation&quot;, &quot;credit_card&quot;, …
-## $ title               &lt;chr&gt; &quot;Credit Card Payoff $8K&quot;, &quot;bad choice&quot;, &quot;Credit C…
-## $ x20                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x21                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x22                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x23                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x24                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x25                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x26                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x27                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x28                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x29                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x30                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x31                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x32                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x33                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x34                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x35                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x36                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x37                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x38                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x39                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x40                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x41                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x42                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x43                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x44                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x45                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x46                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x47                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x48                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x49                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x50                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x51                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x52                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x53                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x54                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x55                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x56                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x57                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x58                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x59                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x60                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x61                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x62                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x63                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x64                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x65                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x66                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x67                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x68                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x69                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x70                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x71                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x72                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x73                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x74                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x75                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x76                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x77                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x78                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x79                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-## $ x80                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…</code></pre>
-<pre class="r"><code>lc_clean&lt;- lc_raw %&gt;%
+<pre class="r"><code>#glimpse(lc_raw) 
+
+lc_clean&lt;- lc_raw %&gt;%
   dplyr::select(-x20:-x80) %&gt;% #delete empty columns
   filter(!is.na(int_rate)) %&gt;%   #delete empty rows
   mutate(
@@ -115,30 +32,8 @@ type: portfolio
   dplyr::select(-emp_title,-installment, -term_months, everything()) %&gt;% mutate(emp_length=as.factor(emp_length)) #move some not-so-important variables to the end. 
 
 
-glimpse(lc_clean) </code></pre>
-<pre><code>## Rows: 37,869
-## Columns: 20
-## $ int_rate            &lt;dbl&gt; 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0…
-## $ loan_amnt           &lt;dbl&gt; 8000, 6000, 6500, 8000, 5500, 6000, 10200, 15000,…
-## $ dti                 &lt;dbl&gt; 2.11, 5.73, 17.68, 22.71, 5.75, 21.92, 18.62, 9.7…
-## $ delinq_2yrs         &lt;fct&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
-## $ annual_inc          &lt;dbl&gt; 50000, 52800, 35352, 79200, 240000, 89000, 110000…
-## $ grade               &lt;chr&gt; &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;, &quot;A&quot;,…
-## $ emp_length          &lt;fct&gt; 5 years, &lt; 1 year, n/a, n/a, 10+ years, 2 years, …
-## $ home_ownership      &lt;chr&gt; &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;MORTGAGE&quot;, &quot;…
-## $ verification_status &lt;chr&gt; &quot;Verified&quot;, &quot;Source Verified&quot;, &quot;Not Verified&quot;, &quot;V…
-## $ issue_d             &lt;date&gt; 2011-09-01, 2011-09-01, 2011-09-01, 2011-09-01, …
-## $ zip_code            &lt;chr&gt; &quot;977xx&quot;, &quot;228xx&quot;, &quot;864xx&quot;, &quot;322xx&quot;, &quot;278xx&quot;, &quot;760…
-## $ addr_state          &lt;chr&gt; &quot;OR&quot;, &quot;VA&quot;, &quot;AZ&quot;, &quot;FL&quot;, &quot;NC&quot;, &quot;TX&quot;, &quot;CT&quot;, &quot;WA&quot;, &quot;…
-## $ loan_status         &lt;chr&gt; &quot;Fully Paid&quot;, &quot;Charged Off&quot;, &quot;Fully Paid&quot;, &quot;Fully…
-## $ desc                &lt;chr&gt; &quot;Borrower added on 09/08/11 &gt; Consolidating debt …
-## $ purpose             &lt;chr&gt; &quot;debt_consolidation&quot;, &quot;vacation&quot;, &quot;credit_card&quot;, …
-## $ title               &lt;chr&gt; &quot;Credit Card Payoff $8K&quot;, &quot;bad choice&quot;, &quot;Credit C…
-## $ term                &lt;fct&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
-## $ term_months         &lt;dbl&gt; 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 3…
-## $ installment         &lt;dbl&gt; 241.3, 181.0, 196.0, 241.3, 165.9, 181.0, 307.6, …
-## $ emp_title           &lt;chr&gt; NA, &quot;coral graphics&quot;, NA, &quot;Honeywell&quot;, &quot;O T Plus,…</code></pre>
-<pre class="r"><code>summary(lc_clean)</code></pre>
+#glimpse(lc_clean) 
+summary(lc_clean)</code></pre>
 <pre><code>##     int_rate      loan_amnt          dti         delinq_2yrs   
 ##  Min.   :0.05   Min.   :  500   Min.   : 0.00   0      :33782  
 ##  1st Qu.:0.09   1st Qu.: 5500   1st Qu.: 8.14   1      : 3141  
@@ -181,9 +76,8 @@ glimpse(lc_clean) </code></pre>
 ## </code></pre>
 <p>The data is now in a clean format stored in the dataframe “lc_clean.”</p>
 </div>
-<div id="q1.-explore-the-data-by-building-some-visualizations-as-suggested-below.-fill-free-to-add-your-own." class="section level1">
-<h1>Q1. Explore the data by building some visualizations as suggested below. Fill free to add your own.</h1>
-<p>Provide your answers in the code block below. (Look at the “Lending_Club_Session1_and_2.html” for some hints on how to do this using ggplot.)</p>
+<div id="explore-the-data-by-building-some-visualizations." class="section level1">
+<h1>Explore the data by building some visualizations.</h1>
 <pre class="r"><code># Build a histogram of interest rates. Make sure it looks nice!
 ggplot(lc_clean, aes(x=int_rate))+ 
   geom_histogram(bins=20) + 
@@ -230,9 +124,7 @@ ggplot(lc_clean , aes(y=int_rate, x=delinq_2yrs, colour= delinq_2yrs)) +
   )+
   theme_bw()</code></pre>
 <p><img src="/portfolio/project-01_files/figure-html/data_visualisation-5.png" width="648" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>#Create our own ones as well
-
-#loan period vs interest rate
+<pre class="r"><code>#loan period vs interest rate
 ggplot(lc_clean, aes(x=term, y = int_rate))+
   geom_boxplot()+
   labs(title=&quot;Interest Rate Spread by Loan Term&quot;,
@@ -262,7 +154,7 @@ ggplot(lc_clean, aes(x=emp_length, y = int_rate))+
 </div>
 <div id="estimate-simple-linear-regression-models" class="section level1">
 <h1>Estimate simple linear regression models</h1>
-<p>We start with a simple but quite powerful model.</p>
+<p>I start with a simple but quite powerful model.</p>
 <pre class="r"><code>#Use the lm command to estimate a regression model with the following variables &quot;loan_amnt&quot;,  &quot;term&quot;, &quot;dti&quot;, &quot;annual_inc&quot;, and &quot;grade&quot;
 
 model1&lt;-lm( int_rate ~ loan_amnt+ term+ dti+ annual_inc+ grade, data = lc_clean
@@ -296,18 +188,18 @@ summary(model1) # noticed that annual income has a p value of over 0.05</code></
 ## Residual standard error: 0.0106 on 37858 degrees of freedom
 ## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
 ## F-statistic: 4.34e+04 on 10 and 37858 DF,  p-value: &lt;2e-16</code></pre>
-<div id="q2.-answer-the-following-questions-on-model-1." class="section level2 unnumbered">
-<h2>Q2. Answer the following questions on model 1.</h2>
+<div id="questions-on-the-model" class="section level2">
+<h2>Questions on the model</h2>
 <ol style="list-style-type: lower-alpha">
 <li><p>Are all variables statistically significant?
-&gt;We noticed that in model1 annual_inc is the only insignificant variable. Therefore, it will be reasonable to exclude it in our future models.</p></li>
-<li><p>How do you interpret the coefficient of the Term60 dummy variable? Of the grade B dummy variable?
+&gt;I noticed that in model1 annual_inc is the only insignificant variable. Therefore, it will be reasonable to exclude it in my future models.</p></li>
+<li><p>How to interpret the coefficient of the Term60 dummy variable? Of the grade B dummy variable?
 &gt;All things being equal and on average compared to term 30, the interest rate increases by 3.608e-03 percentage point if the lending time amounts to 60 (term is equal to 60).
 &gt;All things being equal and on average compared to grade A, the interest rate increases by 3.554e-02 percentage point if the grade of user is B category.</p></li>
 <li><p>How much explanatory power does the model have?
-&gt;Our model has 91.97% explanatory power (we checked it looking at Adjusted R-squared).</p></li>
+&gt;My model has 91.97% explanatory power (I checked it looking at Adjusted R-squared).</p></li>
 <li><p>Approximately, how wide would the 95% confidence interval of any prediction based on this model be?
-&gt;Our 95% Confidence Interval of any prediction based on model1, would amount to 1.96*0.01056 = ~±0.021.</p></li>
+&gt;The 95% Confidence Interval of any prediction based on model1, would amount to 1.96*0.01056 = ~±0.021.</p></li>
 </ol>
 </div>
 </div>
@@ -453,17 +345,14 @@ anova(model1, model2, model3, model4
 <td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.78e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">4.19</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.000915</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
 </table>
 
-<div id="q3.-answer-the-following-questions" class="section level2 unnumbered">
-<h2>Q3. Answer the following questions</h2>
 <ol style="list-style-type: lower-alpha">
 <li><p>Which of the four models has the most explanatory power in sample
 &gt; Models 2, 3 &amp; 4 have the most explanatory power amounting to 0.9204. (The Adjusted R-squared is the same for all the 3 models)</p></li>
-<li><p>In model 2, how do you interpret the estimated coefficient of the interaction term between grade B and loan amount?
+<li><p>In model 2, how to interpret the estimated coefficient of the interaction term between grade B and loan amount?
 &gt;All things being equal and on average compared to grade A, if the loan amount increase by 10 000, the interest rate for grade B useres will decrease by 6.617e-04 percentage point.</p></li>
-<li><p>The problem of multicolinearity describes the situations where one feature is highly correlated with other fueatures (or with a linear combination of other features). If your goal is to use the model to make predictions, should you be concerned by the problem of multicolinearity? Why, or why not?
+<li><p>The problem of multicolinearity describes the situations where one feature is highly correlated with other fueatures (or with a linear combination of other features). If the goal is to use the model to make predictions, should you be concerned by the problem of multicolinearity? Why, or why not?
 &gt; Multicolinearity impacts inference more than prediction, so for the case of prediction it is not very relevant. However, if one is using the model to explain their existing dataset they may have inaccurate results.</p></li>
 </ol>
-</div>
 </div>
 <div id="out-of-sample-testing" class="section level1">
 <h1>Out of sample testing</h1>
@@ -523,24 +412,22 @@ rmse_training</code></pre>
 <pre><code>## [1] 0.0105</code></pre>
 <pre class="r"><code>rmse_testing</code></pre>
 <pre><code>## [1] 0.0106</code></pre>
-<div id="q4.-how-much-does-the-predictive-accuracy-of-model-2-deteriorate-when-we-move-from-in-sample-to-out-of-sample-testing-is-this-sensitive-to-the-random-seed-chosen-is-there-any-evidence-of-overfitting" class="section level2 unnumbered">
-<h2>Q4. How much does the predictive accuracy of model 2 deteriorate when we move from in sample to out of sample testing? Is this sensitive to the random seed chosen? Is there any evidence of overfitting?</h2>
-<blockquote>
-<p>The predictive accuracy of model 2 does not much deteriorate when we move from in sample to out of sample testing. For purpose of checking it we compare the rmse_training to rmse_testing (0.0104 compared to 0.01061). We tried to check if the model is sensitive for the multiple random seed choices and we discovered that the model is not much sensitive (rmse is still a factor of e-2). There isn’t any evidence of overfitting.</p>
-</blockquote>
+<div id="how-much-does-the-predictive-accuracy-of-model-2-deteriorate-when-we-move-from-in-sample-to-out-of-sample-testing-is-this-sensitive-to-the-random-seed-chosen-is-there-any-evidence-of-overfitting" class="section level2">
+<h2>How much does the predictive accuracy of model 2 deteriorate when we move from in sample to out of sample testing? Is this sensitive to the random seed chosen? Is there any evidence of overfitting?</h2>
+<p>The predictive accuracy of model 2 does not much deteriorate when I move from in sample to out of sample testing. For purpose of checking it I compare the rmse_training to rmse_testing (0.0104 compared to 0.01061). I tried to check if the model is sensitive for the multiple random seed choices and I discovered that the model is not much sensitive (rmse is still a factor of e-2). There isn’t any evidence of overfitting.</p>
 </div>
 </div>
 <div id="k-fold-cross-validation" class="section level1">
 <h1>k-fold cross validation</h1>
-<p>We can also do out of sample testing using the method of k-fold cross validation. Using the caret package this is easy.</p>
-<pre class="r"><code>#the method &quot;cv&quot; stands for cross validation. We re going to create 10 folds.  
+<p>I can also do out of sample testing using the method of k-fold cross validation. Using the caret package this is easy.</p>
+<pre class="r"><code>#the method &quot;cv&quot; stands for cross validation. I am going to create 10 folds.  
 
 control &lt;- trainControl (
     method=&quot;cv&quot;,
     number=10,
     verboseIter=TRUE) #by setting this to true the model will report its progress after each estimation
 
-#we are going to train the model and report the results using k-fold cross validation
+#train the model and report the results using k-fold cross validation
 plsFit&lt;-train(
     int_rate ~ loan_amnt + term+ dti + annual_inc + grade +grade:loan_amnt ,
     lc_clean,
@@ -603,16 +490,14 @@ plsFit&lt;-train(
 ## Residual standard error: 0.0105 on 37852 degrees of freedom
 ## Multiple R-squared:  0.92,   Adjusted R-squared:  0.92 
 ## F-statistic: 2.74e+04 on 16 and 37852 DF,  p-value: &lt;2e-16</code></pre>
-<div id="q5.-compare-the-out-of-sample-rmse-of-10-fold-cross-validation-and-the-hold-out-method.-are-they-different-which-do-you-think-is-more-reliable-are-there-any-drawbacks-to-the-k-fold-cross-validation-method-compared-to-the-hold-out-method" class="section level2 unnumbered">
-<h2>Q5. Compare the out-of-sample RMSE of 10-fold cross validation and the hold-out method. Are they different? Which do you think is more reliable? Are there any drawbacks to the k-fold cross validation method compared to the hold-out method?</h2>
-<blockquote>
-<p>Answer here: The RMSE for both moethds is the same, however the k-fold cross validation method gives a range of answers and is more reliable since it checks k times and for k samples. However, the drawback of k-fold cross validation is that it takes much longer time.</p>
-</blockquote>
+<div id="compare-the-out-of-sample-rmse-of-10-fold-cross-validation-and-the-hold-out-method.-are-they-different-which-do-you-think-is-more-reliable-are-there-any-drawbacks-to-the-k-fold-cross-validation-method-compared-to-the-hold-out-method" class="section level2">
+<h2>Compare the out-of-sample RMSE of 10-fold cross validation and the hold-out method. Are they different? Which do you think is more reliable? Are there any drawbacks to the k-fold cross validation method compared to the hold-out method?</h2>
+<p>The RMSE for both moethds is the same, however the k-fold cross validation method gives a range of answers and is more reliable since it checks k times and for k samples. However, the drawback of k-fold cross validation is that it takes much longer time.</p>
 </div>
 </div>
 <div id="sample-size-estimation-and-learning-curves" class="section level1">
 <h1>Sample size estimation and learning curves</h1>
-<p>We can use the hold out method for out-of-sample testing to check if we have a sufficiently large sample to estimate the model reliably. The idea is to set aside some of the data as a testing set. From the remaining data draw progressively larger training sets and check how the performance of the model on the testing set changes. If the performance no longer improves with larger datasets we know we have a large enough sample. The code below does this. Examine it and run it with different random seeds.</p>
+<p>I can use the hold out method for out-of-sample testing to check if I have a sufficiently large sample to estimate the model reliably. The idea is to set aside some of the data as a testing set. From the remaining data draw progressively larger training sets and check how the performance of the model on the testing set changes. If the performance no longer improves with larger datasets we will be sure that the sample is large enough.</p>
 <pre class="r"><code>#select a testing dataset (25% of all data)
 set.seed(12)
 
@@ -620,7 +505,7 @@ train_test_split &lt;- initial_split(lc_clean, prop = 0.75)
 remaining &lt;- training(train_test_split)
 testing &lt;- testing(train_test_split)
 
-#We are now going to run 30 models starting from a tiny training set drawn from the training data and progressively increasing its size. The testing set remains the same in all iterations.
+#run 30 models starting from a tiny training set drawn from the training data and progressively increasing its size. The testing set remains the same in all iterations.
 
 #initiating the model by setting some parameters to zero
 rmse_sample &lt;- 0
@@ -647,11 +532,9 @@ plot(sample_size,rmse_sample)</code></pre>
 <p><img src="/portfolio/project-01_files/figure-html/learning%20curves-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(sample_size,Rsq_sample)</code></pre>
 <p><img src="/portfolio/project-01_files/figure-html/learning%20curves-2.png" width="648" style="display: block; margin: auto;" /></p>
-<div id="q6.-using-the-learning-curves-above-approximately-how-large-of-a-sample-size-would-we-need-to-estimate-model-3-reliably-once-we-reach-this-sample-size-if-we-want-to-reduce-the-prediction-error-further-what-options-do-we-have" class="section level2 unnumbered">
-<h2>Q6. Using the learning curves above, approximately how large of a sample size would we need to estimate model 3 reliably? Once we reach this sample size, if we want to reduce the prediction error further what options do we have?</h2>
-<blockquote>
-<p>Answer here: After analysing the graphs above, we noticed that the sample size that would estimate model 3 reliably is 1500. Once we reach this sample size, we can still try to reduce the prediction error by regularization or using the k-fold cross validation method.</p>
-</blockquote>
+<div id="using-the-learning-curves-above-approximately-how-large-of-a-sample-size-would-we-need-to-estimate-model-3-reliably-once-we-reach-this-sample-size-if-we-want-to-reduce-the-prediction-error-further-what-options-do-we-have" class="section level2">
+<h2>Using the learning curves above, approximately how large of a sample size would we need to estimate model 3 reliably? Once we reach this sample size, if we want to reduce the prediction error further what options do we have?</h2>
+<p>After analysing the graphs above, I noticed that the sample size that would estimate model 3 reliably is 1500. Once I reach this sample size, I can still try to reduce the prediction error by regularization or using the k-fold cross validation method.</p>
 </div>
 </div>
 <div id="regularization-using-lasso-regression" class="section level1">
@@ -680,9 +563,9 @@ data.frame(
 <td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0446</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.352</td></tr>
 </table>
 
-<p>Not surprisingly this model does not perform well – as we knew form the learning curves we constructed for a simpler model we need a lot more data to estimate this model reliably. Try running it again with different seeds. The model’s performance tends to be sensitive to the choice of the training set.</p>
+<p>Not surprisingly this model does not perform well – as I knew from the learning curves I constructed for a simpler model, I would need a lot more data to estimate this model reliably.</p>
 <p>LASSO regression offers one solution – it extends the OLS regression by penalizing the model for setting any coefficient to a value that is different from zero. The penalty is proportional to a parameter $$ (pronounced lambda). This parameter cannot be estimated directly (and for this reason sometimes it is refered to as hyperparameter) and will be selected through k-fold cross validation in order to provide the best out-of-sample performance. As result of the LASSO precedure, only those features that are more strongly associated with the outcome will have non-zero coefficients and the estimated model will be less sensitive to the training set. Sometimes LASSO regression is refered to as regularization.</p>
-<pre class="r"><code>#we will look for the optimal lambda in this sequence (we will try 1000 different lambdas)
+<pre class="r"><code>#I will look for the optimal lambda in this sequence (I will try 1000 different lambdas)
 lambda_seq &lt;- seq(0, 0.01, length = 1000)
 #lasso regression using k-fold cross validation to select the best lambda
 
@@ -802,15 +685,15 @@ data.frame(
 <td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0109</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.917</td></tr>
 </table>
 
-<div id="q7.-answer-the-following-questions" class="section level2 unnumbered">
-<h2>Q7. Answer the following questions</h2>
+<div id="questions-on-ols-and-lasso-regression" class="section level2">
+<h2>Questions on OLS and LASSO regression</h2>
 <ol style="list-style-type: lower-alpha">
 <li><p>Which model performs best out of sample, OLS regression or LASSO?
 &gt; From the above, we can infere that the LASSO regression method is a better fit with a much smaller RMSE and significantly larger Adjusted R-squared using only 0.01 of data.</p></li>
 <li><p>What value of lambda offers best performance? Is this sensitive to the random seed?
 &gt;The best performance lambda in the seed 1234 is equal to 0.0005805806. The lambda is very sensitive to random seed, however the output of LASSO regression seems consistent.</p></li>
 <li><p>How many coefficients are zero and how many are non-zero in the LASSO model of best fit?
-&gt; In our LASSO regression, 23 variables are equal to zero and 35 variables are not equal to 0.</p></li>
+&gt; In my LASSO regression, 23 variables are equal to zero and 35 variables are not equal to 0.</p></li>
 <li><p>Why is it important to standardize continuous variables before running LASSO?
 &gt; Note in linear regression formula, the larger the values of the data, the smaller the coefficients. Since LASSO easily penalises small coefficients to zero, it is important to control the magnitude of data values before running regression.</p></li>
 </ol>
@@ -818,8 +701,8 @@ data.frame(
 </div>
 <div id="using-time-information" class="section level1">
 <h1>Using Time Information</h1>
-<p>Let’s try to further improve the model’s predictive performance. So far we have not used any time series information. Effectively, all things being equal, our prediction for the interest rate of a loan given in 2009 would be the same as that of a loan given in 2011. Is this a good assumption?</p>
-<p>First, investigate graphically whether there are any time trends in the interest rates. (Note that the variable “issue_d” only has information on the month the loan was awarded but not the exact date.) Can you use this information to further improve the forecasting accuracy of your model? Try controlling for time in a linear fashion (i.e., a linear time trend) and controlling for time as quarter dummies (this is a method to capture non-linear effects of time – we assume that the impact of time doesn’t change within a quarter but it can chance from quarter to quarter). Finally, check if time affect loans of different grades differently.</p>
+<p>Let’s try to further improve the model’s predictive performance. So far I have not used any time series information. Effectively, all things being equal, my prediction for the interest rate of a loan given in 2009 would be the same as that of a loan given in 2011.</p>
+<p>First, I will investigate graphically whether there are any time trends in the interest rates. I will try controlling for time in a linear fashion (i.e., a linear time trend) and controlling for time as quarter dummies. Finally, I will check if time affect loans of different grades differently.</p>
 <pre class="r"><code>#linear time trend (add code below)
 
 ggplot(lc_clean, aes(x=issue_d,y=int_rate))+
@@ -1074,7 +957,7 @@ time3&lt;-train(
 ## Residual standard error: 0.00907 on 37835 degrees of freedom
 ## Multiple R-squared:  0.941,  Adjusted R-squared:  0.941 
 ## F-statistic: 1.82e+04 on 33 and 37835 DF,  p-value: &lt;2e-16</code></pre>
-<pre class="r"><code>#We specify one quarter dummy variable for each grade. This is going to be a large model as there are 19 quarters x 7 grades = 133 quarter-grade dummies.
+<pre class="r"><code>#specify one quarter dummy variable for each grade. This is going to be a large model as there are 19 quarters x 7 grades = 133 quarter-grade dummies.
 time4&lt;-train(
     int_rate ~loan_amnt*grade+ term+ dti + yq*grade ,#fill your variables here 
     lc_clean_quarter,
@@ -1267,22 +1150,19 @@ time4&lt;-train(
   time2$results$RMSE,
   time3$results$RMSE,
   time4$results$RMSE)</code></pre>
-<p><table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:time trends">
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:time trends">
 <col><col><col><col><tr>
 <th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time1.results.RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time2.results.RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time3.results.RMSE</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">time4.results.RMSE</th></tr>
 <tr>
 <td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0103</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.00905</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.00908</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.00758</td></tr>
 </table>
 
-## Q8 Based on your analysis above, is there any evidence to suggest that interest rates change over time? Does including time trends /quarter dummies imrpove predictions? {-}</p>
-<blockquote>
-<p>Based on our model, there is the evidence to suggest that interest rate change over time is significant. Including time trends or quarter dummier does improve the predictions.</p>
-</blockquote>
+<p>Based on my model, there is the evidence to suggest that interest rate change over time is significant. Including time trends or quarter dummies does improve the predictions.</p>
 </div>
 <div id="using-bond-yields" class="section level1">
 <h1>Using Bond Yields</h1>
 <p>One concern with using time trends for forecasting is that in order to make predictions for future loans we will need to project trends to the future. This is an extrapolation that may not be reasonable, especially if macroeconomic conditions in the future change. Furthermore, if we are using quarter dummies, it is not even possible to estimate the coefficient of these dummy variables for future quarters.</p>
-<p>Instead, perhaps it’s better to find the reasons as to why different periods are different from one another. The csv file “MonthBondYields.csv” contains information on the yield of US Treasuries on the first day of each month. Can you use it to see if you can improve your predictions without using time dummies?</p>
+<p>Instead, perhaps it’s better to find the reasons as to why different periods are different from one another. The csv file “MonthBondYields.csv” contains information on the yield of US Treasuries on the first day of each month. I will you it to see if I can improve my predictions without using time dummies?.</p>
 <pre class="r"><code>#load the data to memory as a dataframe
 bond_prices&lt;-readr::read_csv(&quot;~/Documents/LBS/Data Science/Session 03/MonthBondYields.csv&quot;)
 
@@ -1382,18 +1262,10 @@ plsFit&lt;-train(
 ## Residual standard error: 0.00958 on 37845 degrees of freedom
 ## Multiple R-squared:  0.934,  Adjusted R-squared:  0.934 
 ## F-statistic: 2.43e+04 on 22 and 37845 DF,  p-value: &lt;2e-16</code></pre>
-<div id="q9.-do-bond-yields-have-any-explanatory-power" class="section level2">
-<h2>Q9. Do bond yields have any explanatory power?</h2>
-<blockquote>
-<p>Answer here: From the above, after including in our model “Price”, we can infer that the bonds have the explanatory power. However, the explanatory power increases our Adjusted R-squared less than the time trend/quarter variables.</p>
-</blockquote>
-</div>
-<div id="q10.-choose-a-model-and-describe-your-methodology" class="section level2 unnumbered">
-<h2>Q10. Choose a model and describe your methodology</h2>
-<p>Feel free to investigate more models with different features using the methodologies covered so far. Present the model you believe predicts interest rates the best. Describe how good it is (including the approximate length of the 95% Confidence Interval of predictions that use this model) and what features it uses. What methodology did you use to choose it? (Do not use time trends or quarter dummies in your model as the first cannot be extrapolated into the future reliably and the second cannot be even estimated for future quarters.)</p>
-<blockquote>
-<p>We were tryinig to add even more variables to our model, however, many of them turned out not to be significant. Our final model can be observed below. It has an explanatory power with adjusted R-squared of 93.57%. Tt has a Confidence Interval at 95% of ±0.01852592%. It can be used to accuratley predict the mean. We used the linear model with method of stepwise k-fold cross validation.</p>
-</blockquote>
+<p>From the above, after including in my model “Price”, I can infer that the bonds have the explanatory power. However, the explanatory power increases the Adjusted R-squared less than the time trend/quarter variables.</p>
+<div id="further-improvement" class="section level2">
+<h2>Further improvement</h2>
+<p>My final model can be observed below. It has an explanatory power with adjusted R-squared of 93.57%. It has a Confidence Interval at 95% of ±0.01852592%. It can be used to accuratley predict the mean. I used the linear model with method of stepwise k-fold cross validation.</p>
 <pre class="r"><code>lc_with_yq_bonds&lt;- lc_with_bonds %&gt;% 
   mutate(yq = as.factor(as.yearqtr(issue_d, format = &quot;%Y-%m-%d&quot;)))
 
@@ -1482,11 +1354,10 @@ model_wild_west &lt;- train(
 <pre class="r"><code>0.009452*1.96</code></pre>
 <pre><code>## [1] 0.0185</code></pre>
 </div>
-<div id="q11.-optional-use-other-publicly-available-datasets-to-further-improve-performance-e.g.-quarterly-data-on-us-inflation-or-cpi.-explain-why-you-think-the-additional-data-will-make-a-difference-and-check-if-it-does." class="section level2 unnumbered">
-<h2>Q11. (optional) Use other publicly available datasets to further improve performance (e.g., quarterly data on US inflation or <a href="https://fred.stlouisfed.org/series/CPALTT01USQ657N">CPI</a>). Explain why you think the additional data will make a difference and check if it does.</h2>
-<blockquote>
+<div id="use-of-additional-sources" class="section level2">
+<h2>Use of additional sources</h2>
+<p>I will now use other publicly available datasets to further improve performance (e.g., quarterly data on US inflation or <a href="https://fred.stlouisfed.org/series/CPALTT01USQ657N">CPI</a>).</p>
 <p>Changes in CPI should correlate to changes in inflation, therefore such a variable can better explain behaviour of interest rates in the market as behaviour of inlfation partially explaines the behaviour of loan takers and actions of investors/government.</p>
-</blockquote>
 <pre class="r"><code>CPI_df &lt;- read_csv(&quot;~/Documents/LBS/Data Science/Session 03/CPALTT01USM657N.csv&quot;) %&gt;%  clean_names() # use janitor::clean_names()
 
 glimpse(CPI_df)</code></pre>

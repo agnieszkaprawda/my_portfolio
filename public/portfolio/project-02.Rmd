@@ -4,7 +4,7 @@ category:
 date: "2020-09-17T15:58:10+06:00"
 image: images/projects/gendergapvisual2.jpg
 project_images:
-title: GENDER PAY DISCRIMINATION in OMEGA GROUP PLC
+title: Gender Pay Discrimination in OMEGA GROUP Plc
 type: portfolio
 ---
 ```{r, setup, include=FALSE}
