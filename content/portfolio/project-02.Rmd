@@ -1,6 +1,6 @@
 ---
 category:
-- Applied Statistics
+- Applied Statistics in R
 date: "2020-09-17T15:58:10+06:00"
 image: images/projects/gendergapvisual2.jpg
 project_images:
