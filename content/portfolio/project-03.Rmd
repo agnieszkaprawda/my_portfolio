@@ -121,7 +121,7 @@ glimpse(big_df_cleaned)
 
 ## What is the relationship between HIV prevalence and life expectancy?
 
-```{r}
+```{r fig.width=15, fig.height=18}
 big_df_cleaned_1990 <- big_df_cleaned %>% 
   filter(year>1989& year <2012)
 ggplot(big_df_cleaned_1990, 
