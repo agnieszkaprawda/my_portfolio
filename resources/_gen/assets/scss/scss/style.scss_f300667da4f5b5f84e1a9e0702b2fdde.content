@@ -293,7 +293,7 @@ textarea.form-control {
     font-weight: 700; }
 
 .site-project, .site-blog {
-  padding: 20px 0;
+  padding: 120px 0;
   overflow: hidden; }
   .site-project-item, .site-blog-post {
     position: relative;
@@ -305,12 +305,12 @@ textarea.form-control {
       position: absolute;
       background: #F7F9FF;
       width: 100%;
-      padding: 20px 20px;
+      padding: 45px 50px;
       bottom: 0;
       transition: all 0.3s cubic-bezier(0.36, 0.03, 0, 0.91); }
-      @media (max-width: 991px) {
+      @media (max-width: 767px) {
         .site-project-item-content, .site-blog-post-content {
-          padding: 20px;
+          padding: 30px;
           padding-bottom: 75px; } }
       .site-project-item-content span, .site-blog-post-content span {
         font-family: "Montserrat", sans-serif;
@@ -328,7 +328,7 @@ textarea.form-control {
         opacity: 0;
         transform: translateY(20px);
         transition: all 0.3s cubic-bezier(0.36, 0.03, 0, 0.91); }
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
           .site-project-item-content a, .site-blog-post-content a {
             transform: translateY(0);
             opacity: 1; } }
@@ -364,16 +364,16 @@ textarea.form-control {
         transform: scaleX(1);
         transform-origin: left; }
   .site-project-header {
-    padding: 20px 0 20px;
+    padding: 170px 0 100px;
     background: #F7F9FF; }
-    @media (max-width: 991px) {
+    @media (max-width: 767px) {
       .site-project-header {
-        padding: 20px 0 20px; } }
+        padding: 120px 0 80px; } }
     .site-project-header-content h1 {
       font-size: 55px; }
       .site-project-header-content h1 span {
         color: #EAA4A4; }
-      @media (max-width: 991px) {
+      @media (max-width: 767px) {
         .site-project-header-content h1 {
           font-size: 40px; } }
     @media (max-width: 991px) {
@@ -389,12 +389,12 @@ textarea.form-control {
         font-weight: 300;
         color: #00113E;
         margin-bottom: 20px; }
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
           .site-project-header-action span {
             font-size: 25px; } }
       .site-project-header-action img {
         width: 66px; }
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
           .site-project-header-action img {
             width: 40px; } }
       .site-project-header-action:hover {
@@ -404,7 +404,7 @@ textarea.form-control {
     .site-project-pagination .pagination, .site-blog-pagination .pagination {
       justify-content: center; }
       .site-project-pagination .pagination .page-item:not(:last-child), .site-blog-pagination .pagination .page-item:not(:last-child) {
-        margin-right: 5px; }
+        margin-right: 10px; }
       .site-project-pagination .pagination .page-item .page-link, .site-blog-pagination .pagination .page-item .page-link {
         font-size: 24px;
         border-radius: 0;
@@ -420,10 +420,10 @@ textarea.form-control {
         opacity: 0.3;
         cursor: not-allowed; }
   .site-project-single-section {
-    padding: 20px 0 20px; }
-    @media (max-width: 991px) {
+    padding: 250px 0 100px; }
+    @media (max-width: 767px) {
       .site-project-single-section {
-        padding: 2-px 0; } }
+        padding: 100px 0; } }
   .site-project-single h1 {
     font-size: 40px;
     font-weight: 500;
@@ -436,7 +436,7 @@ textarea.form-control {
       width: 48%; }
       .site-project-single-image img:nth-child(2n) {
         margin-left: auto; }
-      @media (max-width: 991px) {
+      @media (max-width: 767px) {
         .site-project-single-image img {
           width: 100%; } }
   .site-project-single-description {
@@ -451,7 +451,7 @@ textarea.form-control {
     display: flex;
     margin-left: auto;
     justify-content: flex-end; }
-    @media (max-width: 991px) {
+    @media (max-width: 575px) {
       .site-project-single-action a {
         transform: translateX(-10px); } }
     .site-project-single-action a .link-area {
@@ -480,7 +480,7 @@ textarea.form-control {
   .site-project-single-action img {
     filter: invert(1);
     transform: rotate(90deg);
-    margin-left: 5px; }
+    margin-left: 30px; }
 
 @media (max-width: 575px) {
   .site-blog {
@@ -682,7 +682,7 @@ textarea.form-control {
       color: #00113E; }
       .site-expertise-list li:not(:last-child) {
         margin-bottom: 10px; }
-        
+    
 .site-experience {
   padding: 100px 0;
   background: #F7F9FF; }
