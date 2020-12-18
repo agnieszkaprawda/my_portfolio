@@ -293,7 +293,7 @@ textarea.form-control {
     font-weight: 700; }
 
 .site-project, .site-blog {
-  padding: 120px 0;
+  padding: 5px 0;
   overflow: hidden; }
   .site-project-item, .site-blog-post {
     position: relative;
