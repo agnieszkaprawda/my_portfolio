@@ -1,8 +1,8 @@
 ---
 category:
 - Data Science in R
-date: "2020-10-27T15:58:10+06:00"
-image: images/projects/airbnb1.png
+date: "2020-11-05T15:58:10+06:00"
+image: images/projects/lendingclub1.jpg
 project_images:
 title: Interest rate analysis in R using logistic models
 type: portfolio
