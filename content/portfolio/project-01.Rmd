@@ -2,10 +2,8 @@
 category:
 - Data Science
 date: "2020-11-25T15:58:10+06:00"
-image: images/projects/project-thumb-one.jpg
+image: images/projects/lendingclub1.jpg
 project_images:
-- images/projects/project-details-image-one.jpg
-- images/projects/project-details-image-two.jpg
 title: Predicting interest rates at the Lending Club
 type: portfolio
 ---
