@@ -1,0 +1,1000 @@
+---
+category:
+- Data Science in R
+date: "2020-10-27T15:58:10+06:00"
+image: images/projects/airbnb1.png
+project_images:
+title: 
+type: portfolio
+---
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Welcome to the second workshop. We will continue working with the lending club data. In this workshop we will take the perspective of an investor to the lending club. Our goal is to select a subset of the most promising loans to invest. We will do so using the method of logistic regression. Feel free to consult the R markdown file of session 4.</p>
+<p>For this workshop please submit a knitted (html) rmd file and a csv file containing your investment choices (see question 14) by the deadline posted on canvas. 25% of your grade will depend on the performance of your investment choices (i.e., question 14). The rest of the questions are equally weighted.</p>
+<p>In answering the questions below be succinct but provide complete answers with quantitative evidence as far as possible. Feel free to discuss methods with each other and with the tutors during the workshop. As this is an individual assignment, <em>do not collaborate</em> in answering the questions below or in making investment choices.</p>
+<p>After you have submitted your report I will upload a screen cast that discusses the performance of your chosen portfolios. I will also use this screen cast to illustrate the “wisdom of the crowd” principle. So please make sure you watch it.</p>
+<p>Enjoy the workshop!</p>
+<div id="load-the-data" class="section level2">
+<h2>Load the data</h2>
+<p>First we need to start by loading the data.</p>
+<pre class="r"><code>lc_raw &lt;- read_csv(&quot;~/Documents/LBS/Data Science/Session 03/LendingClub Data.csv&quot;,  skip=1) %&gt;%  #since the first row is a title we want to skip it. 
+  clean_names() # use janitor::clean_names()</code></pre>
+</div>
+</div>
+<div id="ice-the-data-inspect-clean-explore" class="section level1">
+<h1>ICE the data: Inspect, Clean, Explore</h1>
+<p>Any data science engagement starts with ICE. Inspecting, Clean and Explore the data.</p>
+<div id="inspect-the-data" class="section level2">
+<h2>Inspect the data</h2>
+<p>Inspect the data to understand what different variables mean. Variable definitions can be found in the excel version of the data.</p>
+<pre class="r"><code>summary(lc_raw)</code></pre>
+<pre><code>##     int_rate      loan_amnt      term_months    installment        dti      
+##  Min.   :0      Min.   :  500   Min.   :36     Min.   :  16   Min.   : 0    
+##  1st Qu.:0      1st Qu.: 5500   1st Qu.:36     1st Qu.: 169   1st Qu.: 8    
+##  Median :0      Median :10000   Median :36     Median : 288   Median :13    
+##  Mean   :0      Mean   :11253   Mean   :42     Mean   : 333   Mean   :13    
+##  3rd Qu.:0      3rd Qu.:15000   3rd Qu.:60     3rd Qu.: 449   3rd Qu.:19    
+##  Max.   :0      Max.   :35000   Max.   :60     Max.   :1305   Max.   :30    
+##  NA&#39;s   :4669   NA&#39;s   :4669    NA&#39;s   :4669   NA&#39;s   :4669   NA&#39;s   :4669  
+##   delinq_2yrs     annual_inc         grade            emp_title        
+##  Min.   : 0     Min.   :   4000   Length:42538       Length:42538      
+##  1st Qu.: 0     1st Qu.:  40800   Class :character   Class :character  
+##  Median : 0     Median :  59534   Mode  :character   Mode  :character  
+##  Mean   : 0     Mean   :  69148                                        
+##  3rd Qu.: 0     3rd Qu.:  82800                                        
+##  Max.   :11     Max.   :6000000                                        
+##  NA&#39;s   :4669   NA&#39;s   :4669                                           
+##   emp_length        home_ownership     verification_status   issue_d         
+##  Length:42538       Length:42538       Length:42538        Length:42538      
+##  Class :character   Class :character   Class :character    Class :character  
+##  Mode  :character   Mode  :character   Mode  :character    Mode  :character  
+##                                                                              
+##                                                                              
+##                                                                              
+##                                                                              
+##    zip_code          addr_state        loan_status            desc          
+##  Length:42538       Length:42538       Length:42538       Length:42538      
+##  Class :character   Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+##                                                                             
+##                                                                             
+##                                                                             
+##                                                                             
+##    purpose             title             x20            x21         
+##  Length:42538       Length:42538       Mode:logical   Mode:logical  
+##  Class :character   Class :character   NA&#39;s:42538     NA&#39;s:42538    
+##  Mode  :character   Mode  :character                                
+##                                                                     
+##                                                                     
+##                                                                     
+##                                                                     
+##    x22            x23            x24            x25            x26         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x27            x28            x29            x30            x31         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x32            x33            x34            x35            x36         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x37            x38            x39            x40            x41         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x42            x43            x44            x45            x46         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x47            x48            x49            x50            x51         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x52            x53            x54            x55            x56         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x57            x58            x59            x60            x61         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x62            x63            x64            x65            x66         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x67            x68            x69            x70            x71         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x72            x73            x74            x75            x76         
+##  Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538     NA&#39;s:42538    
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##                                                                            
+##    x77            x78             x79             x80         
+##  Mode:logical   Mode:logical   Mode :logical   Mode :logical  
+##  NA&#39;s:42538     NA&#39;s:42538     FALSE:2660      FALSE:2718     
+##                                NA&#39;s :39878     NA&#39;s :39820    
+##                                                               
+##                                                               
+##                                                               
+## </code></pre>
+</div>
+<div id="clean-the-data" class="section level2">
+<h2>Clean the data</h2>
+<p>Are there any redundant columns and rows? Are all the variables in the correct format (e.g., numeric, factor, date)? Lets fix it.</p>
+<p>The variable “loan_status” contains information as to whether the loan has been repaid or charged off (i.e., defaulted). Let’s create a binary factor variable for this. This variable will be the focus of this workshop.</p>
+<pre class="r"><code>lc_clean&lt;- lc_raw %&gt;%
+  dplyr::select(-x20:-x80) %&gt;% #delete empty columns
+  filter(!is.na(int_rate)) %&gt;%   #delete empty rows
+  mutate(
+    issue_d = lubridate::mdy(issue_d),  # lubridate::mdy() to fix date format
+    term = factor(term_months),     # turn &#39;term&#39; into a categorical variable
+    delinq_2yrs = factor(delinq_2yrs) # turn &#39;delinq_2yrs&#39; into a categorical variable
+  ) %&gt;% 
+  mutate(default = dplyr::recode(loan_status, 
+                      &quot;Charged Off&quot; = &quot;1&quot;, 
+                      &quot;Fully Paid&quot; = &quot;0&quot;))%&gt;%
+    mutate(default = as.factor(default)) %&gt;%
+  dplyr::select(-emp_title,-installment, -term_months, everything()) #move some not-so-important variables to the end. </code></pre>
+</div>
+<div id="explore-the-data" class="section level2">
+<h2>Explore the data</h2>
+<p>Let’s explore loan defaults by creating different visualizations. We start with examining how prevalent defaults are, whether the default rate changes by loan grade or number of delinquencies, and a couple of scatter plots of defaults against loan amount and income.</p>
+<pre class="r"><code>#bar chart of defaults
+def_vis1&lt;-ggplot(data=lc_clean, aes(x=default)) +geom_bar(aes(y = (..count..)/sum(..count..))) + labs(x=&quot;Default, 1=Yes, 0=No&quot;, y=&quot;relative frequencies&quot;) +scale_y_continuous(labels=scales::percent) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= &quot;count&quot;,vjust=-0.5) 
+def_vis1</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#bar chart of defaults per loan grade
+def_vis2&lt;-ggplot(data=lc_clean, aes(x=default), group=grade) +geom_bar(aes(y = (..count..)/sum(..count..), fill = factor(..x..)), stat=&quot;count&quot;)  + labs(title=&quot;Defaults by Grade&quot;, x=&quot;Default, 1=Yes, 0=No&quot;, y=&quot;relative frequencies&quot;) +scale_y_continuous(labels=scales::percent) +facet_grid(~grade) + theme(legend.position = &quot;none&quot;) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= &quot;count&quot;,vjust=-0.5) 
+def_vis2</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#bar chart of defaults per number of Delinquencies
+def_vis3&lt;-lc_clean %&gt;%
+  filter(as.numeric(delinq_2yrs)&lt;4) %&gt;%
+  ggplot(aes(x=default), group=delinq_2yrs) +geom_bar(aes(y = (..count..)/sum(..count..), fill = factor(..x..)), stat=&quot;count&quot;)  + labs(title=&quot;Defaults by Number of Delinquencies&quot;, x=&quot;Default, 1=Yes, 0=No&quot;, y=&quot;relative frequencies&quot;)  +scale_y_continuous(labels=scales::percent) +facet_grid(~delinq_2yrs) + theme(legend.position = &quot;none&quot;) +geom_text(aes( label = scales::percent((..count..)/sum(..count..) ),y=(..count..)/sum(..count..) ), stat= &quot;count&quot;,vjust=-0.5)
+
+def_vis3</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-3.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#scatter plots 
+
+#We select 2000 random loans to display only to make the display less busy. 
+set.seed(1234)
+reduced&lt;-lc_clean[sample(0:nrow(lc_clean), 2000, replace = FALSE),]%&gt;%
+  mutate(default=as.numeric(default)-1) # also convert default to a numeric {0,1} to make it easier to plot.
+
+          
+# scatter plot of defaults against loan amount                         
+def_vis4&lt;-ggplot(data=reduced, aes(y=default,x=I(loan_amnt/1000)))  + labs(y=&quot;Default, 1=Yes, 0=No&quot;, x=&quot;Loan Amnt (1000 $)&quot;) +geom_jitter(width=0, height=0.05, alpha=0.7) #We use jitter to offset the display of defaults/non-defaults to make the data easier to interpert. We have also changed the amount to 1000$ to reduce the number of zeros on the horizontal axis.
+
+def_vis4</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-4.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#scatter plot of defaults against loan amount.
+def_vis5&lt;-ggplot(data=reduced, aes(y=default,x=I(annual_inc/1000)))   + labs(y=&quot;Default, 1=Yes, 0=No&quot;, x=&quot;Annual Income(1000 $)&quot;) +geom_jitter(width=0, height=0.05, alpha=0.7) +  xlim(0,400)
+
+def_vis5</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/visualization%20of%20defaults-5.png" width="648" style="display: block; margin: auto;" /></p>
+<p>We can also estimate a correlation table between defaults and other continuous variables.</p>
+<pre class="r"><code># correlation table using GGally::ggcor()
+# this takes a while to plot
+
+lc_clean %&gt;% 
+    mutate(default=as.numeric(default)-1)%&gt;%
+  select(loan_amnt, dti, annual_inc, default) %&gt;% #keep Y variable last
+ ggcorr(method = c(&quot;pairwise&quot;, &quot;pearson&quot;), label_round=2, label = TRUE)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/correlation%20table-1.png" width="648" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Q1. Add one more visualization of your own. Describe what it shows and what you learn from it in 1-2 lines.</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code># My visualizations
+ggplot(lc_clean, aes(x= loan_amnt,y= default, colour=term)) +
+  geom_boxplot() +
+  facet_wrap(~grade) +
+  labs(title= &quot;Average annual income across all the grades for term 36 and 60&quot;, y=&quot;Default&quot;, x=&quot;Annual Income(1000 $)&quot;)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-1-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>lc_clean %&gt;% 
+  select(grade, int_rate, default) %&gt;% 
+           ggpairs(aes(colour=default), alpha=1)+
+  theme_bw()</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-1-2.png" width="648" style="display: block; margin: auto;" />
+&gt; ANSWER:</p>
+<p>From the graph it is interesting to observe that across particular loan grades from A to G the loan amount tends to increase in both terms for 36 months and 60 months. However, the loan amount for 36 months always stays slower disregard grade or default.</p>
+<p>From the ggpairs plot, we can draw a few conclusions. First of all, the amount of data on default=1 is much smaller than the smount of data on default=0. Second of all, the biggest group by grade is group B, and groups that mostly tend to default are B, C or D. Intrestingly, the interest rate tends to be bigger for people who fail to pay the loan back. Also the interest rate is the lowest for grade A and increases across the grades.</p>
+</div>
+</div>
+<div id="linear-vs.-logistic-regression-for-binary-response-variables" class="section level1">
+<h1>Linear vs. logistic regression for binary response variables</h1>
+<p>It is certainly possible to use the OLS approach to find the line that minimizes the sum of square errors when the dependent variable is binary (i.e., default no default). In this case, the predicted values take the interpretation of a probability. We can also estimate a logistic regression instead. We do both below.</p>
+<pre class="r"><code>model_lm&lt;-lm(as.numeric(default)~I(annual_inc/1000), lc_clean)
+summary(model_lm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = as.numeric(default) ~ I(annual_inc/1000), data = lc_clean)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -0.160 -0.149 -0.144 -0.133  1.327 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         1.16e+00   2.70e-03   429.3   &lt;2e-16 ***
+## I(annual_inc/1000) -2.48e-04   2.92e-05    -8.5   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.35 on 37867 degrees of freedom
+## Multiple R-squared:  0.0019, Adjusted R-squared:  0.00188 
+## F-statistic: 72.2 on 1 and 37867 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>logistic1&lt;-glm(default~I(annual_inc/1000), family=&quot;binomial&quot;, lc_clean)
+summary(logistic1)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = default ~ I(annual_inc/1000), family = &quot;binomial&quot;, 
+##     data = lc_clean)
+## 
+## Deviance Residuals: 
+##    Min      1Q  Median      3Q     Max  
+## -0.625  -0.579  -0.557  -0.511   3.639  
+## 
+## Coefficients:
+##                    Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        -1.51916    0.02924   -52.0   &lt;2e-16 ***
+## I(annual_inc/1000) -0.00408    0.00040   -10.2   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 31130  on 37868  degrees of freedom
+## Residual deviance: 31005  on 37867  degrees of freedom
+## AIC: 31009
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>ggplot(data=reduced, aes(x=I(annual_inc/1000), y=default)) + geom_smooth(method=&quot;lm&quot;, se=0, aes(color=&quot;OLS&quot;))+ geom_smooth(method = &quot;glm&quot;, method.args = list(family = &quot;binomial&quot;),  se=0, aes(color=&quot;Logistic&quot;))+ labs(y=&quot;Prob of Default&quot;, x=&quot;Annual Income(1000 $)&quot;)+  xlim(0,450)+scale_y_continuous(labels=scales::percent)+geom_jitter(width=0, height=0.05, alpha=0.7) + scale_colour_manual(name=&quot;Fitted Model&quot;, values=c(&quot;blue&quot;, &quot;red&quot;))</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/linear%20and%20logisitc%20regression%20with%20binary%20response%20variable-1.png" width="648" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Q2. Which model is more suitable for predicting probability of default, the linear regression or the logistic? Why?</p>
+</blockquote>
+<p>Answer here: Logistic model in the case when real y (default) takes values equal to 0 or 1 is much better than OLS. It is because it avoids the negative values for probability, which are impossible to achieve empirically and not explainable.</p>
+</div>
+<div id="multivariate-logistic-regression" class="section level1">
+<h1>Multivariate logistic regression</h1>
+<p>We can estimate logistic regression with multiple explanatory variables as well. Let’s use annual_inc, term, grade, and loan amount as features. Let’s call this model logistic 2.</p>
+<pre class="r"><code>logistic2&lt;-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family=&quot;binomial&quot;, lc_clean)
+summary(logistic2)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = default ~ I(annual_inc/1000) + term + grade + loan_amnt, 
+##     family = &quot;binomial&quot;, data = lc_clean)
+## 
+## Deviance Residuals: 
+##    Min      1Q  Median      3Q     Max  
+## -1.063  -0.608  -0.482  -0.345   4.099  
+## 
+## Coefficients:
+##                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        -2.43e+00   5.06e-02  -48.09   &lt;2e-16 ***
+## I(annual_inc/1000) -6.02e-03   4.73e-04  -12.73   &lt;2e-16 ***
+## term60              4.79e-01   3.56e-02   13.45   &lt;2e-16 ***
+## gradeB              6.60e-01   5.27e-02   12.52   &lt;2e-16 ***
+## gradeC              1.03e+00   5.39e-02   19.13   &lt;2e-16 ***
+## gradeD              1.29e+00   5.70e-02   22.58   &lt;2e-16 ***
+## gradeE              1.42e+00   6.66e-02   21.24   &lt;2e-16 ***
+## gradeF              1.67e+00   8.63e-02   19.30   &lt;2e-16 ***
+## gradeG              1.77e+00   1.34e-01   13.20   &lt;2e-16 ***
+## loan_amnt           2.84e-06   2.35e-06    1.21     0.23    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 31130  on 37868  degrees of freedom
+## Residual deviance: 29286  on 37859  degrees of freedom
+## AIC: 29306
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>#compare the fit of logistic 1 and logistic 2
+anova(logistic1,logistic2)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:multivariate logistic regression">
+<col><col><col><col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Resid. Df</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Resid. Dev</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Df</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">Deviance</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3.79e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3.1e+04&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.79e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2.93e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">8</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">1.72e+03</td></tr>
+</table>
+
+<blockquote>
+<p>Q3. Based on logistic 2, explain the following:</p>
+</blockquote>
+<ol style="list-style-type: lower-alpha">
+<li><p>Estimated Coefficient
+The Estimated Coeffiecient explains how a change in a particular varaible influence directly the risk factor decrease/increase. Risk factor is connected to the outcome y (probability) though the logistic function in the model. Sign of the coefficient has a general interpretation - if negative, the change in variable by 1 will cause decrease in the probability. If coeffiecient is positive, the change in variable by 1 will cause increase in probability.</p></li>
+<li><p>Standard error of coefficient
+The magnitude of the standard error estimates how estimated coefficient would be affected if different data are fed in the model. It is also useful when constructing the 95% Confidence Interval for the true coefficients.</p></li>
+<li><p>p-value of coefficient
+The p-value of the coefficient is connected to the Z-score in the Z-test. If the p-value is smaller than 0.05, the coeffieint is signifficant. The p-value describes the probability of the coeffiecient’s value falling inside the 95% confidence interval.</p></li>
+<li><p>Deviance
+Deviance (or -2 log-likelihood (-2LL) statistic) is a goodness-of-fit statistic for a statistical model. We often use it for statistical hypothesis testing. Deviance is a generalization of the idea of using the sum of squares of residuals in ordinary least squares to cases where model-fitting is achieved by maximum likelihood. It tells us how much unexplained variation there is in our logistic regression model - the higher the value the less accurate the model.</p></li>
+<li><p>AIC
+The Akaike Information Critetion rectifies deviance by penalizing number of coefficients. In other words AIC is an estimator of out-of-sample prediction error. The furmula is as follows: =-2log(L)+2k, where k is the number of coefficients. Again, the lower the score, the more accurate our model. AIC is used most frequently in situations when one is not able to easilty test model’s performance with use of machine learning (when having a small dataset or time series).</p></li>
+<li><p>Null Deviance
+It is the outcome of Deviance, when model depends only on intercept.</p></li>
+<li><p>Is Logistic 2 a better model than logistic 1? Why or why not?
+Yes, Logistic 2 model is better than logistic 1 model as both deviance and AIC are lower.</p></li>
+</ol>
+<blockquote>
+<p>Q4. Calculate the predicted probabilities associated with logistic2 and plot them as a density chart. Also plot the density of the predictions for those loans that did default, and for the loans that did not (on the same chart).</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>#Predict the probability of default
+prob_default2&lt;-predict(logistic2, lc_clean, type=&quot;response&quot;)
+
+#plot 1: Density of predictions
+g0&lt;-ggplot( lc_clean, aes( prob_default2 ) )+
+  geom_density( size=1)+
+  ggtitle( &quot;Predicted Probability with Logistic 2&quot; )+  xlab(&quot;Estimated Probability&quot;)
+g0</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plot 2: Density of predictions by default
+g1&lt;-ggplot( lc_clean, aes( prob_default2, color=default) ) +
+  geom_density( size=1)+
+  ggtitle( &quot;Predicted Probability with Logistic 2 by default&quot; )+  xlab(&quot;Estimated Probability&quot;)
+g1</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-2-2.png" width="648" style="display: block; margin: auto;" /></p>
+<div id="from-probability-to-classification" class="section level2">
+<h2>From probability to classification</h2>
+<p>The logistic regression model gives us a sense of how likely defaults are; it gives us a probability estimate. To convert this into a prediction, we need to choose a cutoff probability and classify every loan with a predicted probability of default above the cutoff as a prediction of default (and vice versa for loans with a predicted probability below this cutoff).</p>
+<p>Let’s choose a threshold of 20%. Of course some of our predictions will turn out to be right but some will turn out to be wrong – you can see this in the density figures of the previous section. Let’s call “default” the “positive” class since this is the class we are trying to predict. We could be making two types of mistakes. False positives (i.e., predict that a loan will default when it will not) and false negatives (I.e., predict that a loan will not default when it does). These errors are summarized in the confusion matrix.</p>
+<blockquote>
+<p>Q5. Produce the confusion matrix for the model logistic 2 for a cutoff of 18%</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>#using the logistic 2 model predict default probabilities
+prob_default2&lt;- predict(logistic2, lc_clean, type=&quot;response&quot;)
+  
+#Call any loan with probability more than 18% as default and any loan with lower probability as non-default. Make sure your prediction is a factor with the same levels as the default variable in the lc_clean data frame
+p_class&lt;-factor(ifelse(prob_default2&gt;0.18,&quot;1&quot;,&quot;0&quot;),levels=levels(lc_clean$default))
+  
+#produce the confusion matrix and set default as the positive outcome
+con2&lt;-confusionMatrix(p_class,lc_clean$default,positive=&quot;1&quot;) 
+
+#print the confusion matrix
+con2</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction     0     1
+##          0 24674  2818
+##          1  7766  2611
+##                                         
+##                Accuracy : 0.721         
+##                  95% CI : (0.716, 0.725)
+##     No Information Rate : 0.857         
+##     P-Value [Acc &gt; NIR] : 1             
+##                                         
+##                   Kappa : 0.175         
+##                                         
+##  Mcnemar&#39;s Test P-Value : &lt;2e-16        
+##                                         
+##             Sensitivity : 0.4809        
+##             Specificity : 0.7606        
+##          Pos Pred Value : 0.2516        
+##          Neg Pred Value : 0.8975        
+##              Prevalence : 0.1434        
+##          Detection Rate : 0.0689        
+##    Detection Prevalence : 0.2740        
+##       Balanced Accuracy : 0.6208        
+##                                         
+##        &#39;Positive&#39; Class : 1             
+## </code></pre>
+<blockquote>
+<p>Q6. Using the confusion matrix, explain the following and show how they are calculated</p>
+</blockquote>
+<p>For each of this explain what they mean in the context of the lending club and the goal of predicting loan defaults.</p>
+<p>Answer here:
+a. Accuracy
+Percentage of status correctly predicted, regardless of default status.
+(2611+24674)/(2611+2818+24674+7766)=0.7205
+b. Sensitivity
+Proportion of good loans correctly identified as non-default.
+2611/(2611+2818)=0.48094
+c. Specificity
+Proportion of bad loans correctly identified as default.
+24674/(24674+7766)=0.76060</p>
+<blockquote>
+<p>Q7. Using the model logistic 2 produce the ROC curve and calculate the AUC measure. Explain what the ROC shows and what the AUC measure means. Why do we expect the AUC of any predictive model to be between 0.5 and 1? Could the AUC ever be below 0.5 or above 1?</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>#estimate the ROC curve for Logistic 2
+ROC_logistic2 &lt;- roc(lc_clean$default,prob_default2)
+
+#estimate the AUC for Logistic 2 and round it to two decimal places
+AUC2&lt;-round(auc(lc_clean$default,prob_default2)*100, digits=2)
+#Plot the ROC curve and display the AUC in the title
+ROC2&lt;-ggroc(ROC_logistic2,  alpha = 0.5)+ ggtitle(paste(&quot;Model Logistic 2: AUC=&quot;,round(auc(lc_clean$default,prob_default2)*100, digits=2),&quot;%&quot;))  + geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)+geom_segment(aes(x = 1, xend = 1, y = 0, yend = 1), color=&quot;black&quot;, linetype=&quot;dashed&quot;)+geom_segment(aes(x = 1, xend = 0, y = 1, yend = 1), color=&quot;black&quot;, linetype=&quot;dashed&quot;)
+
+ROC2</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/ROC%20curves-1.png" width="648" style="display: block; margin: auto;" />
+Provide comments here:
+The ROC curve shows for any given level of True Positives, what level of True Negatives we can expect.The stright line shows the situation in which instead of a model we were using the probability of 0.5. Anything about the line is better than the random prediction. We aim for the ROC to be as close to the (1.00,1.00) point as possible. The AUC measure measures the area under the curve. Again for random prediciton (stright line) the AUC=0.5. The better the AUC the better the model. We expect the AUC of any predictive model to be between 0.5 and 1 as we expect is to be better than the random prediciton based on 0.5 chance. In case of a bad model, the AUC could be equal to the number below 0.5. However, in that case, we should immediately drop the model, as it means, that our model predictions are worse that the random chance of being correct. The AUC cannot be equal to the number above 1, as in case AUC=1, the model predictions are already 100% correct.</p>
+<blockquote>
+<p>Q8. So far we have only worked in-sample. Split the data into training and testing and estimate the models ROC curve and AUC measure out of sample. Is there any evidence of over fitting?</p>
+</blockquote>
+<p>Insert your code here::</p>
+<pre class="r"><code># splitting the data into training and testing
+set.seed(1234)
+train_test_split &lt;- initial_split(lc_clean, prop = 0.8)
+testing &lt;- testing(train_test_split) #20% of the data is set aside for testing
+training &lt;- training(train_test_split) #80% of the data is set aside for training
+
+# run logistic 2 on the training set 
+logistic2_in&lt;-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family=&quot;binomial&quot;, training)
+
+#calculate probability of default in the training sample 
+p_in&lt;-predict(logistic2_in, training, type = &quot;response&quot;)
+  
+#ROC curve using in-sample predictions
+ROC_logistic2_in &lt;- roc(training$default,p_in)
+#AUC using in-sample predictions
+AUC_logistic2_in&lt;-round(auc(training$default,p_in)*100, digits=2)
+  
+#calculate probability of default out of sample 
+p_out&lt;-predict(logistic2_in, testing, type = &quot;response&quot;)
+
+#ROC curve using out-of-sample predictions
+ROC_logistic2_out &lt;- roc(testing$default,p_out)
+#AUC using out-of-sample predictions
+AUC_logistic2_out &lt;- round(auc(testing$default,p_out)*100, digits=2)
+#plot in the same figure both ROC curves and print the AUC of both curves in the title
+ggroc(list(&quot;Logistic 2 in-sample&quot;=ROC_logistic2_in, &quot;Logistic 2 out-of-sample&quot;=ROC_logistic2_out))+ggtitle(paste(&quot;Model Logistic 2 in-sample AUC=&quot;,round(auc(training$default,p_in)*100, digits=2),&quot;%\nModel Logistic 2 out-of-sample AUC=&quot;,round(auc(testing$default,p_out)*100, digits=2),&quot;%&quot;))    +
+geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/out-of-sample%20ROC%20curve-1.png" width="648" style="display: block; margin: auto;" />
+Provide comments here:
+There is a very weak evidence in overfitting, because the ROC curve and AUC statistic has remained roughly the same in both in-sample and out-of-sample cases. Therefore we can assume that overfitting does not occur in our model.</p>
+</div>
+<div id="selecting-loans-to-invest-using-the-model-logistic-2." class="section level2">
+<h2>Selecting loans to invest using the model Logistic 2.</h2>
+<p>Before we look for a better model than logistic 2 let’s see how we can use this model to select loans to invest. Let’s make the simplistic assumption that every loan generates $20 profit if it is paid off and $100 loss if it is charged off for an investor. Let’s use a cut-off value to determine which loans to invest in, that is, if the predicted probability of default for a loan is below this value then we invest in that loan and not if it is above.</p>
+<p>To do this we split the data in three parts: training, validation, and testing. Feel free to experiment with different seeds but please use the seeds provided below for your submission.</p>
+<pre class="r"><code># splitting the data into training and testing
+set.seed(121)
+train_test_split &lt;- initial_split(lc_clean, prop = 0.6)
+training &lt;- training(train_test_split) #60% of the data is set aside for training
+remaining &lt;- testing(train_test_split) #40% of the data is set aside for validation &amp; testing
+set.seed(121)
+train_test_split &lt;- initial_split(remaining, prop = 0.5)
+validation&lt;-training(train_test_split) #50% of the remaining data (20% of total data) will be used for validation
+testing&lt;-testing(train_test_split) #50% of the remaining data (20% of total data) will be used for testing</code></pre>
+<blockquote>
+<p>Q9. Train logistic 2 on the training set above. Use the trained model to determine the optimal cut-off threshold based on the validation test. What is the optimal cutoff threshold? How much profit does it generate? Using the testing set, what is the profit per loan associated with the cutoff?</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>logistic2_in&lt;-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family=&quot;binomial&quot;, training)
+summary(logistic2_in)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = default ~ I(annual_inc/1000) + term + grade + loan_amnt, 
+##     family = &quot;binomial&quot;, data = training)
+## 
+## Deviance Residuals: 
+##    Min      1Q  Median      3Q     Max  
+## -1.053  -0.607  -0.487  -0.338   3.237  
+## 
+## Coefficients:
+##                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        -2.49e+00   6.64e-02  -37.54   &lt;2e-16 ***
+## I(annual_inc/1000) -5.70e-03   6.08e-04   -9.38   &lt;2e-16 ***
+## term60              5.02e-01   4.59e-02   10.94   &lt;2e-16 ***
+## gradeB              7.34e-01   6.89e-02   10.65   &lt;2e-16 ***
+## gradeC              1.07e+00   7.08e-02   15.09   &lt;2e-16 ***
+## gradeD              1.32e+00   7.48e-02   17.59   &lt;2e-16 ***
+## gradeE              1.42e+00   8.74e-02   16.27   &lt;2e-16 ***
+## gradeF              1.70e+00   1.11e-01   15.32   &lt;2e-16 ***
+## gradeG              1.78e+00   1.72e-01   10.35   &lt;2e-16 ***
+## loan_amnt           1.45e-06   3.03e-06    0.48     0.63    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 18591  on 22721  degrees of freedom
+## Residual deviance: 17493  on 22712  degrees of freedom
+## AIC: 17513
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>p_val&lt;-predict(logistic2_in, validation, type = &quot;response&quot;) #predict probability of default on the validation set
+
+#we select the cutoff threshold using the estimated model and the validation set
+profit=0
+threshold=0
+for(i in 1:100) {
+  threshold[i]=i/400
+  one_or_zero_search&lt;-ifelse(p_val&gt;threshold[i],&quot;1&quot;,&quot;0&quot;)
+  p_class_search&lt;-factor(one_or_zero_search,levels=levels(validation$default))
+
+  con_search&lt;-confusionMatrix(p_class_search,validation$default,positive=&quot;1&quot;)
+  profit[i]=con_search$table[1,1]*20-con_search$table[1,2]*100
+}
+
+ggplot(as.data.frame(threshold), aes(x=threshold,y=profit)) + geom_smooth(method = &#39;loess&#39;, se=0) +labs(title=&quot;Profit curve with logistic 2 based on validation set, &quot;)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>paste0(&quot;Based on the validation set: Maximum profit per loan is $&quot;, round(max(profit)/nrow(validation),2), &quot; achieved at a threshold of &quot;, threshold[which.is.max(profit)]*100,&quot;%.&quot;)</code></pre>
+<pre><code>## [1] &quot;Based on the validation set: Maximum profit per loan is $5.55 achieved at a threshold of 17%.&quot;</code></pre>
+<pre class="r"><code>#calculate probability of default out of sample 
+p_out&lt;-predict(logistic2_in, testing, type = &quot;response&quot;)
+
+#we select the cutoff threshold using the estimated model and the testing set
+profitt=0
+thresholdt=0
+for(i in 1:100) {
+  thresholdt[i]=i/400
+  one_or_zero_search_t&lt;-ifelse(p_out&gt;thresholdt[i],&quot;1&quot;,&quot;0&quot;)
+  p_class_search_t&lt;-factor(one_or_zero_search_t,levels=levels(testing$default))
+
+  con_search_t&lt;-confusionMatrix(p_class_search_t,testing$default,positive=&quot;1&quot;)
+  profitt[i]=con_search_t$table[1,1]*20-con_search_t$table[1,2]*100
+}
+
+ggplot(as.data.frame(thresholdt), aes(x=thresholdt,y=profitt)) + geom_smooth(method = &#39;loess&#39;, se=0) +labs(title=&quot;Profit curve with logistic 2 based on testing set, &quot;)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>paste0(&quot;Based on the testing set: Maximum profit per loan is $&quot;, round(max(profitt)/nrow(testing),2), &quot; achieved at a threshold of &quot;, thresholdt[which.is.max(profitt)]*100,&quot;%.&quot;)</code></pre>
+<pre><code>## [1] &quot;Based on the testing set: Maximum profit per loan is $5.62 achieved at a threshold of 17.75%.&quot;</code></pre>
+<p>Insert your comments here:
+Based on the validation set, we can observe that the maximum profit per loan is $5.55 achieved at a threshold of 17% optimal cutoff. In case of using the testing set, we obtain also the cutoff point of 17.5%, however the maximum profit per loan amount to $5.62.</p>
+</div>
+</div>
+<div id="more-realistic-revenue-model" class="section level1">
+<h1>More realistic revenue model</h1>
+<p>Let’s build a more realistic profit and loss model. Each loan has different terms (e.g., different interest rate and different duration) and therefore a different return if fully paid. For example, a 36 month loan of $5000 with installment of $163 per month would generate a return of <code>163*36/5000-1</code> if there was no default. Let’s assume that it would generate a loss of -60% if there was a default (the loss is not 100% because the loan may not default immediately and/or the lending club may be able to recover part of the loan).</p>
+<blockquote>
+<p>Q10. Under these assumptions, how much return would you get if you invested $1 in each loan in the validation set? Express your answer as a % return.</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>validation2&lt;-validation%&gt;%
+  mutate(default1=as.numeric(default)-1,
+         return= ifelse (default1==1, -0.6, term_months*installment/loan_amnt-1))
+
+validation2 %&gt;% 
+  summarize(total_return_percent = sum(return)/n()*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-5">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">total_return_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">11.5</td></tr>
+</table>
+
+<pre class="r"><code>summary(validation2)</code></pre>
+<pre><code>##     int_rate       loan_amnt          dti         delinq_2yrs  
+##  Min.   :0.050   Min.   :  500   Min.   : 0.00   0      :6766  
+##  1st Qu.:0.090   1st Qu.: 5500   1st Qu.: 8.07   1      : 630  
+##  Median :0.120   Median :10000   Median :13.32   2      : 129  
+##  Mean   :0.121   Mean   :11284   Mean   :13.24   3      :  32  
+##  3rd Qu.:0.150   3rd Qu.:15000   3rd Qu.:18.51   4      :   9  
+##  Max.   :0.240   Max.   :35000   Max.   :29.99   5      :   4  
+##                                                  (Other):   4  
+##    annual_inc         grade            emp_length        home_ownership    
+##  Min.   :   4200   Length:7574        Length:7574        Length:7574       
+##  1st Qu.:  41000   Class :character   Class :character   Class :character  
+##  Median :  60000   Mode  :character   Mode  :character   Mode  :character  
+##  Mean   :  69926                                                           
+##  3rd Qu.:  83000                                                           
+##  Max.   :6000000                                                           
+##                                                                            
+##  verification_status    issue_d             zip_code          addr_state       
+##  Length:7574         Min.   :2007-07-01   Length:7574        Length:7574       
+##  Class :character    1st Qu.:2010-05-01   Class :character   Class :character  
+##  Mode  :character    Median :2011-02-01   Mode  :character   Mode  :character  
+##                      Mean   :2010-11-04                                        
+##                      3rd Qu.:2011-08-01                                        
+##                      Max.   :2011-12-01                                        
+##                                                                                
+##  loan_status            desc             purpose             title          
+##  Length:7574        Length:7574        Length:7574        Length:7574       
+##  Class :character   Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+##                                                                             
+##                                                                             
+##                                                                             
+##                                                                             
+##  term      default   term_months    installment    emp_title        
+##  36:5570   0:6490   Min.   :36.0   Min.   :  16   Length:7574       
+##  60:2004   1:1084   1st Qu.:36.0   1st Qu.: 170   Class :character  
+##                     Median :36.0   Median : 295   Mode  :character  
+##                     Mean   :42.4   Mean   : 334                     
+##                     3rd Qu.:60.0   3rd Qu.: 451                     
+##                     Max.   :60.0   Max.   :1303                     
+##                                                                     
+##     default1         return      
+##  Min.   :0.000   Min.   :-0.600  
+##  1st Qu.:0.000   1st Qu.: 0.120  
+##  Median :0.000   Median : 0.183  
+##  Mean   :0.143   Mean   : 0.115  
+##  3rd Qu.:0.000   3rd Qu.: 0.254  
+##  Max.   :1.000   Max.   : 0.723  
+## </code></pre>
+<p>Insert comments here:</p>
+<p>According to the assumption above, we reach a return of 11.45%.</p>
+<p>Unfortunately, we cannot use the realized return to select loans to invest (as at the time we make the investment decision we do not know which loan will default). Instead, we can calculate an expected return using the estimated probabilities of default – expected return = return if not default * (1-prob(default)) + return if default * prob(default).</p>
+<blockquote>
+<p>Q11. Calculate the expected return of the loans in the validation set using the logistic 2 model trained in the training set. Can you use the expected return metric to select a portfolio of the <span class="math inline">\(n\)</span> most promising loans to invest in (<span class="math inline">\(n\)</span> is an integer number)? How does the realized return vary as you change <span class="math inline">\(n\)</span>? What is the profit for <span class="math inline">\(n=800\)</span>?</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>expected_return &lt;- p_val*(-0.6)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return &lt;-as.data.frame(expected_return) %&gt;% 
+  arrange(-expected_return) 
+  
+expected_return_800&lt;-expected_return %&gt;% head(800)
+
+expected_return_800%&gt;% 
+  summarize(expected_return_in_percent = sum(expected_return)/800*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-6">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">expected_return_in_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">23.6</td></tr>
+</table>
+
+<pre class="r"><code>expected_return_2000&lt;-expected_return %&gt;% head(1500)
+
+expected_return_2000%&gt;% 
+  summarize(expected_return_in_percent =sum(expected_return)/1500*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-6">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">expected_return_in_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">20.5</td></tr>
+</table>
+
+<pre class="r"><code>expected_return_2000&lt;-expected_return %&gt;% head(8000)
+
+expected_return_2000%&gt;% 
+  summarize(expected_return_in_percent =sum(expected_return)/8000*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-6">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">expected_return_in_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">11</td></tr>
+</table>
+
+<pre class="r"><code>expected_return_2000&lt;-expected_return %&gt;% head(80)
+
+expected_return_2000%&gt;% 
+  summarize(expected_return_in_percent =sum(expected_return)/80*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-6">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">expected_return_in_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">35.2</td></tr>
+</table>
+
+<p>Insert comments here:
+In case n=800, our expected return amount to 23.64%. In case of increasing n, the perctange value of expected return decreases. If we decrease <span class="math inline">\(n\)</span>, then the expected return in percent increases. We can use the expected return metric as one of the means to select a portfolio, however we should not rely only on this measure. The less loans we choose, the less nominal profit we will obtain. Therefore, it would be smart to use other measures to complement this approach.</p>
+<blockquote>
+<p>Q12. For <span class="math inline">\(n=800\)</span>, how sensitive is your answer to the assumption that if a loan defaults you lose 60% of the value? To answer this question assess how the realized return of the 800 loans chosen in your portfolio change if the loss proportion varies from 20%-80%?</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>expected_return20 &lt;- p_val*(-0.2)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return20 &lt;-as.data.frame(expected_return20) %&gt;% 
+  arrange(-expected_return20) 
+  
+expected_return_800_20&lt;-expected_return20 %&gt;% head(800)
+
+expected_return_800_20%&gt;% 
+  summarize(sum(expected_return20)/800*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-7">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">sum(expected_return20)/800 * 100</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">33.4</td></tr>
+</table>
+
+<pre class="r"><code>expected_return80 &lt;- p_val*(-0.8)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return80 &lt;-as.data.frame(expected_return80) %&gt;% 
+  arrange(-expected_return80) 
+  
+expected_return_800_80&lt;-expected_return80 %&gt;% head(800)
+
+expected_return_800_80%&gt;% 
+  summarize(sum(expected_return80)/800*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-7">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">sum(expected_return80)/800 * 100</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">19.4</td></tr>
+</table>
+
+<pre class="r"><code>expected_return40 &lt;- p_val*(-0.4)+(1-p_val)*(validation2$term_months*validation2$installment/validation2$loan_amnt-1)
+
+expected_return40 &lt;-as.data.frame(expected_return40) %&gt;% 
+  arrange(-expected_return40) 
+  
+expected_return_800_40&lt;-expected_return40 %&gt;% head(800)
+
+expected_return_800_40%&gt;% 
+  summarize(sum(expected_return40)/800*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-7">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">sum(expected_return40)/800 * 100</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">28.3</td></tr>
+</table>
+
+<p>Insert comments here:</p>
+<p>If we lose 20% on default loans, we have expected return on the 800 loans as 33.36%.
+If we lose 80% on default loans, we have expected return on the 800 loans as 19.44%.
+The return changes but we still gain profit from it. The expected return increases more if the loss is small. It means that our answer is not this much sensitive to the assupmtion that if the loan defaults, we lose 60% of the value.</p>
+<blockquote>
+<p>Q13. Experiment with different models using more features, interactions, and non-linear transformations. You may also want to try to estimate models using regularization (e.g., LASSO regression). Feel free to use data from other sources but make sure your model does not use information that would not be available at the time the loan is extended (e.g., for a 4-year loan given in January 2008, you can’t use macro-economic indicators for 2008 or 2009 to predict whether the loan will default). Present below your best model ONLY and explain why you have chosen it (at the very least comment on AUC of your model against other models, e.g. logistic 2. Even better if you can compare your new model against logistic 2 on the realized return of 800 loans chosen out-of-sample from a data set of similar size to the validation set above.)</p>
+</blockquote>
+<p>Insert your code here:</p>
+<pre class="r"><code>#showing best model
+#splitting the data again
+set.seed(121)
+train_test_split &lt;- initial_split(lc_clean, prop = 0.6)
+training &lt;- training(train_test_split) #60% of the data is set aside for training
+remaining &lt;- testing(train_test_split) 
+
+train_test_split &lt;- initial_split(remaining, prop = 0.5)
+validation&lt;-training(train_test_split)
+testing&lt;-testing(train_test_split) 
+
+logistic_wild&lt;-glm(default~
+                     poly(I(annual_inc/1000),3)+
+                     term+
+                     grade+
+                     poly(int_rate,3):loan_amnt+
+                     issue_d*grade, family=&quot;binomial&quot;, training)
+summary(logistic_wild)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = default ~ poly(I(annual_inc/1000), 3) + term + 
+##     grade + poly(int_rate, 3):loan_amnt + issue_d * grade, family = &quot;binomial&quot;, 
+##     data = training)
+## 
+## Deviance Residuals: 
+##    Min      1Q  Median      3Q     Max  
+## -1.211  -0.606  -0.476  -0.320   3.000  
+## 
+## Coefficients:
+##                               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                  -1.22e+01   2.89e+00   -4.23  2.3e-05 ***
+## poly(I(annual_inc/1000), 3)1 -1.49e+02   4.00e+01   -3.72  0.00020 ***
+## poly(I(annual_inc/1000), 3)2 -1.88e+02   7.05e+01   -2.66  0.00773 ** 
+## poly(I(annual_inc/1000), 3)3 -1.18e+02   2.87e+01   -4.12  3.8e-05 ***
+## term60                        5.02e-01   4.91e-02   10.21  &lt; 2e-16 ***
+## gradeB                        1.33e+01   3.35e+00    3.97  7.2e-05 ***
+## gradeC                        1.31e+01   3.36e+00    3.89  9.9e-05 ***
+## gradeD                        1.03e+01   3.57e+00    2.87  0.00409 ** 
+## gradeE                        7.04e+00   4.38e+00    1.61  0.10845    
+## gradeF                        1.57e+01   6.26e+00    2.51  0.01212 *  
+## gradeG                        3.05e+01   1.02e+01    2.98  0.00290 ** 
+## issue_d                       6.40e-04   1.93e-04    3.31  0.00092 ***
+## poly(int_rate, 3)1:loan_amnt  2.78e-03   4.71e-04    5.91  3.3e-09 ***
+## poly(int_rate, 3)2:loan_amnt -1.99e-03   4.46e-04   -4.45  8.6e-06 ***
+## poly(int_rate, 3)3:loan_amnt  1.10e-03   2.87e-04    3.82  0.00013 ***
+## gradeB:issue_d               -8.65e-04   2.25e-04   -3.85  0.00012 ***
+## gradeC:issue_d               -8.32e-04   2.26e-04   -3.69  0.00022 ***
+## gradeD:issue_d               -6.25e-04   2.40e-04   -2.61  0.00905 ** 
+## gradeE:issue_d               -4.04e-04   2.94e-04   -1.38  0.16879    
+## gradeF:issue_d               -9.67e-04   4.19e-04   -2.31  0.02103 *  
+## gradeG:issue_d               -1.96e-03   6.87e-04   -2.85  0.00432 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 18591  on 22721  degrees of freedom
+## Residual deviance: 17378  on 22701  degrees of freedom
+## AIC: 17420
+## 
+## Number of Fisher Scoring iterations: 10</code></pre>
+<pre class="r"><code>#calculate probability of default in the training sample 
+p_wild_in&lt;-predict(logistic_wild, training, type = &quot;response&quot;)
+
+#ROC curve using in-sample predictions
+ROC_logistic_wild &lt;- roc(training$default,p_wild_in)
+#AUC using in-sample predictions
+AUC_logistic_wild&lt;-round(auc(training$default,p_wild_in)*100, digits=2)
+
+#quick check for overfitting
+
+#calculate probability of default out of sample 
+p_wild_out&lt;-predict(logistic_wild, testing, type = &quot;response&quot;)
+
+#ROC curve using out-of-sample predictions
+ROC_logistic_wild_out &lt;- roc(testing$default,p_wild_out)
+#AUC using out-of-sample predictions
+AUC_logistic_wild_out &lt;- round(auc(testing$default,p_wild_out)*100, digits=2)
+#plot in the same figure both ROC curves and print the AUC of both curves in the title
+ggroc(list(&quot;Logistic Wild in-sample&quot;=ROC_logistic_wild, &quot;Logistic Wild out-of-sample&quot;=ROC_logistic_wild_out))+ggtitle(paste(&quot;Model Logistic Wild in-sample AUC=&quot;,round(auc(training$default,p_wild_in)*100, digits=2),&quot;%\nModel Logistic Wild out-of-sample AUC=&quot;,round(auc(testing$default,p_wild_out)*100, digits=2),&quot;%&quot;))    +
+geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-8-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#very weak evidence of overfitting, we can compare now our model logistic_wild to logistic2
+  
+logistic2_in&lt;-glm(default~I(annual_inc/1000)+term+grade+loan_amnt, family=&quot;binomial&quot;, training)
+
+#calculate probability of default in the training sample of model logistic2_in
+p_in&lt;-predict(logistic2_in, training, type = &quot;response&quot;)
+  
+#ROC curve using in-sample predictions
+ROC_logistic2_in &lt;- roc(training$default,p_in)
+#AUC using in-sample predictions
+AUC_logistic2_in&lt;-round(auc(training$default,p_in)*100, digits=2)
+#plot in the same figure both ROC curves and print the AUC of both curves in the title
+ggroc(list(&quot;Logistic 2&quot;=ROC_logistic2_in, &quot;Logistic Wild&quot;=ROC_logistic_wild))+ggtitle(paste(&quot;Model Logistic 2 on training set AUC=&quot;,round(auc(training$default,p_in)*100, digits=2),&quot;%\nModel Logistic Wild on training set AUC=&quot;,round(auc(training$default,p_wild_in)*100, digits=2),&quot;%&quot;))    +
+geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color=&quot;grey&quot;, linetype=&quot;dashed&quot;)</code></pre>
+<p><img src="/portfolio/project-05_files/figure-html/unnamed-chunk-8-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#calculate probability of default in the training sample 
+p_wild_val&lt;-predict(logistic_wild, validation, type = &quot;response&quot;)
+expected_return60l &lt;- p_wild_val*(-0.6)+(1-p_wild_val)*(validation$term_months*validation$installment/validation$loan_amnt-1)
+
+expected_return60l &lt;-as.data.frame(expected_return60l) %&gt;% 
+  arrange(-expected_return60l) 
+
+expected_return_800_60l&lt;-expected_return60l %&gt;% head(800)
+
+expected_return_800_60l%&gt;% 
+  summarize(expected_return_in_percent= sum(expected_return60l)/800*100)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-9">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">expected_return_in_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">24.3</td></tr>
+</table>
+
+<pre class="r"><code>p_val&lt;-predict(logistic2_in, validation, type = &quot;response&quot;)
+expected_return &lt;- p_val*(-0.6)+(1-p_val)*(validation$term_months*validation$installment/validation$loan_amnt-1)
+
+expected_return &lt;-as.data.frame(expected_return) %&gt;% 
+  arrange(-expected_return) 
+
+expected_return_800&lt;-expected_return %&gt;% head(800)
+
+expected_return_800%&gt;% 
+  summarize(expected_return_in_percent = sum(expected_return)/800*100)</code></pre>
+<p><table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-9">
+<col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">expected_return_in_percent</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">23.7</td></tr>
+</table>
+
+Insert comments here:</p>
+<p>My best model is model logistic_wild. I managed to achieve the AIC at the level of 17420 and AUC of the model accounting to 68,43%.When it comes to expected returns, the ones based on model logistic_wild bring return amounting to 24,34% (in comparison to 23,70% from model logistic2) basing it on the validation set. When searching the model, I tried the LASSO method on training split, I tried as well to add variables on inflation and price, however, they would increase my AIC and decrease the AUC. Therefore, I sticked to model logistic_wild.</p>
+<blockquote>
+<p>Q14. The file “Assessment Data_2020.csv” contains information on almost 1800 new loans. Use your best model (see previous question) to choose 200 loans to invest. For this question assume that the loss proportion is 60%. Your grade on this question will be based on the actual performance of your choices.</p>
+</blockquote>
+<p>The submitted output should be a csv file “firstname_lastname.csv” containing only two columns: column A should have the loan number. Column B should have your name on top and then the number 1 for loans you would like to invest in and number zero otherwise. For example, if “Nicos Savva” wanted to invest in loans 2 and 4 but not in loans 1, 3, or 5, his submission should be named “nicos_savva.csv” and if opened in Excel should look like this:</p>
+<div class="figure">
+<img src="sample%20file.jpg" title="Sample submission" alt="" />
+<p class="caption">Sample Submission</p>
+</div>
+<p>(If you can’t see the picture make sure you download it from canvas in your working directory.)</p>
+<p>Please follow these instructions closely. For example, do not change the order of the loans, do not submit a list of the loan numbers you would invest in, do not invest in more (or fewer) than 200 loans, make sure the loan numbers are in column A and the choices in column B, start in cell A1, don’t forget to add your name, etc. For loans you do not want to invest you can write “0” or leave the cell empty. <em>Before you submit, open your file in EXCEL to make sure it looks like the sample above. Also check that the file size is not more that a few kilobytes. If it’s more you are doing something wrong.</em></p>
+<p>Add to the code below to do this:</p>
+<pre class="r"><code>lc_assessment&lt;- read_csv(&quot;~/Documents/LBS/Data Science/Session 05/Assessment Data_2020.csv&quot;) 
+ lc_assessment&lt;-  lc_assessment %&gt;% 
+   janitor::clean_names() %&gt;% # use janitor::clean_names() 
+  mutate(
+    issue_d = lubridate::mdy(issue_d),  # lubridate::mdy() to fix date format
+    term = factor(term_months),     # turn &#39;term&#39; into a categorical variable
+    delinq_2yrs = factor(delinq_2yrs)) # turn &#39;delinq_2yrs&#39; into a categorical variable
+ 
+  lc_assessment %&gt;% head(10)</code></pre>
+<table class="huxtable" style="border-collapse: collapse; border: 0px; margin-bottom: 2em; margin-top: 2em; ; margin-left: auto; margin-right: auto;  " id="tab:unnamed-chunk-10">
+<col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><tr>
+<th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">loan_number</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">int_rate</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">loan_amnt</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">term_months</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">installment</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">dti</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">delinq_2yrs</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">annual_inc</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">grade</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">emp_title</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">emp_length</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">home_ownership</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">verification_status</th><th style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">issue_d</th><th style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: bold;">term</th></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">1</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.147&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">1.2e+04&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">414</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">11.6&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">4</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">1.36e+05</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">C</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2 years</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">Not Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2010-07-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0.4pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.117&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6e+03&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">198</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6.68</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.7e+04&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">B</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">1 year</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">Not Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2011-12-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.079&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">1.61e+04</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">504</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">10.6&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">7.5e+04&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">A</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">7 years</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">MORTGAGE</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">Source Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2011-10-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">4</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.13&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6e+03&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">202</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">18.9&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.2e+04&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">C</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">&lt; 1 year</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">Source Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2011-08-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">5</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.16&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">1.2e+04&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">60</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">292</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">22.2&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">4.87e+04</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">C</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">5 years</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2011-11-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">60</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.15&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">1.5e+04&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">520</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">13.8&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6.7e+04&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">D</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2 years</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">Not Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2009-11-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">7</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.0654</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3e+03&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">60</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">59</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">6.34</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">5e+04&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">A</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">7 years</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">OWN</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">Source Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2010-11-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">60</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">8</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.1&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">6e+03&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">194</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">7.28</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">8.5e+04&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">B</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">4 years</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2011-03-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">9</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0.127&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2.9e+04&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">973</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">21.8&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">8.13e+04</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">B</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">3 years</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">RENT</td><td style="vertical-align: top; text-align: left; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">2011-10-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0pt 0pt;    padding: 6pt 6pt 6pt 6pt; background-color: rgb(242, 242, 242); font-weight: normal;">36</td></tr>
+<tr>
+<td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0.4pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">10</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0.14&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">1e+04&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">342</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">16.7&nbsp;</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">0</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">3.84e+04</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">C</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;"></td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">n/a</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">MORTGAGE</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">Not Verified</td><td style="vertical-align: top; text-align: right; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">2010-06-01</td><td style="vertical-align: top; text-align: left; white-space: normal; border-style: solid solid solid solid; border-width: 0pt 0.4pt 0.4pt 0pt;    padding: 6pt 6pt 6pt 6pt; font-weight: normal;">36</td></tr>
+</table>
+
+<pre class="r"><code> p_assessment&lt;-predict(logistic_wild, lc_assessment, type = &quot;response&quot;)
+
+  p_assessment %&gt;% head(10)</code></pre>
+<pre><code>##      1      2      3      4      5      6      7      8      9     10 
+## 0.0873 0.1225 0.0498 0.1685 0.2225 0.1730 0.1021 0.0771 0.1113 0.1775</code></pre>
+<pre class="r"><code>   expected_return_assessment &lt;- p_assessment*(-0.6)+(1-p_assessment)*(lc_assessment$term_months*lc_assessment$installment/lc_assessment$loan_amnt-1)
+
+lc_assessment_total&lt;- lc_assessment %&gt;% 
+  mutate(expected_return=expected_return_assessment ) %&gt;% 
+arrange(-expected_return ) 
+
+lc_assessment_total_200 &lt;- lc_assessment_total %&gt;%  
+  head(200) %&gt;% 
+  mutate( agnieszka_prawda= 1)
+
+
+
+merged_assessment&lt;- merge(x = lc_assessment_total, y = lc_assessment_total_200, by = &quot;loan_number&quot;, all.x = TRUE) %&gt;% 
+  select(loan_number, agnieszka_prawda) 
+  
+merged_assessment&lt;- replace_na(merged_assessment,list(agnieszka_prawda=0))
+
+
+write.csv(merged_assessment, &quot;agnieszka_prawda.csv&quot;,row.names=TRUE)</code></pre>
+<p>After you have submitted your report I will upload a screen cast that discusses the performance of your chosen portfolios. I will also use this screen cast to illustrate the “wisdom of the crowd” principle. So please make sure you watch it.</p>
+</div>
+<div id="critique" class="section level1">
+<h1>Critique</h1>
+<p>No data science engagement is perfect. Before finishing a project is always important to reflect on the limitations of the analysis and suggest ways for future improvement.</p>
+<blockquote>
+<p>Q15. Provide a critique of your work. What would you want to add to this analysis before you use it in practice?</p>
+</blockquote>
+<p>Insert comments here: First of all, I believe collecting some more historical data on all the loan takers, on how they coped with their liabilities and credit history. I tried to use models on inflation and on bond prices however, the data did not improve my model, so I decided to drop it. Before using it in practice, I would like to try and find true value of the return in case of default instead of 60% assumed. I would also try to run Rigde regression and see how is compares to LASSO ( the best model in the homework).</p>
+<blockquote>
+<p>Q16. In our analysis we did not use information about the applicants race or gender. Why do you think this is the case? Should we have done?</p>
+</blockquote>
+<p>Insert comments here: We do not include data on race or gender as our model could become bias and disciminate poeple of particular sex or skin color. It is an aesthetic approach to data and modelling. We need to remember that when using machine learning methods, the models may sometimes take spourious values as significant ones and become sexist or racist.</p>
+<p>Please submit an html knitted version of your rmd file. Before you submit, please check that the file has knitted correctly and it is not too large (e.g., you are not printing the whole data set or your investment choices!). Also, please submit on time – delayed submissions will be penalized according to the course policy.</p>
+</div>
