@@ -55,7 +55,7 @@ At the last board meeting of Omega Group Plc., the headquarters of a large multi
 
 In this project I will carry out the analysis with the objective to find out whether there is indeed a significant difference between the salaries of men and women, and whether the difference is due to discrimination or whether it is based on another, possibly valid, determining factor.
 
-```{r load_omega_data, include=False}
+```{r load_omega_data}
 omega <- omega <- read_csv("~/Documents/Applied Statistics in R/homeworks/data/omega.csv")
 ```
 
