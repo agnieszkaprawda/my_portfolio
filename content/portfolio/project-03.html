@@ -99,8 +99,8 @@ glimpse(big_df_cleaned)</code></pre>
 ## $ SP.DYN.TFRT.IN     &lt;dbl&gt; 4.82, 4.66, 4.47, 4.27, 4.06, 3.84, 3.62, 3.42, 3.…
 ## $ hiv_count          &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
 ## $ life_expectancy    &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…</code></pre>
-<div id="what-is-the-relationship-between-hiv-prevalence-and-life-expectancy" class="section level2">
-<h2>What is the relationship between HIV prevalence and life expectancy?</h2>
+<div id="what-is-the-relationship-between-hiv-prevalence-and-life-expectancy" class="section level3">
+<h3>What is the relationship between HIV prevalence and life expectancy?</h3>
 <pre class="r"><code>big_df_cleaned_1990 &lt;- big_df_cleaned %&gt;% 
   filter(year&gt;1989&amp; year &lt;2012)
 ggplot(big_df_cleaned_1990, 
@@ -135,8 +135,8 @@ geom_smooth(colour=&quot;blue&quot;) +
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>As we can conclude from the graph, over years the relationship between HIV prevalence and life expectancy is getting stronger. In countries where HIV prevalance is the highest, it has risen for years, while life expectancy has not noticed such a significant growth. Also, we can notice, that for years, the Sub-Saharan Africa has had the biggest scale of the problem.</p>
 </div>
-<div id="what-is-the-relationship-between-fertility-rate-and-gdp-per-capita" class="section level2">
-<h2>What is the relationship between fertility rate and GDP per capita?</h2>
+<div id="what-is-the-relationship-between-fertility-rate-and-gdp-per-capita" class="section level3">
+<h3>What is the relationship between fertility rate and GDP per capita?</h3>
 <pre class="r"><code>by_region &lt;- big_df_cleaned %&gt;% 
   group_by(region) %&gt;% 
 filter(region!=&quot;Aggregates&quot;)
@@ -173,8 +173,8 @@ facet_wrap(~region,
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" />
 W can notice from the graph that in richer countries the fertility, tends to be lower. However, the important factor here is to reember about the free scales of the graphs presented. Even though, the same trend is visible across all the regions, it is much stronger in developed regions than in the poor ones.</p>
 </div>
-<div id="which-regions-have-the-most-observations-with-missing-hiv-data" class="section level2">
-<h2>Which regions have the most observations with missing HIV data?</h2>
+<div id="which-regions-have-the-most-observations-with-missing-hiv-data" class="section level3">
+<h3>Which regions have the most observations with missing HIV data?</h3>
 <pre class="r"><code>#Add regions to the hiv_longer dataframe, selecting all relevant variables, renaming the count variable to make it clearer
 
 hiv_longer_region &lt;- left_join(hiv_longer, 
@@ -232,8 +232,8 @@ ggplot(hiv_longer_region, aes(y = reorder(region, total_NA_per_region), x = tota
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" />
 Again, the most developed regions in the world, are abundant with dasta regarding HIV. In regions, where the problem is the most severe, the data is missing in great amounts.</p>
 </div>
-<div id="how-has-mortality-rate-for-under-5-changed-by-region" class="section level2">
-<h2>How has mortality rate for under 5 changed by region?</h2>
+<div id="how-has-mortality-rate-for-under-5-changed-by-region" class="section level3">
+<h3>How has mortality rate for under 5 changed by region?</h3>
 <p>In each region, I will find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</p>
 <pre class="r"><code># Mortality Rate development across regions
 #Create dataframe with relevant variables, excluding NA
@@ -357,8 +357,8 @@ theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
         legend.position = &quot;none&quot;)</code></pre>
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
 </div>
-<div id="is-there-a-relationship-between-primary-school-enrollment-and-fertility-rate" class="section level2">
-<h2>Is there a relationship between primary school enrollment and fertility rate?</h2>
+<div id="is-there-a-relationship-between-primary-school-enrollment-and-fertility-rate" class="section level3">
+<h3>Is there a relationship between primary school enrollment and fertility rate?</h3>
 <pre class="r"><code>#Create data frame with relevant variables
 
 primenrolment_fertility_df &lt;- data %&gt;%

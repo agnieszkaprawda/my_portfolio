@@ -119,7 +119,7 @@ glimpse(big_df_cleaned)
   
 ```
 
-## What is the relationship between HIV prevalence and life expectancy?
+### What is the relationship between HIV prevalence and life expectancy?
 
 ```{r fig.width=7, fig.height=8}
 big_df_cleaned_1990 <- big_df_cleaned %>% 
@@ -159,7 +159,7 @@ geom_smooth(colour="blue") +
 
 As we can conclude from the graph, over years the relationship between HIV prevalence and life expectancy is getting stronger. In countries where HIV prevalance is the highest, it has risen for years, while life expectancy has not noticed such a significant growth. Also, we can notice, that for years, the Sub-Saharan Africa has had the biggest scale of the problem.
 
-## What is the relationship between fertility rate and GDP per capita?
+### What is the relationship between fertility rate and GDP per capita?
 
 ```{r}
 by_region <- big_df_cleaned %>% 
@@ -201,7 +201,7 @@ W can notice from the graph that in richer countries the fertility, tends to be 
 
 
 
-## Which regions have the most observations with missing HIV data?
+### Which regions have the most observations with missing HIV data?
 
 ```{r}
 
@@ -258,7 +258,7 @@ Again, the most developed regions in the world, are abundant with dasta regardin
 
 
 
-## How has mortality rate for under 5 changed by region? 
+### How has mortality rate for under 5 changed by region? 
 
 In each region, I will find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.
 
@@ -389,7 +389,7 @@ theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
 
 
 
-## Is there a relationship between primary school enrollment and fertility rate?
+### Is there a relationship between primary school enrollment and fertility rate?
 
 ``` {r}
 #Create data frame with relevant variables
