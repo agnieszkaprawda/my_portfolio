@@ -682,6 +682,24 @@ textarea.form-control {
       color: #00113E; }
       .site-expertise-list li:not(:last-child) {
         margin-bottom: 10px; }
+        
+.site-experience {
+  padding: 100px 0;
+  background: #F7F9FF; }
+  .site-experience-list {
+    padding: 0;
+    margin: 10px 0 0 20px; }
+    @media (max-width: 575px) {
+      .site-experience-list {
+        text-align: center;
+        margin: 0; } }
+    .site-experience-list li {
+      list-style: none;
+      font-size: 25px;
+      font-weight: 300;
+      color: #00113E; }
+      .site-experience-list li:not(:last-child) {
+        margin-bottom: 10px; }
 
 .site-client {
   padding: 100px 0 50px; }
