@@ -29,6 +29,7 @@ library(tidyverse) # the usual stuff: dplyr, readr, and other goodies
 library(GGally) # for correlation-scatterplot matrix
 library(mosaic)
 library(ggthemes)
+library(ggplot2)
 library(readxl)
 library(here)
 library(skimr)
@@ -37,28 +38,38 @@ library(broom)
 library(tidyquant)
 library(infer)
 library(openintro)
+library(extrafont)
+loadfonts(dev="pdf")
+library(devtools)
+library(showtext)
+font_add_google("Montserrat", "Montserrat") #downloading fonts from Google
+showtext_auto()
 ```
 
 
 # Omega Group plc- Pay Discrimination
 
+ 
+
 At the last board meeting of Omega Group Plc., the headquarters of a large multinational company, the issue was raised that women were being discriminated in the company, in the sense that the salaries were not the same for male and female executives. A quick analysis of a sample of 50 employees (of which 24 men and 26 women) revealed that the average salary for men was about 8,700 higher than for women. This seemed like a considerable difference, so it was decided that a further analysis of the company salaries was warranted. 
 
-You are asked to carry out the analysis. The objective is to find out whether there is indeed a significant difference between the salaries of men and women, and whether the difference is due to discrimination or whether it is based on another, possibly valid, determining factor. 
-
-## Loading the data
-
+In this project I will carry out the analysis with the objective to find out whether there is indeed a significant difference between the salaries of men and women, and whether the difference is due to discrimination or whether it is based on another, possibly valid, determining factor.
 
 ```{r load_omega_data}
 omega <- omega <- read_csv("~/Documents/Applied Statistics in R/homeworks/data/omega.csv")
+```
+
+```{r}
 glimpse(omega) # examine the data frame
 ```
 
 ## Relationship Salary - Gender ?
 
-The data frame `omega`  contains the salaries for the sample of 50 executives in the company. Can you conclude that there is a significant difference between the salaries of the male and female executives?
+The data frame `omega`  contains the salaries for the sample of 50 executives in the company. 
 
-Note that you can perform different types of analyses, and check whether they all lead to the same conclusion 
+Can we conclude that there is a significant difference between the salaries of the male and female executives?
+
+To check it, I will perform different types of analyses, and check whether they all lead to the same conclusion 
 
 .	Confidence intervals
 .	Hypothesis testing
@@ -66,7 +77,9 @@ Note that you can perform different types of analyses, and check whether they al
 .	Regression
 
 
-Calculate summary statistics on salary by gender. Also, create and print a dataframe where, for each gender, you show the mean, SD, sample size, the t-critical, the SE, the margin of error, and the low/high endpoints of a 95% condifence interval
+I will alculate summary statistics on salary by gender. 
+
+Also, I will create and print a dataframe where, for each gender, I show the mean, SD, sample size, the t-critical, the SE, the margin of error, and the low/high endpoints of a 95% condifence interval
 
 ```{r, confint_single_valiables}
 # Summary Statistics of salary by gender
@@ -81,21 +94,36 @@ df_by_gender2<- df_by_gender %>%
 
 df_by_gender2
 
-# We can see that the confidence intervals for men and women in regards to salary do not overlap. This would allow us to reject the null hypothesis, but we will carry out hypothesis testing anyway and analyse the relationships between all the remaining factors.
+#I can see that the confidence intervals for men and women in regards to salary do not overlap. This would allow us to reject the null hypothesis, but we will carry out hypothesis testing anyway and analyse the relationships between all the remaining factors.
 
-#We will draw a scatterplot to visually inspect relationship between salary and experience
+#I will draw a scatterplot to visually inspect relationship between salary and experience
+```
 
+```{r }
 ggplot(omega,aes(x=experience,y=salary, colour= gender,fill=gender)) +
   geom_point() +
   geom_smooth() +
-  labs(title = "Experience is Valued Highly at Omega", x="Years of experience", y= "Salary (in USD)") +
-  theme_bw()
+  labs(title = "Experience is Valued Highly at Omega", x="Years of experience", y= "Salary") +
+  theme_bw()+
+    scale_y_continuous(labels = scales::dollar) +
+  theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
+        panel.background = element_rect(fill = "white", colour = "white"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        axis.ticks = element_line(size = 3,colour = "grey80"),
+        axis.ticks.length = unit(.20, "cm"),
+        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=7),
+        legend.text=element_text(family="Montserrat", size=7),
+        legend.title=element_text(family="Montserrat", size=8, face="bold"))
 
 ```
 
-We can observe a strong relationship between salary and experience. Increase in salary comes quickly at the beginning and throughout the first ~15 years, however the gains in salary become slower later over time, displaying diminishing marginal returns.
+I can observe a strong relationship between salary and experience. Increase in salary comes quickly at the beginning and throughout the first ~15 years, however the gains in salary become slower later over time, displaying diminishing marginal returns.
 
-We will further investigate the difference between salaries by gender through hypothesis testing, utilizing both t.test() and the simulation method from the infer package.
+I will further investigate the difference between salaries by gender through hypothesis testing, utilizing both t.test() and the simulation method from the infer package.
 
 ```{r, hypothesis_testing}
 # hypothesis testing using t.test() 
@@ -110,7 +138,22 @@ salary_by_gender<- omega %>%
   calculate(stat="diff in means",
             order=c("male","female"))
 
-salary_by_gender %>% visualize()+shade_p_value(obs_stat = df_by_gender2[2,2]-df_by_gender2[1,2], direction = "both")
+salary_by_gender %>% 
+  visualize()+
+  shade_p_value(obs_stat = df_by_gender2[2,2]-df_by_gender2[1,2], direction = "both")+ 
+    labs(title = "Simulation-Based Null Distribution", x="Average Salary", y= "Count")+
+  theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
+        panel.background = element_rect(fill = "white", colour = "white"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        axis.ticks = element_line(size = 3,colour = "grey80"),
+        axis.ticks.length = unit(.20, "cm"),
+        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=7),
+        legend.text=element_text(family="Montserrat", size=7),
+        legend.title=element_text(family="Montserrat", size=8, face="bold"))
 
 
 #now getting p value for conclusion
@@ -123,7 +166,7 @@ p_value_by_gender
 #p_value is tiny, so the null hypothesis can be rejected
 ```
 
-Looking at the graph the x axis ends at 10,000 dollars. The difference in the mean values of the gender salaries is 8,696 dollars. We can see that this results in a p-value close enough to zero, so we can conclude that at a 5% significance level there is a meaningful difference between the mean salaries of men and women.
+Looking at the graph the x axis ends at 10,000 dollars. The difference in the mean values of the gender salaries is 8,696 dollars. I can see that this results in a p-value close enough to zero, so I can conclude that at a 5% significance level there is a meaningful difference between the mean salaries of men and women.
 
 ## Relationship Experience - Gender?
 
@@ -164,7 +207,23 @@ set.seed(1234)
     calculate(stat = "diff in means",
               order = c("female", "male"))
   
-  experience_in_null %>% visualize() + shade_p_value(obs_stat = exp_gender_ci[2,2]-exp_gender_ci[1,2], direction = "both")
+  experience_in_null %>% 
+    visualize() + 
+    shade_p_value(obs_stat = exp_gender_ci[2,2]-exp_gender_ci[1,2], direction = "both")+
+    labs(title = "Simulation-Based Null Distribution", x="Statistics", y= "Count")+
+  theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
+        panel.background = element_rect(fill = "white", colour = "white"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        axis.ticks = element_line(size = 3,colour = "grey80"),
+        axis.ticks.length = unit(.20, "cm"),
+        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=7),
+        legend.text=element_text(family="Montserrat", size=7),
+        legend.title=element_text(family="Montserrat", size=8, face="bold"))
+
   
   
 #now getting p value for conclusion
@@ -182,7 +241,7 @@ The person who raised the issue at the board meeting was correct in assuming tha
 
 Someone at the meeting argues that clearly, a more thorough analysis of the relationship between salary and experience is required before any conclusion can be drawn about whether there is any gender-based salary discrimination in the company.
 
-Analyse the relationship between salary and experience. Draw a scatterplot to visually inspect the data.
+I will now analyse the relationship between salary and experience & draw a scatterplot to visually inspect the data.
 
 ```{r, salary_exp_scatter}
 
@@ -191,25 +250,53 @@ Analyse the relationship between salary and experience. Draw a scatterplot to vi
   ggplot(omega,aes(x=experience,y=salary, colour= gender,fill=gender)) +
   geom_point() +
   geom_smooth(method = 'gam') +
-  labs(title = "We can observe a strong relationship between salary and experience", x="Years of experience", y= "Salary") +
+  labs(title = "We can observe a strong relationship \nbetween salary and experience", x="Years of experience", y= "Salary") +
   theme_bw() +
+  theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
+        panel.background = element_rect(fill = "white", colour = "white"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        axis.ticks = element_line(size = 3,colour = "grey80"),
+        axis.ticks.length = unit(.20, "cm"),
+        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=7),
+        legend.text=element_text(family="Montserrat", size=7),
+        legend.title=element_text(family="Montserrat", size=8, face="bold"))+
   scale_y_continuous(labels= scales::dollar)
 
 #We can observe a strong relationship between salary and experience. Increase in salary comes quickly at the beginning throughout first ~15 years, however the gains in salary become slower later over time.
 ```
 
-As our analysis above shows, there is a significant positive relationship between years of experience and salary. We can also see what was confirmed in the previous section, that women have significantly less experience than men, with a cut off point displayed above at around 30 years. This gives an alternative reasoning besides discrimination regarding the pay gap, as more years of experience are a valuable asset that is accordingly financially rewarded with a greater salary.
+As my analysis above shows, there is a significant positive relationship between years of experience and salary. I can also see what was confirmed in the previous section, that women have significantly less experience than men, with a cut off point displayed above at around 30 years. This gives an alternative reasoning besides discrimination regarding the pay gap, as more years of experience are a valuable asset that is accordingly financially rewarded with a greater salary.
 
 ## Check correlations between the data
-You can use `GGally:ggpairs()` to create a scatterplot and correlation matrix. Essentially, we change the order our variables will appear in and have the dependent variable (Y), salary, as last in our list. We then pipe the dataframe to `ggpairs()` with `aes` arguments to colour by `gender` and make ths plots somewhat transparent (`alpha  = 0.3`).
+
+I will use `GGally:ggpairs()` to create a scatterplot and correlation matrix. Essentially, I change the order our variables will appear in and have the dependent variable (Y), salary, as last in our list. I will then pipe the dataframe to `ggpairs()` with `aes` arguments to colour by `gender` and make ths plots somewhat transparent (`alpha  = 0.3`).
 
 ```{r, ggpairs}
 omega %>% 
   select(gender, experience, salary) %>% #order variables they will appear in ggpairs()
   ggpairs(aes(colour=gender, alpha = 0.3))+
-  theme_bw()
+  theme_bw()+
+  theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
+        strip.text= element_text(family="Montserrat", face = "plain"),
+        panel.background = element_rect(fill = "white", colour = "white"),
+        axis.line = element_line(size = 1, colour = "grey80"),
+        axis.ticks = element_line(size = 3,colour = "grey80"),
+        axis.ticks.length = unit(.20, "cm"),
+        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=7),
+        legend.text=element_text(family="Montserrat", size=7),
+        legend.title=element_text(family="Montserrat", size=8, face="bold"))
 ```
 
 From the scatterplot we can see that the majority of women in the sample have a comparable salary to men with the same experience level. 
 
-The majority of women in the sample have experience between 0 and 20 years, whereas the approximate range of experience for most men is between 10 and 35 years. We also saw above that there is a statistically significant difference between the levels of experience for both genders, which confirms what we are seeing. Women seem to end their careers earlier, at least within the given sample.
+The majority of women in the sample have experience between 0 and 20 years, whereas the approximate range of experience for most men is between 10 and 35 years. I also saw above that there is a statistically significant difference between the levels of experience for both genders, which confirms what we are seeing. Women seem to end their careers earlier, at least within the given sample.
+
+Thank you!
