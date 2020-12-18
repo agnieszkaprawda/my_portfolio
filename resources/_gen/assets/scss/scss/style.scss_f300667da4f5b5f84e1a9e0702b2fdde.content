@@ -321,7 +321,7 @@ textarea.form-control {
         margin-bottom: 0; }
       .site-project-item-content a, .site-blog-post-content a {
         position: absolute;
-        bottom: 40px;
+        bottom: 5px;
         display: block;
         width: 100%;
         color: #9D9EA5;
