@@ -482,7 +482,7 @@ textarea.form-control {
     transform: rotate(90deg);
     margin-left: 30px; }
 
-@media (max-width: 575px) {
+@media (max-width: 991px) {
   .site-blog {
     padding: 70px 0; } }
 
