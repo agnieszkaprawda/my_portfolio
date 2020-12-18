@@ -17,7 +17,8 @@
       <pubDate>Wed, 25 Nov 2020 15:58:10 +0600</pubDate>
       
       <guid>/portfolio/project-01/</guid>
-      <description>In this piece I will analyse the data on interest rates in the Lendign Club. First I will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding.</description>
+      <description>#Predicting interest rates using K-fold CV and LASSO &amp;amp; OLS regression
+In this piece I will analyse the data on interest rates in the Lendign Club.</description>
     </item>
     
     <item>
@@ -35,7 +36,7 @@
       <pubDate>Sat, 19 Sep 2020 15:58:10 +0600</pubDate>
       
       <guid>/portfolio/project-03/</guid>
-      <description>Gapminder revisited The Gapminder data is know worldwide thanks to Hans Rosling and his webstie data in Gapminder World. The data downloaded from the website was cut into the data frame that contains just six columns from the larger .</description>
+      <description>Gapminder data The Gapminder data is know worldwide thanks to Hans Rosling and his webstie data in Gapminder World. The data downloaded from the website was cut into the data frame that contains just six columns from the larger .</description>
     </item>
     
     <item>

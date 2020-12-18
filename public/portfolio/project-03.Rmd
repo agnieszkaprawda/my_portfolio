@@ -49,7 +49,7 @@ library(vroom)
 
 ```
 
-# Gapminder revisited
+# Gapminder data
 
 
 The Gapminder data is know worldwide thanks to Hans Rosling and his webstie [data in Gapminder World](https://www.gapminder.org/data/). The data downloaded from the website was cut into the data frame that contains just six columns from the larger . In this part, I will join a few dataframes with more data than the 'gapminder' package. Specifically, I will look at data on 

@@ -40,6 +40,7 @@ library(zoo) #to allow for timeseries operations
 
 ```
 
+#Predicting interest rates using K-fold CV and LASSO & OLS regression
 
 In this piece I will analyse the data on interest rates in the Lendign Club. First I will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, I will first build a linear regression model
 
