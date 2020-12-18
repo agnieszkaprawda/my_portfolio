@@ -4,7 +4,7 @@ category:
 date: "2020-09-19T15:58:10+06:00"
 image: images/projects/gapminder1.jpg
 project_images:
-title: GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION
+title: GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION and much more
 type: portfolio
 ---
 
@@ -12,7 +12,7 @@ type: portfolio
 
 <div id="gapminder-revisited" class="section level1">
 <h1>Gapminder revisited</h1>
-<p>Recall the <code>gapminder</code> data frame from the gapminder package. That data frame contains just six columns from the larger <a href="https://www.gapminder.org/data/">data in Gapminder World</a>. In this part, you will join a few dataframes with more data than the ‘gapminder’ package. Specifically, you will look at data on</p>
+<p>The Gapminder data is know worldwide thanks to Hans Rosling and his webstie <a href="https://www.gapminder.org/data/">data in Gapminder World</a>. The data downloaded from the website was cut into the data frame that contains just six columns from the larger . In this part, I will join a few dataframes with more data than the ‘gapminder’ package. Specifically, I will look at data on</p>
 <ul>
 <li>Life expectancy at birth (life_expectancy_years.csv)</li>
 <li>GDP per capita in constant 2010 US$ (<a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.KD" class="uri">https://data.worldbank.org/indicator/NY.GDP.PCAP.KD</a>)</li>
@@ -21,10 +21,9 @@ type: portfolio
 <li>Mortality rate, for under 5, per 1000 live births (<a href="https://data.worldbank.org/indicator/SH.DYN.MORT" class="uri">https://data.worldbank.org/indicator/SH.DYN.MORT</a>)</li>
 <li>HIV prevalence (adults_with_hiv_percent_age_15_49.csv): The estimated number of people living with HIV per 100 population of age group 15-49.</li>
 </ul>
-<p>You must use the <code>wbstats</code> package to download data from the World Bank. The relevant World Bank indicators are <code>SP.DYN.TFRT.IN</code>, <code>SE.PRM.NENR</code>, <code>NY.GDP.PCAP.KD</code>, and <code>SH.DYN.MORT</code></p>
-<p>You have to join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one. You may need to tidy your data first and then perform <a href="http://r4ds.had.co.nz/relational-data.html">join operations</a>.
-Think about what type makes the most sense <strong>and explain why you chose it</strong>.</p>
-<p>To join all the 3 dataframes we used left.join in order to keep our data tidy. On the left side of the “data” dataframe we can find all the categorical variables that describe our data. On the right side, we can find numerical variables.</p>
+<p>For this, I will use the <code>wbstats</code> package to download data from the World Bank. The relevant World Bank indicators are <code>SP.DYN.TFRT.IN</code>, <code>SE.PRM.NENR</code>, <code>NY.GDP.PCAP.KD</code>, and <code>SH.DYN.MORT</code></p>
+<p>I will join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one. I will tidy my data first and then perform <a href="http://r4ds.had.co.nz/relational-data.html">join operations</a>.</p>
+<p>To join all the 3 dataframes I used left.join in order to keep our data tidy. On the left side of the “data” dataframe we can find all the categorical variables that describe our data. On the right side, we can find numerical variables.</p>
 <pre class="r"><code># load gapminder HIV data
 hiv &lt;- adults_with_hiv_percent_age_15_49 &lt;- read_csv(&quot;~/Documents/Applied Statistics in R/homeworks/data/adults_with_hiv_percent_age_15_49.csv&quot;)
 life_expectancy &lt;- life_expectancy_years &lt;- read_csv(&quot;~/Documents/Applied Statistics in R/homeworks/data/life_expectancy_years.csv&quot;)
@@ -39,7 +38,6 @@ worldbank_data &lt;- wb_data(country=&quot;countries_only&quot;,
                           indicator = indicators, 
                           start_date = 1960, 
                           end_date = 2016) %&gt;% rename(year=date)
-
 
 
 # get a dataframe of information regarding countries, indicators, sources, regions, indicator topics, lending types, income levels,  from the World Bank API 
@@ -101,9 +99,8 @@ glimpse(big_df_cleaned)</code></pre>
 ## $ SP.DYN.TFRT.IN     &lt;dbl&gt; 4.82, 4.66, 4.47, 4.27, 4.06, 3.84, 3.62, 3.42, 3.…
 ## $ hiv_count          &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
 ## $ life_expectancy    &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…</code></pre>
-<ol style="list-style-type: decimal">
-<li>What is the relationship between HIV prevalence and life expectancy? Generate a scatterplot with a smoothing line to report your results. You may find faceting useful</li>
-</ol>
+<div id="what-is-the-relationship-between-hiv-prevalence-and-life-expectancy" class="section level2">
+<h2>What is the relationship between HIV prevalence and life expectancy?</h2>
 <pre class="r"><code>big_df_cleaned_1990 &lt;- big_df_cleaned %&gt;% 
   filter(year&gt;1989&amp; year &lt;2012)
 ggplot(big_df_cleaned_1990, 
@@ -116,20 +113,37 @@ geom_point() +
 geom_smooth(colour=&quot;blue&quot;) +
  theme_bw() +
   labs (
-    title = &quot;Over time the relationship between HIV prevalance and life \n expectancy is getting stronger - the less HIV prevalence, the higher \n the life expectancy&quot;, 
+    title = &quot;Over time the relationship between HIV prevalance and life expectancy is getting stronger - \nthe less HIV prevalence, the higher the life expectancy&quot;, 
     subtitle = &quot;Relationship between HIV prevalence and life expectancy&quot;, 
     x= &quot;Life expectancy&quot;, 
     y= &quot;HIV prevalence&quot;
-  )</code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-1-1.png" width="1440" style="display: block; margin: auto;" />
-2. What is the relationship between fertility rate and GDP per capita? Generate a scatterplot with a smoothing line to report your results. You may find facetting by region useful</p>
+  )+
+   theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-1-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>As we can conclude from the graph, over years the relationship between HIV prevalence and life expectancy is getting stronger. In countries where HIV prevalance is the highest, it has risen for years, while life expectancy has not noticed such a significant growth. Also, we can notice, that for years, the Sub-Saharan Africa has had the biggest scale of the problem.</p>
+</div>
+<div id="what-is-the-relationship-between-fertility-rate-and-gdp-per-capita" class="section level2">
+<h2>What is the relationship between fertility rate and GDP per capita?</h2>
 <pre class="r"><code>by_region &lt;- big_df_cleaned %&gt;% 
   group_by(region) %&gt;% 
 filter(region!=&quot;Aggregates&quot;)
 ggplot(by_region, aes(x=SP.DYN.TFRT.IN, 
                       y=NY.GDP.PCAP.KD) ) + 
     scale_y_continuous(name=&quot;NY.GDP.PCAP.KD&quot;,labels= scales::comma)+
-facet_wrap(~region, 
+facet_wrap(~region,
            scales=&quot;free&quot;)+
   geom_point(alpha=0.04) +
   scale_y_log10() +
@@ -141,11 +155,26 @@ facet_wrap(~region,
     x= &quot;Fertility rate&quot;, 
     y= &quot;GDP per capita&quot;
   ) +
-   theme(legend.position = &quot;none&quot;)</code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-2-1.png" width="1440" style="display: block; margin: auto;" /></p>
-<ol start="3" style="list-style-type: decimal">
-<li>Which regions have the most observations with missing HIV data? Generate a bar chart (<code>geom_col()</code>), in descending order.</li>
-</ol>
+   theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" />
+W can notice from the graph that in richer countries the fertility, tends to be lower. However, the important factor here is to reember about the free scales of the graphs presented. Even though, the same trend is visible across all the regions, it is much stronger in developed regions than in the poor ones.</p>
+</div>
+<div id="which-regions-have-the-most-observations-with-missing-hiv-data" class="section level2">
+<h2>Which regions have the most observations with missing HIV data?</h2>
 <pre class="r"><code>#Add regions to the hiv_longer dataframe, selecting all relevant variables, renaming the count variable to make it clearer
 
 hiv_longer_region &lt;- left_join(hiv_longer, 
@@ -184,12 +213,28 @@ hiv_longer_region</code></pre>
 ggplot(hiv_longer_region, aes(y = reorder(region, total_NA_per_region), x = total_NA_per_region)) + 
   geom_col() + 
  theme_bw() + 
-  labs(title = &quot;Sub-saharan Africa has the lowest Quality HIV data&quot;, 
-                           subtitle = &quot;Comparison of total number of missing HIV data across regions&quot;, x= &quot;Total number of missing HIV values&quot;, y= NULL) </code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" /></p>
-<ol start="4" style="list-style-type: decimal">
-<li>How has mortality rate for under 5 changed by region? In each region, find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</li>
-</ol>
+  labs(title = &quot;Sub-saharan Africa has the lowest quality of the HIV data&quot;, 
+                           subtitle = &quot;Comparison of total number of missing HIV data across regions&quot;, x= &quot;Total number of missing HIV values&quot;, y= NULL) +
+    theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=20,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=15,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=12),
+        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=12),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=12),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=12, face=&quot;bold&quot;))</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" />
+Again, the most developed regions in the world, are abundant with dasta regarding HIV. In regions, where the problem is the most severe, the data is missing in great amounts.</p>
+</div>
+<div id="how-has-mortality-rate-for-under-5-changed-by-region" class="section level2">
+<h2>How has mortality rate for under 5 changed by region?</h2>
+<p>In each region, I will find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</p>
 <pre class="r"><code># Mortality Rate development across regions
 #Create dataframe with relevant variables, excluding NA
 mortality_data &lt;- data %&gt;% 
@@ -209,13 +254,6 @@ rename(&quot;mortality_rate&quot; = &quot;SH.DYN.MORT&quot;)
 mort_by_region &lt;- mortality_data %&gt;%
   group_by(region) %&gt;%
   filter(region!=&quot;Aggregates&quot;)
-
-# ggplot(mort_by_region, aes(x=year, y=mortality_rate)) + geom_point(alpha = 0.2) + facet_wrap(~region, scales = &quot;free_x&quot;) +
-#   labs(title = &quot;Child mortality globally decreasing&quot;,
-#        subtitle = &quot;Comparison of Child Mortality (under 5) across Regions, 1990 - 2011&quot;,
-#        x = &quot;&quot;,
-#        y = &quot;Mortality Rate under 5 per 1000 live births&quot;)
-
 
 # Now lets find the top countries in regards to the change of mortality rate from base year 1990 to 2011
 
@@ -240,9 +278,9 @@ mortality_data_country &lt;- data %&gt;%
  #Check created data frame
 # mortality_data_country
 
-#Now we create two data sets based on the new dataframe with the relative % change in mortality rate, one for the 5 biggest improvers per region and one for the 5 worst improvers
+#Now I create two data sets based on the new dataframe with the relative % change in mortality rate, one for the 5 biggest improvers per region and one for the 5 worst improvers
 
-#We use slice_min as we want the largest negative values, i.e. the largest relative decreases
+#I use slice_min as we want the largest negative values, i.e. the largest relative decreases
  
 biggest_improvers &lt;- mortality_data_country %&gt;%  
   group_by(region) %&gt;% 
@@ -251,7 +289,7 @@ biggest_improvers &lt;- mortality_data_country %&gt;%
 #biggest_improvers # check 
 
 
-#We use slice_max to get the largest (positive) values of the difference in mortality rate (or lowest negative numbers)
+#I use slice_max to get the largest (positive) values of the difference in mortality rate (or lowest negative numbers)
 
 worst_improvers &lt;- mortality_data_country %&gt;%  # finding top 5 countries per region with the worst improvement
   group_by(region) %&gt;% 
@@ -272,8 +310,23 @@ ggplot(biggest_improvers,
   labs(title = &quot;Leaders in Child Mortality reduction&quot;,
        subtitle = &quot;Comparison of most improved countries in relative % change in child mortality rates, by region&quot;, 
        x = &quot;&quot;,
-       y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)</code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-1.png" width="1440" style="display: block; margin: auto;" /></p>
+       y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)+
+ theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Plot for top 5 worst improvement
 
 ggplot(worst_improvers, 
@@ -286,11 +339,26 @@ ggplot(worst_improvers,
   labs(title = &quot;Laggards in Child Mortality Reduction&quot;,
        subtitle = &quot;Comparison of least improved countries in relative % change in child mortality rates, by region&quot;,
        x = &quot;&quot;, 
-       y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)</code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-2.png" width="1440" style="display: block; margin: auto;" /></p>
-<ol start="5" style="list-style-type: decimal">
-<li>Is there a relationship between primary school enrollment and fertility rate?</li>
-</ol>
+       y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)+
+theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="is-there-a-relationship-between-primary-school-enrollment-and-fertility-rate" class="section level2">
+<h2>Is there a relationship between primary school enrollment and fertility rate?</h2>
 <pre class="r"><code>#Create data frame with relevant variables
 
 primenrolment_fertility_df &lt;- data %&gt;%
@@ -314,8 +382,25 @@ ggplot(primenrolment_fertility_df,
   theme_bw() +
   labs(title = &quot;More kids, Less School&quot;,
        subtitle = &quot;Relationship between Net School Enrolment and Births per Woman&quot;, 
-       x = &quot;Net School Enrolment in %&quot;, 
-       y = &quot;Births per Woman&quot;)</code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-5-1.png" width="960" style="display: block; margin: auto;" />
-.</p>
+       x = &quot;Net School Enrollment in %&quot;, 
+       y = &quot;Births per Woman&quot;)+
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-5-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>There is a significant corelation betwwen net school enrollment and fertility rates worldwide. We can deduct, that the more educated coutnries, the smaller families.</p>
+<p>Thank you!</p>
+</div>
 </div>
