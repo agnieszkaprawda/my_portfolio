@@ -4,7 +4,7 @@ category:
 date: "2020-09-19T15:58:10+06:00"
 image: images/projects/gapminder1.jpg
 project_images:
-title: GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION and much more
+title: GAPMINDER DATA ANALYSIS
 type: portfolio
 ---
 ```{r, setup, include=FALSE}
@@ -121,7 +121,7 @@ glimpse(big_df_cleaned)
 
 ## What is the relationship between HIV prevalence and life expectancy?
 
-```{r fig.width=15, fig.height=18}
+```{r fig.width=7, fig.height=8}
 big_df_cleaned_1990 <- big_df_cleaned %>% 
   filter(year>1989& year <2012)
 ggplot(big_df_cleaned_1990, 
@@ -134,7 +134,7 @@ geom_point() +
 geom_smooth(colour="blue") +
  theme_bw() +
   labs (
-    title = "Over time the relationship between HIV prevalance and life expectancy is getting stronger - \nthe less HIV prevalence, the higher the life expectancy", 
+    title = "Over time the relationship between HIV prevalance and \nlife expectancy is getting stronger - the less HIV prevalence, \nthe higher the life expectancy", 
     subtitle = "Relationship between HIV prevalence and life expectancy", 
     x= "Life expectancy", 
     y= "HIV prevalence"
@@ -145,11 +145,11 @@ geom_smooth(colour="blue") +
         axis.line = element_line(size = 1, colour = "grey80"),
         axis.ticks = element_line(size = 3,colour = "grey80"),
         axis.ticks.length = unit(.20, "cm"),
-        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        plot.title = element_text(color = "black",size=13,face="bold", family= "Montserrat"),
         plot.subtitle = element_text(color = "black",size=12,face="plain", family= "Montserrat"),
-        axis.title.y = element_text(size = 12, angle = 90, family="Montserrat", face = "plain"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
         axis.text.y=element_text(family="Montserrat", size=7),
-        axis.title.x = element_text(size = 12, family="Montserrat", face = "plain"),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
         axis.text.x=element_text(family="Montserrat", size=7),
         legend.text=element_text(family="Montserrat", size=7),
         legend.title=element_text(family="Montserrat", size=8, face="bold"))
@@ -186,14 +186,14 @@ facet_wrap(~region,
         axis.line = element_line(size = 1, colour = "grey80"),
         axis.ticks = element_line(size = 3,colour = "grey80"),
         axis.ticks.length = unit(.20, "cm"),
-        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
+        plot.title = element_text(color = "black",size=13,face="bold", family= "Montserrat"),
         plot.subtitle = element_text(color = "black",size=12,face="plain", family= "Montserrat"),
-        axis.title.y = element_text(size = 12, angle = 90, family="Montserrat", face = "plain"),
-        axis.text.y=element_text(family="Montserrat", size=7),
-        axis.title.x = element_text(size = 12, family="Montserrat", face = "plain"),
-        axis.text.x=element_text(family="Montserrat", size=7),
-        legend.text=element_text(family="Montserrat", size=7),
-        legend.title=element_text(family="Montserrat", size=8, face="bold"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=6),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=6),
+        legend.text=element_text(family="Montserrat", size=6),
+        legend.title=element_text(family="Montserrat", size=6, face="bold"),
         legend.position = "none")
 
 ```
@@ -242,14 +242,14 @@ ggplot(hiv_longer_region, aes(y = reorder(region, total_NA_per_region), x = tota
         axis.line = element_line(size = 1, colour = "grey80"),
         axis.ticks = element_line(size = 3,colour = "grey80"),
         axis.ticks.length = unit(.20, "cm"),
-        plot.title = element_text(color = "black",size=20,face="bold", family= "Montserrat"),
-        plot.subtitle = element_text(color = "black",size=15,face="plain", family= "Montserrat"),
-        axis.title.y = element_text(size = 12, angle = 90, family="Montserrat", face = "plain"),
-        axis.text.y=element_text(family="Montserrat", size=12),
-        axis.title.x = element_text(size = 12, family="Montserrat", face = "plain"),
-        axis.text.x=element_text(family="Montserrat", size=12),
-        legend.text=element_text(family="Montserrat", size=12),
-        legend.title=element_text(family="Montserrat", size=12, face="bold"))
+        plot.title = element_text(color = "black",size=13,face="bold", family= "Montserrat"),
+        plot.subtitle = element_text(color = "black",size=12,face="plain", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=6),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=6),
+        legend.text=element_text(family="Montserrat", size=6),
+        legend.title=element_text(family="Montserrat", size=6, face="bold"))
 
 
 
@@ -336,23 +336,23 @@ ggplot(biggest_improvers,
              scales = "free") + 
   geom_col() + 
   labs(title = "Leaders in Child Mortality reduction",
-       subtitle = "Comparison of most improved countries in relative % change in child mortality rates, by region", 
+       subtitle = "Comparison of most improved countries in relative % \nchange in child mortality rates, by region", 
        x = "",
        y = "Difference in mortality rate under 5 (%, 1990 vs 2011")+
- theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
-        strip.text= element_text(family="Montserrat", face = "plain"),
+ theme(panel.grid.major.y = element_line(color = "gray60", size = 0.2),
+        strip.text= element_text(size=6,family="Montserrat", face = "plain"),
         panel.background = element_rect(fill = "white", colour = "white"),
         axis.line = element_line(size = 1, colour = "grey80"),
         axis.ticks = element_line(size = 3,colour = "grey80"),
         axis.ticks.length = unit(.20, "cm"),
-        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
-        plot.subtitle = element_text(color = "black",size=12,face="plain", family= "Montserrat"),
-        axis.title.y = element_text(size = 12, angle = 90, family="Montserrat", face = "plain"),
-        axis.text.y=element_text(family="Montserrat", size=7),
-        axis.title.x = element_text(size = 12, family="Montserrat", face = "plain"),
-        axis.text.x=element_text(family="Montserrat", size=7),
-        legend.text=element_text(family="Montserrat", size=7),
-        legend.title=element_text(family="Montserrat", size=8, face="bold"),
+        plot.title = element_text(color = "black",size=13,face="bold", family= "Montserrat"),
+        plot.subtitle = element_text(color = "black",size=10,face="plain", family= "Montserrat"),
+        axis.title.y = element_text(size = 7, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=6),
+        axis.title.x = element_text(size = 7, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=6),
+        legend.text=element_text(family="Montserrat", size=6),
+        legend.title=element_text(family="Montserrat", size=6, face="bold"),
         legend.position = "none")
   
 # Plot for top 5 worst improvement
@@ -365,23 +365,23 @@ ggplot(worst_improvers,
              scales = "free") + 
   geom_col() + 
   labs(title = "Laggards in Child Mortality Reduction",
-       subtitle = "Comparison of least improved countries in relative % change in child mortality rates, by region",
+       subtitle = "Comparison of least improved countries in relative % \nchange in child mortality rates, by region",
        x = "", 
        y = "Difference in mortality rate under 5 (%, 1990 vs 2011")+
 theme(panel.grid.major.y = element_line(color = "gray60", size = 0.1),
-        strip.text= element_text(family="Montserrat", face = "plain"),
+        strip.text= element_text(size = 6,family="Montserrat", face = "plain"),
         panel.background = element_rect(fill = "white", colour = "white"),
         axis.line = element_line(size = 1, colour = "grey80"),
         axis.ticks = element_line(size = 3,colour = "grey80"),
         axis.ticks.length = unit(.20, "cm"),
-        plot.title = element_text(color = "black",size=15,face="bold", family= "Montserrat"),
-        plot.subtitle = element_text(color = "black",size=12,face="plain", family= "Montserrat"),
-        axis.title.y = element_text(size = 12, angle = 90, family="Montserrat", face = "plain"),
-        axis.text.y=element_text(family="Montserrat", size=7),
-        axis.title.x = element_text(size = 12, family="Montserrat", face = "plain"),
-        axis.text.x=element_text(family="Montserrat", size=7),
-        legend.text=element_text(family="Montserrat", size=7),
-        legend.title=element_text(family="Montserrat", size=8, face="bold"),
+        plot.title = element_text(color = "black",size=13,face="bold", family= "Montserrat"),
+        plot.subtitle = element_text(color = "black",size=10,face="plain", family= "Montserrat"),
+        axis.title.y = element_text(size = 7, angle = 90, family="Montserrat", face = "plain"),
+        axis.text.y=element_text(family="Montserrat", size=5),
+        axis.title.x = element_text(size = 7, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=5),
+        legend.text=element_text(family="Montserrat", size=6),
+        legend.title=element_text(family="Montserrat", size=6, face="bold"),
         legend.position = "none")
  
 

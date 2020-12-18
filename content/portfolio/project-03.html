@@ -4,7 +4,7 @@ category:
 date: "2020-09-19T15:58:10+06:00"
 image: images/projects/gapminder1.jpg
 project_images:
-title: GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION and much more
+title: GAPMINDER DATA ANALYSIS
 type: portfolio
 ---
 
@@ -113,7 +113,7 @@ geom_point() +
 geom_smooth(colour=&quot;blue&quot;) +
  theme_bw() +
   labs (
-    title = &quot;Over time the relationship between HIV prevalance and life expectancy is getting stronger - \nthe less HIV prevalence, the higher the life expectancy&quot;, 
+    title = &quot;Over time the relationship between HIV prevalance and \nlife expectancy is getting stronger - the less HIV prevalence, \nthe higher the life expectancy&quot;, 
     subtitle = &quot;Relationship between HIV prevalence and life expectancy&quot;, 
     x= &quot;Life expectancy&quot;, 
     y= &quot;HIV prevalence&quot;
@@ -124,15 +124,15 @@ geom_smooth(colour=&quot;blue&quot;) +
         axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
         axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
         axis.ticks.length = unit(.20, &quot;cm&quot;),
-        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=13,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
         plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
-        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
         axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
-        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
         axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
         legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
         legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))</code></pre>
-<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-1-1.png" width="1440" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>As we can conclude from the graph, over years the relationship between HIV prevalence and life expectancy is getting stronger. In countries where HIV prevalance is the highest, it has risen for years, while life expectancy has not noticed such a significant growth. Also, we can notice, that for years, the Sub-Saharan Africa has had the biggest scale of the problem.</p>
 </div>
 <div id="what-is-the-relationship-between-fertility-rate-and-gdp-per-capita" class="section level2">
@@ -161,14 +161,14 @@ facet_wrap(~region,
         axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
         axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
         axis.ticks.length = unit(.20, &quot;cm&quot;),
-        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=13,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
         plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
-        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
-        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
-        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
-        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=6),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=6, face=&quot;bold&quot;),
         legend.position = &quot;none&quot;)</code></pre>
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" />
 W can notice from the graph that in richer countries the fertility, tends to be lower. However, the important factor here is to reember about the free scales of the graphs presented. Even though, the same trend is visible across all the regions, it is much stronger in developed regions than in the poor ones.</p>
@@ -221,14 +221,14 @@ ggplot(hiv_longer_region, aes(y = reorder(region, total_NA_per_region), x = tota
         axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
         axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
         axis.ticks.length = unit(.20, &quot;cm&quot;),
-        plot.title = element_text(color = &quot;black&quot;,size=20,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
-        plot.subtitle = element_text(color = &quot;black&quot;,size=15,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
-        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=12),
-        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=12),
-        legend.text=element_text(family=&quot;Montserrat&quot;, size=12),
-        legend.title=element_text(family=&quot;Montserrat&quot;, size=12, face=&quot;bold&quot;))</code></pre>
+        plot.title = element_text(color = &quot;black&quot;,size=13,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=6),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=6, face=&quot;bold&quot;))</code></pre>
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" />
 Again, the most developed regions in the world, are abundant with dasta regarding HIV. In regions, where the problem is the most severe, the data is missing in great amounts.</p>
 </div>
@@ -308,23 +308,23 @@ ggplot(biggest_improvers,
              scales = &quot;free&quot;) + 
   geom_col() + 
   labs(title = &quot;Leaders in Child Mortality reduction&quot;,
-       subtitle = &quot;Comparison of most improved countries in relative % change in child mortality rates, by region&quot;, 
+       subtitle = &quot;Comparison of most improved countries in relative % \nchange in child mortality rates, by region&quot;, 
        x = &quot;&quot;,
        y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)+
- theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
-        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+ theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.2),
+        strip.text= element_text(size=6,family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
         panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
         axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
         axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
         axis.ticks.length = unit(.20, &quot;cm&quot;),
-        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
-        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
-        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
-        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
-        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
-        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=13,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=10,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 7, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=6),
+        axis.title.x = element_text(size = 7, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=6, face=&quot;bold&quot;),
         legend.position = &quot;none&quot;)</code></pre>
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Plot for top 5 worst improvement
@@ -337,23 +337,23 @@ ggplot(worst_improvers,
              scales = &quot;free&quot;) + 
   geom_col() + 
   labs(title = &quot;Laggards in Child Mortality Reduction&quot;,
-       subtitle = &quot;Comparison of least improved countries in relative % change in child mortality rates, by region&quot;,
+       subtitle = &quot;Comparison of least improved countries in relative % \nchange in child mortality rates, by region&quot;,
        x = &quot;&quot;, 
        y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)+
 theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
-        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        strip.text= element_text(size = 6,family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
         panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
         axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
         axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
         axis.ticks.length = unit(.20, &quot;cm&quot;),
-        plot.title = element_text(color = &quot;black&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
-        plot.subtitle = element_text(color = &quot;black&quot;,size=12,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
-        axis.title.y = element_text(size = 12, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
-        axis.title.x = element_text(size = 12, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
-        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
-        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
-        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;),
+        plot.title = element_text(color = &quot;black&quot;,size=13,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(color = &quot;black&quot;,size=10,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 7, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=5),
+        axis.title.x = element_text(size = 7, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=5),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=6),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=6, face=&quot;bold&quot;),
         legend.position = &quot;none&quot;)</code></pre>
 <p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
 </div>
