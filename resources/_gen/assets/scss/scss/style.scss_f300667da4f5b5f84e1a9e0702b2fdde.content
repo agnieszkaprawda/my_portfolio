@@ -342,7 +342,7 @@ textarea.form-control {
   .site-project-cta {
     margin-top: 30px;
     display: inline-block;
-    position: relative;
+    position: absolute;
     font-family: "Montserrat", sans-serif;
     font-size: 18px;
     font-weight: 500;
@@ -378,18 +378,18 @@ textarea.form-control {
           font-size: 40px; } }
     @media (max-width: 991px) {
       .site-project-header-content {
-        text-align: center;
+        text-align: left;
         margin-bottom: 30px; } }
     .site-project-header-action {
       display: block;
-      text-align: center; }
+      text-align: left; }
       .site-project-header-action span {
         display: block;
         font-size: 30px;
         font-weight: 300;
         color: #00113E;
         margin-bottom: 20px; }
-        @media (max-width: 767px) {
+        @media (max-width: 991px) {
           .site-project-header-action span {
             font-size: 25px; } }
       .site-project-header-action img {
@@ -402,7 +402,7 @@ textarea.form-control {
   .site-project-pagination, .site-blog-pagination {
     margin-top: 40px; }
     .site-project-pagination .pagination, .site-blog-pagination .pagination {
-      justify-content: center; }
+      justify-content: left; }
       .site-project-pagination .pagination .page-item:not(:last-child), .site-blog-pagination .pagination .page-item:not(:last-child) {
         margin-right: 10px; }
       .site-project-pagination .pagination .page-item .page-link, .site-blog-pagination .pagination .page-item .page-link {
@@ -444,7 +444,7 @@ textarea.form-control {
     .site-project-single-description p {
       margin-bottom: 30px; }
   .site-project-single-action a {
-    position: relative;
+    position: absolute;
     font-size: 24px;
     font-weight: 300;
     color: #00113E;
@@ -458,18 +458,18 @@ textarea.form-control {
       display: inline-block;
       overflow: hidden; }
       .site-project-single-action a .link-area span {
-        position: relative;
+        position: absolute;
         display: block;
         padding: 2px 0;
         transition: transform 0.9s cubic-bezier(0.19, 1, 0.22, 1);
-        transform-origin: left center; }
+        transform-origin: left; }
         .site-project-single-action a .link-area span::after {
           content: attr(data-text);
           position: absolute;
           top: 150%;
           left: 0;
           transform: skewY(30deg);
-          transform-origin: left center;
+          transform-origin: left;
           transition: transform 0.9s cubic-bezier(0.19, 1, 0.22, 1); }
     .site-project-single-action a:hover {
       text-decoration: none; }
