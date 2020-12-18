@@ -1,0 +1,343 @@
+---
+category:
+- Applied Statistics
+date: "2020-09-19T15:58:10+06:00"
+image: images/projects/gapminder1.jpg
+project_images:
+title: GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION
+type: portfolio
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r, load_libraries, include = FALSE}
+library(tidyverse) # the usual stuff: dplyr, readr, and other goodies
+library(GGally) # for correlation-scatterplot matrix
+library(mosaic)
+library(ggthemes)
+library(ggplot2)
+library(readxl)
+library(here)
+library(skimr)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(extrafont)
+loadfonts(dev="pdf")
+library(devtools)
+library(showtext)
+font_add_google("Montserrat", "Montserrat") #downloading fonts from Google
+showtext_auto()
+library(lubridate)
+library(vroom)
+
+```
+
+# Gapminder revisited
+
+Recall the `gapminder` data frame from the gapminder package. That data frame contains just six columns from the larger [data in Gapminder World](https://www.gapminder.org/data/). In this part, you will join a few dataframes with more data than the 'gapminder' package. Specifically, you will look at data on 
+
+
+- Life expectancy at birth (life_expectancy_years.csv)
+- GDP per capita in constant 2010 US$ (https://data.worldbank.org/indicator/NY.GDP.PCAP.KD)
+- Female fertility: The number of babies per woman (https://data.worldbank.org/indicator/SP.DYN.TFRT.IN)
+- Primary school enrollment as % of children attending primary school (https://data.worldbank.org/indicator/SE.PRM.NENR)
+- Mortality rate, for under 5, per 1000 live births (https://data.worldbank.org/indicator/SH.DYN.MORT)
+- HIV prevalence (adults_with_hiv_percent_age_15_49.csv): The estimated number of people living with HIV per 100 population of age group 15-49.
+
+You must use the `wbstats` package to download data from the World Bank. The relevant World Bank indicators are `SP.DYN.TFRT.IN`, `SE.PRM.NENR`, `NY.GDP.PCAP.KD`, and `SH.DYN.MORT`
+
+You have to join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one. You may need to tidy your data first and then perform [join operations](http://r4ds.had.co.nz/relational-data.html). 
+Think about what type makes the most sense **and explain why you chose it**.
+
+To join all the 3 dataframes we used left.join in order to keep our data tidy. On the left side of the "data" dataframe we can find all the categorical variables that describe our data. On the right side, we can find numerical variables.
+
+```{r, get_data, cache=TRUE}
+
+# load gapminder HIV data
+hiv <- adults_with_hiv_percent_age_15_49 <- read_csv("~/Documents/Applied Statistics in R/homeworks/data/adults_with_hiv_percent_age_15_49.csv")
+life_expectancy <- life_expectancy_years <- read_csv("~/Documents/Applied Statistics in R/homeworks/data/life_expectancy_years.csv")
+
+# get World bank data using wbstats
+indicators <- c("SP.DYN.TFRT.IN","SE.PRM.NENR", "SH.DYN.MORT", "NY.GDP.PCAP.KD")
+
+
+library(wbstats)
+
+worldbank_data <- wb_data(country="countries_only",
+                          indicator = indicators, 
+                          start_date = 1960, 
+                          end_date = 2016) %>% rename(year=date)
+
+
+
+# get a dataframe of information regarding countries, indicators, sources, regions, indicator topics, lending types, income levels,  from the World Bank API 
+countries <-  wbstats::wb_cachelist$countries
+
+data <- left_join(countries, worldbank_data, by="country")
+
+Life_expectancy_longer<- life_expectancy %>% 
+  pivot_longer(!country,names_to= "year", 
+               values_to= "count")
+
+hiv_longer<- hiv %>% 
+  pivot_longer(!country,names_to= "year", 
+               values_to= "count") 
+  
+
+big_df<- left_join(hiv_longer,
+                   Life_expectancy_longer, 
+                   by=c("country","year")) %>% 
+  transform(year=as.numeric(year))
+
+big_df_cleaned<- left_join(data, 
+                           big_df, 
+                           by=c("country","year"))
+
+
+big_df_cleaned<- big_df_cleaned %>% 
+  rename(hiv_count=count.x, 
+         life_expectancy=count.y)
+  
+  
+glimpse(big_df_cleaned)
+  
+```
+
+1. What is the relationship between HIV prevalence and life expectancy? Generate a scatterplot with a smoothing line to report your results. You may find faceting useful
+```{r, fig.width=15, fig.height=18}
+big_df_cleaned_1990 <- big_df_cleaned %>% 
+  filter(year>1989& year <2012)
+ggplot(big_df_cleaned_1990, 
+       aes(x=life_expectancy, 
+           y=hiv_count, 
+           colour= region)) +
+ facet_wrap(~year, 
+            scales="free")+
+geom_point() +
+geom_smooth(colour="blue") +
+ theme_bw() +
+  labs (
+    title = "Over time the relationship between HIV prevalance and life \n expectancy is getting stronger - the less HIV prevalence, the higher \n the life expectancy", 
+    subtitle = "Relationship between HIV prevalence and life expectancy", 
+    x= "Life expectancy", 
+    y= "HIV prevalence"
+  )
+
+
+```
+2. What is the relationship between fertility rate and GDP per capita? Generate a scatterplot with a smoothing line to report your results. You may find facetting by region useful
+
+```{r,fig.width=15,fig.height=10}
+by_region <- big_df_cleaned %>% 
+  group_by(region) %>% 
+filter(region!="Aggregates")
+ggplot(by_region, aes(x=SP.DYN.TFRT.IN, 
+                      y=NY.GDP.PCAP.KD) ) + 
+    scale_y_continuous(name="NY.GDP.PCAP.KD",labels= scales::comma)+
+facet_wrap(~region, 
+           scales="free")+
+  geom_point(alpha=0.04) +
+  scale_y_log10() +
+  geom_smooth(method="loess") +
+ theme_bw() +
+  labs (
+    title = "Generally, the higher GDP per capita, the lower ferility rate", 
+    subtitle = "Relationship between height of GDP per capita and fertility rate", 
+    x= "Fertility rate", 
+    y= "GDP per capita"
+  ) +
+   theme(legend.position = "none")
+
+```
+
+3. Which regions have the most observations with missing HIV data? Generate a bar chart (`geom_col()`), in descending order.
+```{r}
+
+#Add regions to the hiv_longer dataframe, selecting all relevant variables, renaming the count variable to make it clearer
+
+hiv_longer_region <- left_join(hiv_longer, 
+                               countries, 
+                               by = "country") %>% 
+  select(region, 
+         country, 
+         year, 
+         count) %>% 
+  rename(hiv_count_per100=count)
+
+#Count the number of NA values per region
+hiv_longer_region <- hiv_longer_region %>% 
+  group_by(region) %>%
+  summarise_all(~sum(is.na(.))) %>% 
+  transmute(region, total_NA_per_region = rowSums(.[-1]))
+
+hiv_longer_region
+  
+
+hiv_longer_region <- hiv_longer_region %>% 
+  na.omit(hiv_longer_region)
+  
+
+#Graph the total NA per region as a column chart, reordered in descending order
+
+ggplot(hiv_longer_region, aes(y = reorder(region, total_NA_per_region), x = total_NA_per_region)) + 
+  geom_col() + 
+ theme_bw() + 
+  labs(title = "Sub-saharan Africa has the lowest Quality HIV data", 
+                           subtitle = "Comparison of total number of missing HIV data across regions", x= "Total number of missing HIV values", y= NULL) 
+
+
+
+```
+
+4. How has mortality rate for under 5 changed by region? In each region, find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.
+
+```{r, fig.width=15,fig.height=10}
+# Mortality Rate development across regions
+#Create dataframe with relevant variables, excluding NA
+mortality_data <- data %>% 
+  select(region,
+         country, 
+         year, 
+         SH.DYN.MORT) %>%
+  na.omit() %>% 
+  filter(year>1989& 
+           year <2012) %>%
+rename("mortality_rate" = "SH.DYN.MORT")
+
+#mortality_data #check created data frame
+
+#Now we plot the mortality data per region
+
+mort_by_region <- mortality_data %>%
+  group_by(region) %>%
+  filter(region!="Aggregates")
+
+# ggplot(mort_by_region, aes(x=year, y=mortality_rate)) + geom_point(alpha = 0.2) + facet_wrap(~region, scales = "free_x") +
+#   labs(title = "Child mortality globally decreasing",
+#        subtitle = "Comparison of Child Mortality (under 5) across Regions, 1990 - 2011",
+#        x = "",
+#        y = "Mortality Rate under 5 per 1000 live births")
+
+
+# Now lets find the top countries in regards to the change of mortality rate from base year 1990 to 2011
+
+#Create data frame with relevant variables
+mortality_data_country <- data %>% 
+  select(region, 
+         country, 
+         year, 
+         SH.DYN.MORT) %>% 
+  group_by(region) %>% 
+  na.omit() %>% 
+ filter(year== 1990 | 
+          year ==2011) %>% 
+  pivot_wider(names_from=year , 
+              values_from=SH.DYN.MORT)  %>% 
+  rename("mortality_rate_1990" = "1990",
+         "mortality_rate_2011" = "2011") %>% 
+  mutate(mort_diff=(mortality_rate_2011-mortality_rate_1990)/mortality_rate_1990*100) %>% 
+  arrange(mort_diff) %>% 
+  filter(region!="Aggregates")
+  
+ #Check created data frame
+# mortality_data_country
+
+#Now we create two data sets based on the new dataframe with the relative % change in mortality rate, one for the 5 biggest improvers per region and one for the 5 worst improvers
+
+#We use slice_min as we want the largest negative values, i.e. the largest relative decreases
+ 
+biggest_improvers <- mortality_data_country %>%  
+  group_by(region) %>% 
+  slice_min(mort_diff, n=5)
+
+#biggest_improvers # check 
+
+
+#We use slice_max to get the largest (positive) values of the difference in mortality rate (or lowest negative numbers)
+
+worst_improvers <- mortality_data_country %>%  # finding top 5 countries per region with the worst improvement
+  group_by(region) %>% 
+  arrange(desc(mort_diff)) %>% 
+  slice_max(mort_diff, n=5)
+ 
+#worst_improvers # check
+
+# Plot for top 5 best improvement
+
+ggplot(biggest_improvers, 
+       aes( x=abs(mort_diff),
+            y=reorder(country, 
+                      abs(mort_diff)))) + 
+  facet_wrap(~region, 
+             scales = "free") + 
+  geom_col() + 
+  labs(title = "Leaders in Child Mortality reduction",
+       subtitle = "Comparison of most improved countries in relative % change in child mortality rates, by region", 
+       x = "",
+       y = "Difference in mortality rate under 5 (%, 1990 vs 2011")
+  
+# Plot for top 5 worst improvement
+
+ggplot(worst_improvers, 
+       aes(x=abs(mort_diff), 
+           y=reorder(country, 
+                     abs(mort_diff)))) + 
+  facet_wrap(~region, 
+             scales = "free") + 
+  geom_col() + 
+  labs(title = "Laggards in Child Mortality Reduction",
+       subtitle = "Comparison of least improved countries in relative % change in child mortality rates, by region",
+       x = "", 
+       y = "Difference in mortality rate under 5 (%, 1990 vs 2011")
+ 
+
+```
+
+5. Is there a relationship between primary school enrollment and fertility rate?
+``` {r, fig.width=10}
+#Create data frame with relevant variables
+
+primenrolment_fertility_df <- data %>%
+  select(region,
+         country, 
+         year, 
+         SP.DYN.TFRT.IN, 
+         SE.PRM.NENR) %>% 
+  rename("births_per_woman" = "SP.DYN.TFRT.IN",
+         "net_school_enrolment" = "SE.PRM.NENR")
+
+#primenrolment_fertility_df
+
+
+ggplot(primenrolment_fertility_df, 
+       aes(x = net_school_enrolment, 
+           y = births_per_woman, 
+           colour=region)) + 
+  geom_point(alpha = 0.1) + 
+  geom_smooth(method = loess, se=FALSE) + 
+  theme_bw() +
+  labs(title = "More kids, Less School",
+       subtitle = "Relationship between Net School Enrolment and Births per Woman", 
+       x = "Net School Enrolment in %", 
+       y = "Births per Woman")
+
+```
+.
+

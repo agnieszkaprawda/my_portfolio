@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+  <meta charset="utf-8" />
+  <title>GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  
+  <meta name="author" content="StaticMania">
+  
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <!-- Bootstrap -->
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <!-- font-awesome -->
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css" />
+  <!-- Main Stylesheets -->
+  
+  <link href="/scss/style.min.css" rel="stylesheet" />
+
+  
+  <link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon" />
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+</head><body><nav class="navbar navbar-expand-lg site-navigation">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <img src="/images/logo.png" alt="logo" />
+    </a>
+    <button
+      class="navbar-toggler collapsed"
+      type="button"
+      data-toggle="collapse"
+      data-target="#sitenavbar"
+    >
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenavbar">
+      <ul class="navbar-nav ml-auto main-nav">
+         
+         
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/"
+              >Home</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/portfolio"
+              >Portfolio</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/blog"
+              >Other Projects</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a
+              class="nav-link btn btn-sm btn-primary btn-sm-rounded"
+              href="/contact"
+            >
+              <span class="btn-area">
+                <span data-text="Get in touch">
+                  Get in touch
+                </span>
+              </span>
+            </a>
+          </li>
+           
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+<main>
+
+<section class="site-project-single-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="site-project-single">
+          <h1>
+            GAPMINDER ANALYSIS - FERTILITY VS. EDUCATION
+          </h1>
+          <div class="site-project-single-description">
+            
+
+
+<div id="gapminder-revisited" class="section level1">
+<h1>Gapminder revisited</h1>
+<p>Recall the <code>gapminder</code> data frame from the gapminder package. That data frame contains just six columns from the larger <a href="https://www.gapminder.org/data/">data in Gapminder World</a>. In this part, you will join a few dataframes with more data than the ‘gapminder’ package. Specifically, you will look at data on</p>
+<ul>
+<li>Life expectancy at birth (life_expectancy_years.csv)</li>
+<li>GDP per capita in constant 2010 US$ (<a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.KD" class="uri">https://data.worldbank.org/indicator/NY.GDP.PCAP.KD</a>)</li>
+<li>Female fertility: The number of babies per woman (<a href="https://data.worldbank.org/indicator/SP.DYN.TFRT.IN" class="uri">https://data.worldbank.org/indicator/SP.DYN.TFRT.IN</a>)</li>
+<li>Primary school enrollment as % of children attending primary school (<a href="https://data.worldbank.org/indicator/SE.PRM.NENR" class="uri">https://data.worldbank.org/indicator/SE.PRM.NENR</a>)</li>
+<li>Mortality rate, for under 5, per 1000 live births (<a href="https://data.worldbank.org/indicator/SH.DYN.MORT" class="uri">https://data.worldbank.org/indicator/SH.DYN.MORT</a>)</li>
+<li>HIV prevalence (adults_with_hiv_percent_age_15_49.csv): The estimated number of people living with HIV per 100 population of age group 15-49.</li>
+</ul>
+<p>You must use the <code>wbstats</code> package to download data from the World Bank. The relevant World Bank indicators are <code>SP.DYN.TFRT.IN</code>, <code>SE.PRM.NENR</code>, <code>NY.GDP.PCAP.KD</code>, and <code>SH.DYN.MORT</code></p>
+<p>You have to join the 3 dataframes (life_expectancy, worldbank_data, and HIV) into one. You may need to tidy your data first and then perform <a href="http://r4ds.had.co.nz/relational-data.html">join operations</a>.
+Think about what type makes the most sense <strong>and explain why you chose it</strong>.</p>
+<p>To join all the 3 dataframes we used left.join in order to keep our data tidy. On the left side of the “data” dataframe we can find all the categorical variables that describe our data. On the right side, we can find numerical variables.</p>
+<pre class="r"><code># load gapminder HIV data
+hiv &lt;- adults_with_hiv_percent_age_15_49 &lt;- read_csv(&quot;~/Documents/Applied Statistics in R/homeworks/data/adults_with_hiv_percent_age_15_49.csv&quot;)
+life_expectancy &lt;- life_expectancy_years &lt;- read_csv(&quot;~/Documents/Applied Statistics in R/homeworks/data/life_expectancy_years.csv&quot;)
+
+# get World bank data using wbstats
+indicators &lt;- c(&quot;SP.DYN.TFRT.IN&quot;,&quot;SE.PRM.NENR&quot;, &quot;SH.DYN.MORT&quot;, &quot;NY.GDP.PCAP.KD&quot;)
+
+
+library(wbstats)
+
+worldbank_data &lt;- wb_data(country=&quot;countries_only&quot;,
+                          indicator = indicators, 
+                          start_date = 1960, 
+                          end_date = 2016) %&gt;% rename(year=date)
+
+
+
+# get a dataframe of information regarding countries, indicators, sources, regions, indicator topics, lending types, income levels,  from the World Bank API 
+countries &lt;-  wbstats::wb_cachelist$countries
+
+data &lt;- left_join(countries, worldbank_data, by=&quot;country&quot;)
+
+Life_expectancy_longer&lt;- life_expectancy %&gt;% 
+  pivot_longer(!country,names_to= &quot;year&quot;, 
+               values_to= &quot;count&quot;)
+
+hiv_longer&lt;- hiv %&gt;% 
+  pivot_longer(!country,names_to= &quot;year&quot;, 
+               values_to= &quot;count&quot;) 
+  
+
+big_df&lt;- left_join(hiv_longer,
+                   Life_expectancy_longer, 
+                   by=c(&quot;country&quot;,&quot;year&quot;)) %&gt;% 
+  transform(year=as.numeric(year))
+
+big_df_cleaned&lt;- left_join(data, 
+                           big_df, 
+                           by=c(&quot;country&quot;,&quot;year&quot;))
+
+
+big_df_cleaned&lt;- big_df_cleaned %&gt;% 
+  rename(hiv_count=count.x, 
+         life_expectancy=count.y)
+  
+  
+glimpse(big_df_cleaned)</code></pre>
+<pre><code>## Rows: 12,456
+## Columns: 27
+## $ iso3c.x            &lt;chr&gt; &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;…
+## $ iso2c.x            &lt;chr&gt; &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;A…
+## $ country            &lt;chr&gt; &quot;Aruba&quot;, &quot;Aruba&quot;, &quot;Aruba&quot;, &quot;Aruba&quot;, &quot;Aruba&quot;, &quot;Arub…
+## $ capital_city       &lt;chr&gt; &quot;Oranjestad&quot;, &quot;Oranjestad&quot;, &quot;Oranjestad&quot;, &quot;Oranjes…
+## $ longitude          &lt;dbl&gt; -70, -70, -70, -70, -70, -70, -70, -70, -70, -70, …
+## $ latitude           &lt;dbl&gt; 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12…
+## $ region_iso3c       &lt;chr&gt; &quot;LCN&quot;, &quot;LCN&quot;, &quot;LCN&quot;, &quot;LCN&quot;, &quot;LCN&quot;, &quot;LCN&quot;, &quot;LCN&quot;, &quot;…
+## $ region_iso2c       &lt;chr&gt; &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;ZJ&quot;, &quot;Z…
+## $ region             &lt;chr&gt; &quot;Latin America &amp; Caribbean&quot;, &quot;Latin America &amp; Cari…
+## $ admin_region_iso3c &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ admin_region_iso2c &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ admin_region       &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ income_level_iso3c &lt;chr&gt; &quot;HIC&quot;, &quot;HIC&quot;, &quot;HIC&quot;, &quot;HIC&quot;, &quot;HIC&quot;, &quot;HIC&quot;, &quot;HIC&quot;, &quot;…
+## $ income_level_iso2c &lt;chr&gt; &quot;XD&quot;, &quot;XD&quot;, &quot;XD&quot;, &quot;XD&quot;, &quot;XD&quot;, &quot;XD&quot;, &quot;XD&quot;, &quot;XD&quot;, &quot;X…
+## $ income_level       &lt;chr&gt; &quot;High income&quot;, &quot;High income&quot;, &quot;High income&quot;, &quot;High…
+## $ lending_type_iso3c &lt;chr&gt; &quot;LNX&quot;, &quot;LNX&quot;, &quot;LNX&quot;, &quot;LNX&quot;, &quot;LNX&quot;, &quot;LNX&quot;, &quot;LNX&quot;, &quot;…
+## $ lending_type_iso2c &lt;chr&gt; &quot;XX&quot;, &quot;XX&quot;, &quot;XX&quot;, &quot;XX&quot;, &quot;XX&quot;, &quot;XX&quot;, &quot;XX&quot;, &quot;XX&quot;, &quot;X…
+## $ lending_type       &lt;chr&gt; &quot;Not classified&quot;, &quot;Not classified&quot;, &quot;Not classifie…
+## $ iso2c.y            &lt;chr&gt; &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;AW&quot;, &quot;A…
+## $ iso3c.y            &lt;chr&gt; &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;ABW&quot;, &quot;…
+## $ year               &lt;dbl&gt; 1960, 1961, 1962, 1963, 1964, 1965, 1966, 1967, 19…
+## $ NY.GDP.PCAP.KD     &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ SE.PRM.NENR        &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ SH.DYN.MORT        &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ SP.DYN.TFRT.IN     &lt;dbl&gt; 4.82, 4.66, 4.47, 4.27, 4.06, 3.84, 3.62, 3.42, 3.…
+## $ hiv_count          &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ life_expectancy    &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…</code></pre>
+<ol style="list-style-type: decimal">
+<li>What is the relationship between HIV prevalence and life expectancy? Generate a scatterplot with a smoothing line to report your results. You may find faceting useful</li>
+</ol>
+<pre class="r"><code>big_df_cleaned_1990 &lt;- big_df_cleaned %&gt;% 
+  filter(year&gt;1989&amp; year &lt;2012)
+ggplot(big_df_cleaned_1990, 
+       aes(x=life_expectancy, 
+           y=hiv_count, 
+           colour= region)) +
+ facet_wrap(~year, 
+            scales=&quot;free&quot;)+
+geom_point() +
+geom_smooth(colour=&quot;blue&quot;) +
+ theme_bw() +
+  labs (
+    title = &quot;Over time the relationship between HIV prevalance and life \n expectancy is getting stronger - the less HIV prevalence, the higher \n the life expectancy&quot;, 
+    subtitle = &quot;Relationship between HIV prevalence and life expectancy&quot;, 
+    x= &quot;Life expectancy&quot;, 
+    y= &quot;HIV prevalence&quot;
+  )</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-1-1.png" width="1440" style="display: block; margin: auto;" />
+2. What is the relationship between fertility rate and GDP per capita? Generate a scatterplot with a smoothing line to report your results. You may find facetting by region useful</p>
+<pre class="r"><code>by_region &lt;- big_df_cleaned %&gt;% 
+  group_by(region) %&gt;% 
+filter(region!=&quot;Aggregates&quot;)
+ggplot(by_region, aes(x=SP.DYN.TFRT.IN, 
+                      y=NY.GDP.PCAP.KD) ) + 
+    scale_y_continuous(name=&quot;NY.GDP.PCAP.KD&quot;,labels= scales::comma)+
+facet_wrap(~region, 
+           scales=&quot;free&quot;)+
+  geom_point(alpha=0.04) +
+  scale_y_log10() +
+  geom_smooth(method=&quot;loess&quot;) +
+ theme_bw() +
+  labs (
+    title = &quot;Generally, the higher GDP per capita, the lower ferility rate&quot;, 
+    subtitle = &quot;Relationship between height of GDP per capita and fertility rate&quot;, 
+    x= &quot;Fertility rate&quot;, 
+    y= &quot;GDP per capita&quot;
+  ) +
+   theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-2-1.png" width="1440" style="display: block; margin: auto;" /></p>
+<ol start="3" style="list-style-type: decimal">
+<li>Which regions have the most observations with missing HIV data? Generate a bar chart (<code>geom_col()</code>), in descending order.</li>
+</ol>
+<pre class="r"><code>#Add regions to the hiv_longer dataframe, selecting all relevant variables, renaming the count variable to make it clearer
+
+hiv_longer_region &lt;- left_join(hiv_longer, 
+                               countries, 
+                               by = &quot;country&quot;) %&gt;% 
+  select(region, 
+         country, 
+         year, 
+         count) %&gt;% 
+  rename(hiv_count_per100=count)
+
+#Count the number of NA values per region
+hiv_longer_region &lt;- hiv_longer_region %&gt;% 
+  group_by(region) %&gt;%
+  summarise_all(~sum(is.na(.))) %&gt;% 
+  transmute(region, total_NA_per_region = rowSums(.[-1]))
+
+hiv_longer_region</code></pre>
+<pre><code>## # A tibble: 8 x 2
+##   region                     total_NA_per_region
+##   &lt;chr&gt;                                    &lt;dbl&gt;
+## 1 East Asia &amp; Pacific                        179
+## 2 Europe &amp; Central Asia                      435
+## 3 Latin America &amp; Caribbean                  258
+## 4 Middle East &amp; North Africa                 105
+## 5 North America                               20
+## 6 South Asia                                 108
+## 7 Sub-Saharan Africa                         497
+## 8 &lt;NA&gt;                                       179</code></pre>
+<pre class="r"><code>hiv_longer_region &lt;- hiv_longer_region %&gt;% 
+  na.omit(hiv_longer_region)
+  
+
+#Graph the total NA per region as a column chart, reordered in descending order
+
+ggplot(hiv_longer_region, aes(y = reorder(region, total_NA_per_region), x = total_NA_per_region)) + 
+  geom_col() + 
+ theme_bw() + 
+  labs(title = &quot;Sub-saharan Africa has the lowest Quality HIV data&quot;, 
+                           subtitle = &quot;Comparison of total number of missing HIV data across regions&quot;, x= &quot;Total number of missing HIV values&quot;, y= NULL) </code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" /></p>
+<ol start="4" style="list-style-type: decimal">
+<li>How has mortality rate for under 5 changed by region? In each region, find the top 5 countries that have seen the greatest improvement, as well as those 5 countries where mortality rates have had the least improvement or even deterioration.</li>
+</ol>
+<pre class="r"><code># Mortality Rate development across regions
+#Create dataframe with relevant variables, excluding NA
+mortality_data &lt;- data %&gt;% 
+  select(region,
+         country, 
+         year, 
+         SH.DYN.MORT) %&gt;%
+  na.omit() %&gt;% 
+  filter(year&gt;1989&amp; 
+           year &lt;2012) %&gt;%
+rename(&quot;mortality_rate&quot; = &quot;SH.DYN.MORT&quot;)
+
+#mortality_data #check created data frame
+
+#Now we plot the mortality data per region
+
+mort_by_region &lt;- mortality_data %&gt;%
+  group_by(region) %&gt;%
+  filter(region!=&quot;Aggregates&quot;)
+
+# ggplot(mort_by_region, aes(x=year, y=mortality_rate)) + geom_point(alpha = 0.2) + facet_wrap(~region, scales = &quot;free_x&quot;) +
+#   labs(title = &quot;Child mortality globally decreasing&quot;,
+#        subtitle = &quot;Comparison of Child Mortality (under 5) across Regions, 1990 - 2011&quot;,
+#        x = &quot;&quot;,
+#        y = &quot;Mortality Rate under 5 per 1000 live births&quot;)
+
+
+# Now lets find the top countries in regards to the change of mortality rate from base year 1990 to 2011
+
+#Create data frame with relevant variables
+mortality_data_country &lt;- data %&gt;% 
+  select(region, 
+         country, 
+         year, 
+         SH.DYN.MORT) %&gt;% 
+  group_by(region) %&gt;% 
+  na.omit() %&gt;% 
+ filter(year== 1990 | 
+          year ==2011) %&gt;% 
+  pivot_wider(names_from=year , 
+              values_from=SH.DYN.MORT)  %&gt;% 
+  rename(&quot;mortality_rate_1990&quot; = &quot;1990&quot;,
+         &quot;mortality_rate_2011&quot; = &quot;2011&quot;) %&gt;% 
+  mutate(mort_diff=(mortality_rate_2011-mortality_rate_1990)/mortality_rate_1990*100) %&gt;% 
+  arrange(mort_diff) %&gt;% 
+  filter(region!=&quot;Aggregates&quot;)
+  
+ #Check created data frame
+# mortality_data_country
+
+#Now we create two data sets based on the new dataframe with the relative % change in mortality rate, one for the 5 biggest improvers per region and one for the 5 worst improvers
+
+#We use slice_min as we want the largest negative values, i.e. the largest relative decreases
+ 
+biggest_improvers &lt;- mortality_data_country %&gt;%  
+  group_by(region) %&gt;% 
+  slice_min(mort_diff, n=5)
+
+#biggest_improvers # check 
+
+
+#We use slice_max to get the largest (positive) values of the difference in mortality rate (or lowest negative numbers)
+
+worst_improvers &lt;- mortality_data_country %&gt;%  # finding top 5 countries per region with the worst improvement
+  group_by(region) %&gt;% 
+  arrange(desc(mort_diff)) %&gt;% 
+  slice_max(mort_diff, n=5)
+ 
+#worst_improvers # check
+
+# Plot for top 5 best improvement
+
+ggplot(biggest_improvers, 
+       aes( x=abs(mort_diff),
+            y=reorder(country, 
+                      abs(mort_diff)))) + 
+  facet_wrap(~region, 
+             scales = &quot;free&quot;) + 
+  geom_col() + 
+  labs(title = &quot;Leaders in Child Mortality reduction&quot;,
+       subtitle = &quot;Comparison of most improved countries in relative % change in child mortality rates, by region&quot;, 
+       x = &quot;&quot;,
+       y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-1.png" width="1440" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Plot for top 5 worst improvement
+
+ggplot(worst_improvers, 
+       aes(x=abs(mort_diff), 
+           y=reorder(country, 
+                     abs(mort_diff)))) + 
+  facet_wrap(~region, 
+             scales = &quot;free&quot;) + 
+  geom_col() + 
+  labs(title = &quot;Laggards in Child Mortality Reduction&quot;,
+       subtitle = &quot;Comparison of least improved countries in relative % change in child mortality rates, by region&quot;,
+       x = &quot;&quot;, 
+       y = &quot;Difference in mortality rate under 5 (%, 1990 vs 2011&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-4-2.png" width="1440" style="display: block; margin: auto;" /></p>
+<ol start="5" style="list-style-type: decimal">
+<li>Is there a relationship between primary school enrollment and fertility rate?</li>
+</ol>
+<pre class="r"><code>#Create data frame with relevant variables
+
+primenrolment_fertility_df &lt;- data %&gt;%
+  select(region,
+         country, 
+         year, 
+         SP.DYN.TFRT.IN, 
+         SE.PRM.NENR) %&gt;% 
+  rename(&quot;births_per_woman&quot; = &quot;SP.DYN.TFRT.IN&quot;,
+         &quot;net_school_enrolment&quot; = &quot;SE.PRM.NENR&quot;)
+
+#primenrolment_fertility_df
+
+
+ggplot(primenrolment_fertility_df, 
+       aes(x = net_school_enrolment, 
+           y = births_per_woman, 
+           colour=region)) + 
+  geom_point(alpha = 0.1) + 
+  geom_smooth(method = loess, se=FALSE) + 
+  theme_bw() +
+  labs(title = &quot;More kids, Less School&quot;,
+       subtitle = &quot;Relationship between Net School Enrolment and Births per Woman&quot;, 
+       x = &quot;Net School Enrolment in %&quot;, 
+       y = &quot;Births per Woman&quot;)</code></pre>
+<p><img src="/portfolio/project-03_files/figure-html/unnamed-chunk-5-1.png" width="960" style="display: block; margin: auto;" />
+.</p>
+</div>
+
+          </div>
+          <div class="site-project-single-image">
+            
+          </div>
+          
+          <div class="site-project-single-action">
+            <a href="/portfolio/project-01/">
+              <span class="link-area">
+                <span data-text="Next Project">
+                  Next Project
+                </span>
+              </span>
+              <img src="/images/to-top.svg" alt="next project">
+            </a>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  
+  <section class="site-cta" style='background-image: url("/images/backgrounds/cta-background.jpg");'>
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h1 class="site-cta-title">Contact me</h1>
+          <ul class="site-cta-buttons">
+            <li>
+              <a href="/contact" class="btn btn-secondary">
+                <span class="btn-area">
+                  <span data-text="Send an email">
+                    Send an email
+                  </span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="/portfolio" class="btn btn-primary">
+                <span class="btn-area">
+                  <span data-text="See more portfolio">
+                    See more portfolio
+                  </span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+
+
+        </main><footer class="site-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="site-footer-logo"><a href="/"><img src="/images/logo-footer.png" alt="logo-footer"></a></div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Contact Info</h5>
+          <p class="site-footer-widget-description">
+            Regent's Park, London NW1 4SA
+            <br>
+            <a href="tel:&#43;447762727403">&#43;447762727403</a>
+            <br>
+            <a href="mailto:aprawda.mam2021@london.edu">aprawda.mam2021@london.edu</a>
+          </p>
+        </div>
+      </div>
+      
+      
+      
+      <div class="col-lg-2 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Social Media</h5>
+          <ul class="site-footer-widget-links">
+            
+              <li><a href="https://www.linkedin.com/in/agnieszka-prawda/">Linkedin</a></li>
+            
+          </ul>
+        </div>
+      </div>
+      
+      
+      <div class="col-lg-2 col-12">
+        <a href="#top" class="site-footer-widget-top">
+          <img src="/images/to-top.svg" alt="back-to-top">
+          <p>
+            I want to 
+            <br>
+            visit again
+          </p>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script src="/js/formhandler.min.js"></script>
+
+<script src="/js/vendor.min.js"></script>
+
+<script src="/js/script.min.js"></script></body>
+</html>
