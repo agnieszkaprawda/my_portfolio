@@ -1,6 +1,6 @@
 ---
 category:
-- Data Science
+- Data Science in R
 date: "2020-10-11T15:58:10+06:00"
 image: images/projects/lendingclub1.jpg
 project_images:

@@ -1,3 +1,13 @@
+---
+category:
+- Data Science in R
+date: "2020-10-11T15:58:10+06:00"
+image: images/projects/lendingclub1.jpg
+project_images:
+title: Predicting interest rates using K-fold CV,LASSO & OLS regression
+type: portfolio
+---
+
 
 
 <p>In this piece I will analyse the data on interest rates in the Lendign Club. First I will conduct the ICE of the data together with visualisation of the variables disributions and correlations for better understanding. Then, I will first build a linear regression model</p>
@@ -76,7 +86,7 @@ ggplot(lc_clean, aes(x=int_rate))+
        y=&quot;Count&quot;)+
   scale_x_continuous(labels = scales::percent)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Build a histogram of interest rates but use different color for loans of different grades 
 ggplot(lc_clean, aes(x=int_rate, fill=grade))+ 
   geom_histogram(bins=20)+
@@ -85,14 +95,14 @@ ggplot(lc_clean, aes(x=int_rate, fill=grade))+
        y=&quot;Count&quot;)+
   scale_x_continuous(labels = scales::percent)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-2.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Produce a scatter plot of loan amount against interest rate and add visually the line of best fit
 ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=loan_amnt)) +  geom_smooth(method=&quot;lm&quot;,se=0)+
   geom_point()+
 scale_x_continuous(label=scales::dollar)+
   labs(y=&quot;Interest Rate&quot;, x=&quot;Annual Income&quot;)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-3.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-3.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># Produce a scatter plot of annual income against interest rate and add visually the line of best fit 
 ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=annual_inc)) + 
   geom_point(size=0.1)+ 
@@ -100,7 +110,7 @@ ggplot(lc_clean[seq(1, nrow(lc_clean), 10), ] , aes(y=int_rate, x=annual_inc)) +
   scale_x_continuous(label=scales::dollar)+
   labs(y=&quot;Interest Rate&quot;, x=&quot;Annual Income&quot;)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-4.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-4.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># In the same axes, produce box plots of the interest rate for every value of delinquencies
 ggplot(lc_clean , aes(y=int_rate, x=delinq_2yrs, colour= delinq_2yrs)) + 
   geom_boxplot()+
@@ -113,7 +123,7 @@ ggplot(lc_clean , aes(y=int_rate, x=delinq_2yrs, colour= delinq_2yrs)) +
     x= &quot;Number of delinquecies in last two years&quot;, y=&quot;Interest Rate&quot;
   )+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-5.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-5.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#loan period vs interest rate
 ggplot(lc_clean, aes(x=term, y = int_rate))+
   geom_boxplot()+
@@ -122,7 +132,7 @@ ggplot(lc_clean, aes(x=term, y = int_rate))+
        y=&quot;Interest Rate&quot;)+
   scale_y_continuous(labels=scales::percent)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-6.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-6.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#home ownership vs interest rate
 ggplot(lc_clean, aes(x=home_ownership, y = int_rate))+
   geom_boxplot()+
@@ -131,7 +141,7 @@ ggplot(lc_clean, aes(x=home_ownership, y = int_rate))+
        y=&quot;Interest Rate&quot;)+
   scale_y_continuous(labels=scales::percent)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-7.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-7.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#Employment Length vs Interest 
 ggplot(lc_clean, aes(x=emp_length, y = int_rate))+
   geom_boxplot()+
@@ -140,7 +150,7 @@ ggplot(lc_clean, aes(x=emp_length, y = int_rate))+
        y=&quot;Interest Rate&quot;)+
   scale_y_continuous(labels=scales::percent)+
   theme_bw()</code></pre>
-<p><img src="project-01_files/figure-html/data_visualisation-8.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/data_visualisation-8.png" width="648" style="display: block; margin: auto;" /></p>
 </div>
 <div id="estimate-simple-linear-regression-models" class="section level1">
 <h1>Estimate simple linear regression models</h1>
@@ -519,9 +529,9 @@ sample
   Rsq_sample[i]&lt;-R2(pred,testing$int_rate)
 }
 plot(sample_size,rmse_sample)</code></pre>
-<p><img src="project-01_files/figure-html/learning%20curves-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/learning%20curves-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(sample_size,Rsq_sample)</code></pre>
-<p><img src="project-01_files/figure-html/learning%20curves-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/learning%20curves-2.png" width="648" style="display: block; margin: auto;" /></p>
 <div id="using-the-learning-curves-above-approximately-how-large-of-a-sample-size-would-we-need-to-estimate-model-3-reliably-once-we-reach-this-sample-size-if-we-want-to-reduce-the-prediction-error-further-what-options-do-we-have" class="section level2">
 <h2>Using the learning curves above, approximately how large of a sample size would we need to estimate model 3 reliably? Once we reach this sample size, if we want to reduce the prediction error further what options do we have?</h2>
 <p>After analysing the graphs above, I noticed that the sample size that would estimate model 3 reliably is 1500. Once I reach this sample size, I can still try to reduce the prediction error by regularization or using the k-fold cross validation method.</p>
@@ -698,12 +708,12 @@ data.frame(
 ggplot(lc_clean, aes(x=issue_d,y=int_rate))+
   geom_point()+
   geom_smooth(method=&quot;lm&quot;)</code></pre>
-<p><img src="project-01_files/figure-html/time%20trends-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/time%20trends-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#linear time trend by grade (add code below)
 ggplot(lc_clean, aes(x=issue_d,y=int_rate, colour=grade))+
   geom_point()+
   geom_smooth(method=&quot;lm&quot;)</code></pre>
-<p><img src="project-01_files/figure-html/time%20trends-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/time%20trends-2.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>glimpse(lc_clean2)</code></pre>
 <pre><code>## Rows: 37,869
 ## Columns: 21
@@ -1167,7 +1177,7 @@ bond_prices &lt;- bond_prices %&gt;%
 
 bond_prices %&gt;%
   ggplot(aes(x=Date2, y=Price))+geom_point(size=0.1, alpha=0.5)</code></pre>
-<p><img src="project-01_files/figure-html/bond%20yields-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/bond%20yields-1.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#join the data using a left join
 lc_with_bonds&lt;-lc_clean %&gt;%
   left_join(bond_prices, by = c(&quot;issue_d&quot; = &quot;Date2&quot;)) %&gt;%
@@ -1177,10 +1187,10 @@ lc_with_bonds&lt;-lc_clean %&gt;%
 # investigate graphically if there is a relationship 
 lc_with_bonds%&gt;%
   ggplot(aes(x=int_rate, y=Price))+geom_point(size=0.1, alpha=0.5)+geom_smooth(method=&quot;lm&quot;)</code></pre>
-<p><img src="project-01_files/figure-html/bond%20yields-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/bond%20yields-2.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>lc_with_bonds%&gt;%
   ggplot(aes(x=int_rate, y=Price, color=grade))+geom_point(size=0.1, alpha=0.5)+geom_smooth(method=&quot;lm&quot;)</code></pre>
-<p><img src="project-01_files/figure-html/bond%20yields-3.png" width="648" style="display: block; margin: auto;" /></p>
+<p><img src="/portfolio/project-01_files/figure-html/bond%20yields-3.png" width="648" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#let&#39;s train a model using the bond information
 
 
