@@ -33,9 +33,9 @@ from sklearn import preprocessing
 
 df = pd.read_csv('titanic.csv')
 
-#Explore the data
+# Explore the data
 
-#Check top 10 rows of the dataframe
+# Check top 10 rows of the dataframe
 df.head(10) 
 '''
    pclass  survived  ...    cabin embarked
@@ -53,7 +53,7 @@ df.head(10)
 [10 rows x 11 columns]
 '''
 
-#Display names of the columns
+# Display names of the columns
 df.columns
 '''
 Index(['pclass', 'survived', 'name', 'sex', 'age', 'sibsp', 'parch', 'ticket', 'fare', 'cabin', 'embarked'], 
@@ -61,7 +61,7 @@ Index(['pclass', 'survived', 'name', 'sex', 'age', 'sibsp', 'parch', 'ticket', '
 
 '''
 
-#Display data types of each column
+# Display data types of each column
 df.dtypes
 '''
 pclass        int64
@@ -78,8 +78,8 @@ embarked     object
 dtype: object
 '''
 
-#Summary statistics
-#Maximum values for all the columns
+# Summary statistics
+# Maximum values for all the columns
 maxi = df.max()
 print('The maximum values for each column are:\n' + str(maxi))
 '''
@@ -96,7 +96,7 @@ fare                            512.329
 dtype: object
 '''
 
-#Minimum values for all the columns
+# Minimum values for all the columns
 mini = df.min()
 print('The minimum values for each column are:\n' + str(mini))
 '''
@@ -112,7 +112,7 @@ ticket                   110152
 fare                          0
 dtype: object
 '''
-#Search for NaN values in each column
+# Search for NaN values in each column
 df.isnull().sum()
 
 '''
@@ -134,7 +134,7 @@ I will later take care of them using interpolation.
 '''
 
 
-#Drop two columns that will not be useful for the model - sibsp & ticket
+# Drop two columns that will not be useful for the model - sibsp & ticket
 df.drop(['ticket', 'embarked'], axis = 1, inplace = True)
 
 # Examine survival based on gender
@@ -152,7 +152,7 @@ Name: survived, dtype: float64
 # DATA PRE-PROCESSING
 # Encode 'sex' column to be female - 0, and male - 1 
 
-#Display top 5 rows of the column
+# Display top 5 rows of the column
 df.sex.head(5)
 '''
 0    female
@@ -162,10 +162,10 @@ df.sex.head(5)
 4    female
 Name: sex, dtype: object
 '''
-#Transformation to bool type
+# Transformation to bool type
 df.sex = df.sex == "male"
 
-#Display top 5 rows of the column for confirmation
+ Display top 5 rows of the column for confirmation
 df.sex.head(5)
 '''
 0    False
@@ -178,10 +178,10 @@ Name: sex, dtype: bool
 
 # Extract only titles from names
 
-#Disply top 5 rows of the column 'name'
+# Disply top 5 rows of the column 'name'
 df.name.head(5)
 
-#Extract the titles and display unique values
+# Extract the titles and display unique values
 titles = df.name.str.extract(pat = '([A-Za-z]+)\.').copy()
 titles = np.unique(titles)
 print(titles)
@@ -195,10 +195,10 @@ type(titles)
 '''
 numpy.ndarray
 '''
-#Overwrite 'name' column values
+# Overwrite 'name' column values
 df.name = df.name.str.extract(pat = '([A-Za-z]+)\.')
 
-#Disply 5 rows of the column 'name' for confirmation
+# Disply 5 rows of the column 'name' for confirmation
 df.name.head(5)
 '''
 0      Miss
@@ -224,7 +224,7 @@ for titles in df['name'].unique():
         s.sort_index().plot(kind = 'pie', colors = [col[i]])
     counter += 1
   
-#Indepth look at the class survival
+# Indepth look at the class survival
 survivalTitles = s = df.groupby(['name', 'survived']).agg({'survived': 'count'})
 sirvivalinTitle = df.groupby(['name']).agg({'survived': 'count'})
 finalTitles = survivalTitles.div(sirvivalinTitle, level='name') * 100
@@ -259,14 +259,14 @@ Rev      0         100.000000
 Sir      1         100.000000
 
 '''
-#Interpolate missing age entries in the ‘age’ column.
+# Interpolate missing age entries in the ‘age’ column.
 gp = df.groupby('name') #Group the data by title
 val = gp.transform('median').age #Find the median value for each title
 df['age'].fillna(val, inplace = True) #Fill in missing values
 
 
 
-#Check if the age missing values were fixed
+# Check if the age missing values were fixed
 df.isnull().sum()
 
 '''
@@ -284,9 +284,9 @@ embarked       2
 dtype: int64
 '''
 
-#Change titles to numbers
+# Change titles to numbers
 
-#Check the median of age by title
+# Check the median of age by title
 df.groupby('name').age.median()
 '''
 name
@@ -310,7 +310,7 @@ Rev         41.5
 Sir         49.0
 Name: age, dtype: float64
 '''
-#Count hoe many passengers hold each title
+# Count hoe many passengers hold each title
 df.groupby(['name'])['name'].count()
 '''
 name
@@ -357,7 +357,7 @@ df['name'] = df['name'].replace(['Master'],5)
 df['name'] = df['name'].replace(['Sir', 'Don', 'Dr'],6)
 df['name'] = df['name'].replace(['Major','Col'],7)
 df['name'] = df['name'].replace(['Mrs'],8)
-#Checking for female Doctor
+# Checking for female Doctor
 df.loc[df['name'] == 6, 'sex']
 '''
 40     True
@@ -375,7 +375,7 @@ Name: sex, dtype: bool
 df['name'][181] = 8
 
 
-#Check unique values for titles
+# Check unique values for titles
 df.name.unique()
 '''
 array([2, 5, 4, 8, 7, 6, 0, 3, 1])
@@ -387,7 +387,7 @@ gp = df.groupby('pclass') #Group the data by class
 val = gp.transform('median').fare #Find the median value for each title
 df['fare'].fillna(val, inplace = True) #Fill in missing values
 
-#Check if the ticket fare missing values were fixed
+# Check if the ticket fare missing values were fixed
 df.isnull().sum()
 '''
 pclass         0
@@ -403,51 +403,51 @@ dtype: int64
 '''
 
 
-#Replace 'cabin' identification by only one letter
+# Replace 'cabin' identification by only one letter
 df.cabin.unique()
 
 cabinClass= df.cabin.str.extract(pat = '([A-Z])').copy()
 print(cabinClass)
 
-#Overwrite 'name' column values
+# Overwrite 'name' column values
 df.cabin = df.cabin.str.extract(pat = '([A-Z])')
 
-#Check the unique values for now
+# Check the unique values for now
 df.cabin.unique()
 '''
 array(['B', 'C', 'E', 'D', 'A', nan, 'T', 'F', 'G'], dtype=object)
 '''
 
-#Fill the missing values with 'Z'
+# Fill the missing values with 'Z'
 df.cabin = df['cabin'].fillna(value = 'Z')
 
 
-#Check the unique values after filling missing values
+# Check the unique values after filling missing values
 df.cabin.unique()
 '''
 array(['B', 'C', 'E', 'D', 'A', 'Z', 'T', 'F', 'G'], dtype=object)
 '''
 
-#Change to numeric values
+# Change to numeric values
 df['cabin'] = LabelEncoder().fit_transform(df['cabin'].astype(str))
 
-#Check the unique values
+# Check the unique values
 df['cabin'].unique()
 '''
 array([1, 2, 4, 3, 0, 8, 7, 5, 6])
 '''
-#Numeric values
+# Numeric values
 
-#Examine the unique values in the 'sibsp' column
+# Examine the unique values in the 'sibsp' column
 df.sibsp.unique()
 '''
 array([0, 1, 2, 3, 4, 5, 8])
 
 '''
-#Only numeric values
+# Only numeric values
 
 
-#Make sure there are not any more missing values in the dataframe
+# Make sure there are not any more missing values in the dataframe
 df.isnull().sum()
 '''
 pclass      0
@@ -464,7 +464,7 @@ dtype: int64
 
 
 
-#Make sure there are not any more missing values in the dataframe
+# Make sure there are not any more missing values in the dataframe
 df.isnull().sum()
 '''
 pclass      0
@@ -480,16 +480,16 @@ dtype: int64
 '''
 
 
-#No more missing values in the data set
+# No more missing values in the data set
 
 ## machine learning algo training and testing
 # seed random number generator for reproducible results
 random.seed(1234)
 
-#Split the data into features and label (true outcome, i.e. survived)
+# Split the data into features and label (true outcome, i.e. survived)
 label = df['survived'] #initialise feature
 feature = df.drop(['survived'], axis=1)  #initalise feature
-#Sanity check
+# Sanity check
 label
 '''
        1
@@ -509,22 +509,22 @@ feature.columns
 '''
 Index(['pclass', 'name', 'sex', 'age', 'sibsp', 'parch', 'fare', 'cabin'], dtype='object')
 '''
-#Split the data & make sure it is randomised (shuffle=True)
+# Split the data & make sure it is randomised (shuffle=True)
 random.seed(1234)
 X_train, X_test, y_train, y_test = train_test_split(feature, label, test_size = 0.25,shuffle = True)
 
-#Scale the data
+# Scale the data
 X_train_scaled = preprocessing.scale(X_train, with_mean = True, with_std = True)
 scaler = preprocessing.StandardScaler().fit(X_train) #scaler to sclae the test data as well
 
-#Sanity check
+# Sanity check
 X_train_scaled[0]
 '''
 array([ 0.8273289 , -0.12183624,  0.73980985, -0.02862179, -0.47325356,
        -0.45944255, -0.49725754,  0.50891413])
 '''
 
-#Standardise X_test
+# Standardise X_test
 X_test_scaled = scaler.transform(X_test)
 
 X_test_scaled[0]
