@@ -10,11 +10,6 @@ type: portfolio
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Author : AGNIESZKA PRAWDA
-Year   : 2020
-Individual Assignment Answers: Predicting Survival of Titanic Passengers
-"""
 
 #%% IMPORT LIBRARIES
 import numpy as np
