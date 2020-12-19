@@ -31,6 +31,15 @@ from sklearn.preprocessing import LabelEncoder from sklearn.neural_network impor
     </item>
     
     <item>
+      <title>Estimation Engine for London House Prices</title>
+      <link>/portfolio/project-10/</link>
+      <pubDate>Thu, 10 Dec 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/portfolio/project-10/</guid>
+      <description>div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}  Introduction and learning objectives The purpose of this exercise is to build an estimation engine to guide investment decisions in London house market.</description>
+    </item>
+    
+    <item>
       <title>Building Recommendation Systems for BBC iPlayer users</title>
       <link>/portfolio/project-07/</link>
       <pubDate>Wed, 02 Dec 2020 15:58:10 +0600</pubDate>
@@ -120,15 +129,6 @@ from sklearn.preprocessing import LabelEncoder from sklearn.neural_network impor
       
       <guid>/2015-07-23-r-rmarkdown/</guid>
       <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.</description>
-    </item>
-    
-    <item>
-      <title>Estimation Engine for London House Prices</title>
-      <link>/portfolio/project-10/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/portfolio/project-10/</guid>
-      <description>div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}  Introduction and learning objectives The purpose of this exercise is to build an estimation engine to guide investment decisions in London house market.</description>
     </item>
     
   </channel>

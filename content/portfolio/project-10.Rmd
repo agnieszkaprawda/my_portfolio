@@ -1,7 +1,7 @@
 ---
 category:
 - Big Data & Data Science
-date: "2020-17-11T15:58:10+06:00"
+date: "2020-12-10T15:58:10+06:00"
 image: images/projects/londonhouse1.png
 project_images:
 title: Estimation Engine for London House Prices 
