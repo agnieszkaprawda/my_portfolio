@@ -2,9 +2,9 @@
 category:
 - Machine Learning in R
 date: "2020-12-15T15:58:10+06:00"
-image: images/projects/lendingclub3.jpg
+image: images/projects/pca1.png
 project_images:
-title: PCA and LDA training
+title: Cars clustering using dimension reduction methods - PCA and LDA
 type: portfolio
 ---
 ```{r, setup, include=FALSE}
