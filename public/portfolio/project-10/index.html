@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+  <meta charset="utf-8" />
+  <title>Estimation Engine for London House Prices</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  
+  <meta name="author" content="StaticMania">
+  
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <!-- Bootstrap -->
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <!-- font-awesome -->
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css" />
+  <!-- Main Stylesheets -->
+  
+  <link href="/scss/style.min.css" rel="stylesheet" />
+
+  
+  <link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon" />
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+</head><body><nav class="navbar navbar-expand-lg site-navigation">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <img src="/images/logo.png" alt="logo" />
+    </a>
+    <button
+      class="navbar-toggler collapsed"
+      type="button"
+      data-toggle="collapse"
+      data-target="#sitenavbar"
+    >
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenavbar">
+      <ul class="navbar-nav ml-auto main-nav">
+         
+         
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/"
+              >Home</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/portfolio"
+              >Portfolio</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/blog"
+              >Other Projects</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a
+              class="nav-link btn btn-sm btn-primary btn-sm-rounded"
+              href="/contact"
+            >
+              <span class="btn-area">
+                <span data-text="Get in touch">
+                  Get in touch
+                </span>
+              </span>
+            </a>
+          </li>
+           
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+<main>
+
+<section class="site-project-single-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="site-project-single">
+          <h1>
+            Estimation Engine for London House Prices
+          </h1>
+          <div class="site-project-single-description">
+            
+
+
+<style>
+div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+<div id="introduction-and-learning-objectives" class="section level1">
+<h1>Introduction and learning objectives</h1>
+<div class="navy1">
+<p>The purpose of this exercise is to build an estimation engine to guide investment decisions in London house market. I will first build machine learning algorithms (and tune them) to estimate the house prices given variety of information about each property. Then, using my algorithm, I will choose 200 houses to invest in out of about 2000 houses on the market at the moment.</p>
+<p><b>Objectives</b></p>
+<ol type="i">
+<li>
+Using different data mining algorithms for prediction.
+</li>
+<li>
+Dealing with large data sets
+</li>
+<li>
+Tuning data mining algorithms
+</li>
+<li>
+Interpreting data mining algorithms and deducing importance of variables
+</li>
+<li>
+Using results of data mining algorithms to make business decisions
+</li>
+</ol>
+</div>
+</div>
+<div id="load-data" class="section level1">
+<h1>Load data</h1>
+<p>There are two sets of data, i) training data that has the actual prices ii) out of sample data that has the asking prices. I will now load both data sets.</p>
+<p>I will make sure to understand what information each column contains. Note that not all information provided might be useful in predicting house prices, but do not make any assumptions before you decide what information you use in your prediction algorithms.</p>
+<pre class="r"><code>#reading in the data
+london_house_prices_2019_training&lt;-read_csv(&quot;~/Documents/LBS/Data Science/Session 10/workshop/training_data_assignment_with_prices.csv&quot;)
+london_house_prices_2019_out_of_sample&lt;-read_csv(&quot;~/Documents/LBS/Data Science/Session 10/workshop/test_data_assignment.csv&quot;)
+
+#fixing the dates
+london_house_prices_2019_out_of_sample&lt;- london_house_prices_2019_out_of_sample %&gt;% 
+  mutate(date=as.Date(date))
+
+london_house_prices_2019_training&lt;- london_house_prices_2019_training %&gt;% 
+  mutate(date=as.Date(date))
+
+#changing characters to factors
+london_house_prices_2019_out_of_sample &lt;- london_house_prices_2019_out_of_sample %&gt;% mutate_if(is.character, as.factor)
+
+london_house_prices_2019_training &lt;- london_house_prices_2019_training %&gt;% mutate_if(is.character, as.factor)
+
+
+#making sure out of sample data and training data have the same number of factors
+a&lt;-union(levels(london_house_prices_2019_training$postcode_short),levels(london_house_prices_2019_out_of_sample$postcode_short))
+london_house_prices_2019_training$postcode_short&lt;- factor(london_house_prices_2019_training$postcode_short,levels=a)
+london_house_prices_2019_out_of_sample$postcode_short&lt;-factor(london_house_prices_2019_out_of_sample$postcode_short, levels=a)
+
+b&lt;-union(levels(london_house_prices_2019_training$water_company),levels(london_house_prices_2019_out_of_sample$water_company))
+london_house_prices_2019_training$water_company&lt;- factor(london_house_prices_2019_training$water_company,levels=b)
+london_house_prices_2019_out_of_sample$water_company&lt;-factor(london_house_prices_2019_out_of_sample$water_company, levels=b)
+
+c&lt;-union(levels(london_house_prices_2019_training$nearest_station),levels(london_house_prices_2019_out_of_sample$nearest_station))
+london_house_prices_2019_training$nearest_station&lt;- factor(london_house_prices_2019_training$nearest_station,levels=c)
+london_house_prices_2019_out_of_sample$nearest_station&lt;-factor(london_house_prices_2019_out_of_sample$nearest_station, levels=c)
+
+d&lt;-union(levels(london_house_prices_2019_training$district),levels(london_house_prices_2019_out_of_sample$district))
+london_house_prices_2019_training$district&lt;- factor(london_house_prices_2019_training$district,levels=d)
+london_house_prices_2019_out_of_sample$district&lt;-factor(london_house_prices_2019_out_of_sample$district, levels=d)
+
+
+#take a quick look at what&#39;s in the data
+str(london_house_prices_2019_training)</code></pre>
+<pre><code>## tibble [13,998 × 37] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ ID                          : num [1:13998] 2 3 4 5 7 8 9 10 11 12 ...
+##  $ date                        : Date[1:13998], format: &quot;2019-11-01&quot; &quot;2019-08-08&quot; ...
+##  $ postcode                    : Factor w/ 12635 levels &quot;BR1 1AB&quot;,&quot;BR1 1LR&quot;,..: 10897 11027 11264 2031 11241 11066 421 9594 9444 873 ...
+##  $ property_type               : Factor w/ 4 levels &quot;D&quot;,&quot;F&quot;,&quot;S&quot;,&quot;T&quot;: 2 2 3 2 3 2 1 4 4 2 ...
+##  $ whether_old_or_new          : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ freehold_or_leasehold       : Factor w/ 2 levels &quot;F&quot;,&quot;L&quot;: 2 2 1 2 1 2 1 1 1 2 ...
+##  $ address1                    : Factor w/ 2825 levels &quot;1&quot;,&quot;1 - 2&quot;,&quot;1 - 3&quot;,..: 2503 792 253 789 569 234 264 418 5 274 ...
+##  $ address2                    : Factor w/ 434 levels &quot;1&quot;,&quot;10&quot;,&quot;101&quot;,..: 372 NA NA NA NA NA NA NA NA NA ...
+##  $ address3                    : Factor w/ 8543 levels &quot;ABBERTON WALK&quot;,..: 6990 6821 3715 2492 4168 2879 3620 5251 6045 6892 ...
+##  $ town                        : Factor w/ 133 levels &quot;ABBEY WOOD&quot;,&quot;ACTON&quot;,..: NA NA NA 78 NA NA NA NA NA NA ...
+##  $ local_aut                   : Factor w/ 69 levels &quot;ASHFORD&quot;,&quot;BARKING&quot;,..: 36 46 24 36 24 46 65 36 36 17 ...
+##  $ county                      : Factor w/ 33 levels &quot;BARKING AND DAGENHAM&quot;,..: 22 27 18 25 18 27 5 27 32 8 ...
+##  $ postcode_short              : Factor w/ 248 levels &quot;BR1&quot;,&quot;BR2&quot;,&quot;BR3&quot;,..: 190 194 198 28 198 194 4 169 167 8 ...
+##  $ current_energy_rating       : Factor w/ 6 levels &quot;B&quot;,&quot;C&quot;,&quot;D&quot;,&quot;E&quot;,..: 4 3 3 4 3 2 4 3 4 2 ...
+##  $ total_floor_area            : num [1:13998] 30 50 100 39 88 101 136 148 186 65 ...
+##  $ number_habitable_rooms      : num [1:13998] 2 2 5 2 4 4 6 6 6 3 ...
+##  $ co2_emissions_current       : num [1:13998] 2.3 3 3.7 2.8 3.9 3.1 8.1 5.6 10 1.5 ...
+##  $ co2_emissions_potential     : num [1:13998] 1.7 1.7 1.5 1.1 1.4 1.4 4.1 2 6.1 1.5 ...
+##  $ energy_consumption_current  : num [1:13998] 463 313 212 374 251 175 339 216 308 128 ...
+##  $ energy_consumption_potential: num [1:13998] 344 175 82 144 90 77 168 75 186 128 ...
+##  $ windows_energy_eff          : Factor w/ 5 levels &quot;Average&quot;,&quot;Good&quot;,..: 1 1 1 5 1 1 1 1 5 1 ...
+##  $ tenure                      : Factor w/ 3 levels &quot;owner-occupied&quot;,..: 1 2 1 2 1 1 1 2 1 1 ...
+##  $ latitude                    : num [1:13998] 51.5 51.5 51.5 51.6 51.5 ...
+##  $ longitude                   : num [1:13998] -0.1229 -0.2828 -0.4315 0.0423 -0.4293 ...
+##  $ population                  : num [1:13998] 34 75 83 211 73 51 25 91 60 97 ...
+##  $ altitude                    : num [1:13998] 8 9 25 11 21 11 95 7 7 106 ...
+##  $ london_zone                 : num [1:13998] 1 3 5 3 6 6 3 2 2 3 ...
+##  $ nearest_station             : Factor w/ 594 levels &quot;abbey road&quot;,&quot;abbey wood&quot;,..: 478 358 235 319 180 502 566 30 32 566 ...
+##  $ water_company               : Factor w/ 5 levels &quot;Affinity Water&quot;,..: 5 5 1 5 1 5 5 5 5 5 ...
+##  $ average_income              : num [1:13998] 57200 61900 50600 45400 49000 56200 57200 65600 50400 52300 ...
+##  $ district                    : Factor w/ 33 levels &quot;Barking and Dagenham&quot;,..: 22 27 18 26 18 27 5 27 32 8 ...
+##  $ price                       : num [1:13998] 360000 408500 499950 259999 395000 ...
+##  $ type_of_closest_station     : Factor w/ 3 levels &quot;light_rail&quot;,&quot;rail&quot;,..: 3 2 3 1 3 2 1 3 1 1 ...
+##  $ num_tube_lines              : num [1:13998] 1 0 1 0 1 0 0 2 0 0 ...
+##  $ num_rail_lines              : num [1:13998] 0 1 1 0 1 1 0 0 1 0 ...
+##  $ num_light_rail_lines        : num [1:13998] 0 0 0 1 0 0 1 0 1 1 ...
+##  $ distance_to_station         : num [1:13998] 0.528 0.77 0.853 0.29 1.073 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   date = col_date(format = &quot;&quot;),
+##   ..   postcode = col_character(),
+##   ..   property_type = col_character(),
+##   ..   whether_old_or_new = col_character(),
+##   ..   freehold_or_leasehold = col_character(),
+##   ..   address1 = col_character(),
+##   ..   address2 = col_character(),
+##   ..   address3 = col_character(),
+##   ..   town = col_character(),
+##   ..   local_aut = col_character(),
+##   ..   county = col_character(),
+##   ..   postcode_short = col_character(),
+##   ..   current_energy_rating = col_character(),
+##   ..   total_floor_area = col_double(),
+##   ..   number_habitable_rooms = col_double(),
+##   ..   co2_emissions_current = col_double(),
+##   ..   co2_emissions_potential = col_double(),
+##   ..   energy_consumption_current = col_double(),
+##   ..   energy_consumption_potential = col_double(),
+##   ..   windows_energy_eff = col_character(),
+##   ..   tenure = col_character(),
+##   ..   latitude = col_double(),
+##   ..   longitude = col_double(),
+##   ..   population = col_double(),
+##   ..   altitude = col_double(),
+##   ..   london_zone = col_double(),
+##   ..   nearest_station = col_character(),
+##   ..   water_company = col_character(),
+##   ..   average_income = col_double(),
+##   ..   district = col_character(),
+##   ..   price = col_double(),
+##   ..   type_of_closest_station = col_character(),
+##   ..   num_tube_lines = col_double(),
+##   ..   num_rail_lines = col_double(),
+##   ..   num_light_rail_lines = col_double(),
+##   ..   distance_to_station = col_double()
+##   .. )</code></pre>
+<pre class="r"><code>str(london_house_prices_2019_out_of_sample)</code></pre>
+<pre><code>## tibble [1,999 × 37] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ ID                          : num [1:1999] 14434 12562 8866 10721 1057 ...
+##  $ date                        : Date[1:1999], format: NA NA ...
+##  $ postcode                    : logi [1:1999] NA NA NA NA NA NA ...
+##  $ property_type               : Factor w/ 4 levels &quot;D&quot;,&quot;F&quot;,&quot;S&quot;,&quot;T&quot;: 1 2 2 3 4 3 2 3 2 4 ...
+##  $ whether_old_or_new          : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ freehold_or_leasehold       : Factor w/ 2 levels &quot;F&quot;,&quot;L&quot;: 1 2 2 1 1 1 2 1 2 1 ...
+##  $ address1                    : logi [1:1999] NA NA NA NA NA NA ...
+##  $ address2                    : logi [1:1999] NA NA NA NA NA NA ...
+##  $ address3                    : logi [1:1999] NA NA NA NA NA NA ...
+##  $ town                        : Factor w/ 54 levels &quot;ACTON&quot;,&quot;ADDISCOMBE&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ local_aut                   : logi [1:1999] NA NA NA NA NA NA ...
+##  $ county                      : logi [1:1999] NA NA NA NA NA NA ...
+##  $ postcode_short              : Factor w/ 248 levels &quot;BR1&quot;,&quot;BR2&quot;,&quot;BR3&quot;,..: 91 58 37 60 232 159 168 124 187 135 ...
+##  $ current_energy_rating       : Factor w/ 6 levels &quot;B&quot;,&quot;C&quot;,&quot;D&quot;,&quot;E&quot;,..: 3 2 3 3 4 4 4 3 4 3 ...
+##  $ total_floor_area            : num [1:1999] 150 59 58 74 97.3 ...
+##  $ number_habitable_rooms      : num [1:1999] 6 2 2 5 5 5 5 4 2 5 ...
+##  $ co2_emissions_current       : num [1:1999] 7.3 1.5 2.8 3.5 6.5 4.9 5.1 2.9 4.2 4.3 ...
+##  $ co2_emissions_potential     : num [1:1999] 2.4 1.4 1.2 1.2 5.7 1.6 3 0.8 3.2 2.5 ...
+##  $ energy_consumption_current  : num [1:1999] 274 142 253 256 303 309 240 224 458 253 ...
+##  $ energy_consumption_potential: num [1:1999] 89 136 110 80 266 101 140 58 357 143 ...
+##  $ windows_energy_eff          : Factor w/ 5 levels &quot;Average&quot;,&quot;Good&quot;,..: 1 1 1 1 1 1 3 1 3 1 ...
+##  $ tenure                      : Factor w/ 3 levels &quot;owner-occupied&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ latitude                    : num [1:1999] 51.6 51.6 51.5 51.6 51.5 ...
+##  $ longitude                   : num [1:1999] -0.129 -0.2966 -0.0328 -0.3744 -0.2576 ...
+##  $ population                  : num [1:1999] 87 79 23 73 100 24 22 49 65 98 ...
+##  $ altitude                    : num [1:1999] 63 38 17 39 8 46 26 16 14 18 ...
+##  $ london_zone                 : num [1:1999] 4 4 2 5 2 4 3 6 1 3 ...
+##  $ nearest_station             : Factor w/ 594 levels &quot;abbey road&quot;,&quot;abbey wood&quot;,..: 19 546 214 362 516 168 24 519 148 251 ...
+##  $ water_company               : Factor w/ 5 levels &quot;Affinity Water&quot;,..: 5 1 5 1 5 5 5 2 5 5 ...
+##  $ average_income              : num [1:1999] 61300 48900 46200 52200 60700 59600 64000 48100 56600 53500 ...
+##  $ district                    : Factor w/ 33 levels &quot;Barking and Dagenham&quot;,..: 10 4 30 15 18 11 32 16 20 23 ...
+##  $ type_of_closest_station     : Factor w/ 3 levels &quot;light_rail&quot;,&quot;rail&quot;,..: 3 3 1 2 3 2 3 3 3 2 ...
+##  $ num_tube_lines              : num [1:1999] 1 2 0 0 2 0 1 1 2 0 ...
+##  $ num_rail_lines              : num [1:1999] 0 1 0 1 0 1 1 0 0 1 ...
+##  $ num_light_rail_lines        : num [1:1999] 0 1 1 0 0 0 0 1 0 0 ...
+##  $ distance_to_station         : num [1:1999] 0.839 0.104 0.914 0.766 0.449 ...
+##  $ asking_price                : num [1:1999] 750000 229000 152000 379000 930000 350000 688000 386000 534000 459000 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   date = col_logical(),
+##   ..   postcode = col_logical(),
+##   ..   property_type = col_character(),
+##   ..   whether_old_or_new = col_character(),
+##   ..   freehold_or_leasehold = col_character(),
+##   ..   address1 = col_logical(),
+##   ..   address2 = col_logical(),
+##   ..   address3 = col_logical(),
+##   ..   town = col_character(),
+##   ..   local_aut = col_logical(),
+##   ..   county = col_logical(),
+##   ..   postcode_short = col_character(),
+##   ..   current_energy_rating = col_character(),
+##   ..   total_floor_area = col_double(),
+##   ..   number_habitable_rooms = col_double(),
+##   ..   co2_emissions_current = col_double(),
+##   ..   co2_emissions_potential = col_double(),
+##   ..   energy_consumption_current = col_double(),
+##   ..   energy_consumption_potential = col_double(),
+##   ..   windows_energy_eff = col_character(),
+##   ..   tenure = col_character(),
+##   ..   latitude = col_double(),
+##   ..   longitude = col_double(),
+##   ..   population = col_double(),
+##   ..   altitude = col_double(),
+##   ..   london_zone = col_double(),
+##   ..   nearest_station = col_character(),
+##   ..   water_company = col_character(),
+##   ..   average_income = col_double(),
+##   ..   district = col_character(),
+##   ..   type_of_closest_station = col_character(),
+##   ..   num_tube_lines = col_double(),
+##   ..   num_rail_lines = col_double(),
+##   ..   num_light_rail_lines = col_double(),
+##   ..   distance_to_station = col_double(),
+##   ..   asking_price = col_double()
+##   .. )</code></pre>
+<pre class="r"><code>#describe(london_house_prices_2019_training)</code></pre>
+<p>In my predictions, i will not use columns between date:country. For the rest of variables, I will investigate their performance and correlation to price in further steps.</p>
+<pre class="r"><code>#let&#39;s do the initial split
+set.seed(1)
+train_test_split &lt;- initial_split(london_house_prices_2019_training, prop = 0.75) #training set contains 75% of the data
+set.seed(1)
+# Create the training dataset
+train_data &lt;- training(train_test_split)
+# Create the testing dataset
+test_data &lt;- testing(train_test_split)</code></pre>
+</div>
+<div id="visualize-data" class="section level1">
+<h1>Visualize data</h1>
+<p>In this section I will visualise my data. The most useful plots will tackle factor variables from our dataset, as the numeric ones we can examine later on in the correlation matrix.</p>
+<pre class="r"><code>#checking the data once again
+#summary(train_data)
+#glimpse(train_data)
+
+# avg price in districts
+train_data_vis1 &lt;- train_data %&gt;%
+  group_by(district) %&gt;%
+  summarise(avg = mean(price))
+
+
+vis1 &lt;- train_data_vis1 %&gt;%
+  ggplot (aes(y=avg, x=reorder(district,avg))) +
+            geom_col() +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        plot.title = element_text(color = &quot;grey80&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(y=&quot;Price&quot;, x=&quot;London district&quot;) 
+
+vis1</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#avg price vs nearest station
+
+train_data_vis2 &lt;- train_data %&gt;%
+  group_by(nearest_station) %&gt;%
+  summarise(avg = mean(price))
+
+train_data_vis2&lt;-train_data_vis2 %&gt;% 
+    arrange(desc(avg)) %&gt;% 
+    filter(avg&gt;2000000)
+ 
+
+vis2 &lt;- train_data_vis2 %&gt;%
+  ggplot (aes(y=avg, x=reorder(nearest_station,avg))) +
+            geom_col() +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        plot.title = element_text(color = &quot;grey80&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(y=&quot;Price&quot;, x=&quot;Nearest station&quot;) 
+
+
+
+vis2</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Graph showing price in ths in particular property types  in regards to different london zones and station types
+
+train_data_vis3 &lt;- train_data %&gt;%
+  group_by(type_of_closest_station, property_type, london_zone) %&gt;%
+  summarise(avg = mean(price))
+  
+train_data_vis3$property_type&lt;- train_data_vis3$property_type %&gt;% factor(levels=c(&quot;D&quot;,&quot;S&quot;, &quot;T&quot;, &quot;F&quot;))
+
+vis3 &lt;- train_data_vis3 %&gt;%
+  ggplot(aes(y=avg, x=property_type,fill=property_type))+
+  geom_col() +
+  facet_grid(type_of_closest_station~london_zone)+
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;grey40&quot;,size=10,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;)
+                                  )+
+    labs(title=&quot;Average price in regards to proerty types located in \nparticular london zones near specific types of stations&quot;,y=&quot;Price&quot;, x=&quot;Property type&quot;) +
+  scale_fill_discrete(name = &quot;Property type&quot;, labels = c(&quot;Detached&quot;, &quot;Semi-detached&quot;, &quot;Terraced&quot;, &quot;Flat/Masionette&quot;))
+
+vis3</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-3.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># price vs distance to the station &amp; propety_type
+train_data_vis4 &lt;- train_data %&gt;%
+  group_by(property_type, distance_to_station) %&gt;%
+  summarise(avg = mean(price))
+
+vis4 &lt;- train_data_vis4 %&gt;%
+  ggplot(aes(y=avg, x=distance_to_station))+
+  geom_point()+
+  facet_wrap(~property_type)
+
+
+vis4</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-4.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># energy_ratings vs price
+train_data_vis5 &lt;- train_data %&gt;%
+  group_by(current_energy_rating) %&gt;%
+  summarise(avg = mean(price))
+
+vis5 &lt;- train_data_vis5 %&gt;%
+  ggplot(aes(y=avg, x=current_energy_rating))+
+  geom_col()
+
+vis5</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-5.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#correlations
+vis6&lt;- train_data %&gt;% 
+  select(distance_to_station, london_zone, price,) %&gt;% #order variables they will appear in ggpairs()
+  ggpairs(aes(alpha = 0.3))+
+  theme_bw()
+
+vis6</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-6.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#price vs water_provider
+train_data_vis7 &lt;- train_data %&gt;%
+  group_by(water_company) %&gt;%
+  summarise(avg = mean(price))
+
+
+vis7 &lt;- train_data_vis7 %&gt;%
+  ggplot (aes(y=avg, x=reorder(water_company,avg))) +
+            geom_col() +
+  coord_flip()
+
+vis7</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-7.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#price vs freehold_or_leasehold
+train_data_vis8 &lt;- train_data %&gt;%
+  group_by(freehold_or_leasehold) %&gt;%
+  summarise(avg = mean(price))
+
+
+vis8 &lt;- train_data_vis8 %&gt;%
+  ggplot (aes(y=avg, x=reorder(freehold_or_leasehold,avg))) +
+            geom_col() +
+  coord_flip()
+
+vis8</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-8.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#price vs windows_energy_eff 
+train_data_vis9 &lt;- train_data %&gt;%
+  group_by(windows_energy_eff) %&gt;%
+  summarise(avg = mean(price))
+
+
+vis9 &lt;- train_data_vis9 %&gt;%
+  ggplot (aes(y=avg, x=reorder(windows_energy_eff,avg))) +
+            geom_col() +
+  coord_flip()
+
+vis9</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-9.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#price vs tenure  
+train_data_vis10 &lt;- train_data %&gt;%
+  group_by(tenure ) %&gt;%
+  summarise(avg = mean(price))
+
+
+vis10 &lt;- train_data_vis10 %&gt;%
+  ggplot (aes(y=avg, x=reorder(tenure ,avg))) +
+            geom_col() +
+  coord_flip()
+
+vis10</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-10.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#postcode_short
+train_data_vis11 &lt;- train_data %&gt;%
+  group_by(postcode_short) %&gt;%
+  summarise(avg = mean(price)) %&gt;% 
+  arrange(desc(avg)) %&gt;% 
+  filter(avg&gt;2000000)
+
+
+vis11&lt;- train_data_vis11 %&gt;%
+  ggplot (aes(y=avg, x=reorder(postcode_short,avg))) +
+            geom_col() +
+  coord_flip()+
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        plot.title = element_text(color = &quot;grey80&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(y=&quot;Price&quot;, x=&quot;Postcode short version&quot;) 
+
+vis11</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-11.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>train_data_vis12 &lt;- train_data %&gt;%
+  group_by(total_floor_area,london_zone) %&gt;%
+  summarise(avg = mean(price)) %&gt;% 
+  arrange(desc(avg))
+
+vis12&lt;-train_data_vis12%&gt;%
+  ggplot(aes(x=total_floor_area, y=avg))+
+  geom_smooth() +
+  facet_wrap(~london_zone)+
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        strip.text= element_text(family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        axis.ticks.length = unit(.20, &quot;cm&quot;),
+        plot.title = element_text(color = &quot;grey40&quot;,size=10,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.caption = element_text(color = &quot;grey40&quot;, face=&quot;italic&quot;,size= 7,family= &quot;Montserrat&quot;,hjust=0),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.text=element_text(family=&quot;Montserrat&quot;, size=7),
+        legend.title=element_text(family=&quot;Montserrat&quot;, size=8, face=&quot;bold&quot;))+
+    labs(title= &quot;Changes in average Price in regards to total floor area &amp; london_zone&quot;, y=&quot;Price&quot;, x=&quot;Total floor area in particular London zone&quot;) 
+                   
+
+vis12</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/visualize-12.png" width="648" style="display: block; margin: auto;" /></p>
+<div id="learnings-from-visualisations" class="section level3">
+<h3>Learnings from visualisations:</h3>
+<p>It seems that the price of houses located in the most distinguished districts in London is significantly affected and much higher than in other districts - the same trend tackles the most popular and best located tube stations and postcodes_short.. Therefore, I will create three new varaibles in my data:
+- is_district - that will have value “TRUE” for the most expensive districts and “FALSE” for the rest
+- is_station - that will take the value “TRUE” for the station where house price was above 2,000,000.
+- is_postcode - that will take the value “TRUE” for the postcode_short where house price exceeded 2,000,000.</p>
+<p>Additionally, we can learn from the visualisations, that property_type and distance to the station combined also have a significant influence on the price. Also, london_zone and distance_to_station seem to be interconnected.</p>
+<p>When in comes to such variables as “current_energy_rating”, “freehold_or_leasehold”, or“tenure”, we will need to deduct from the further models if any values are really significant for estimating the price or not.</p>
+<p>From the graphs, we can deduct that for “water_company” and “windows_energy_eff” only one value of each variable seems to affect the price significantly. We will further exemine it in the next steps.</p>
+</div>
+</div>
+<div id="feature-engineering" class="section level1">
+<h1>Feature engineering</h1>
+<p>I will now add new variables to my dayaset basing on what I found in the section above.</p>
+<pre class="r"><code>#Adding variable &quot;is station&quot; for stations beloning to the one near which the price of a property sis significantly bigger (assumption: over 2,000,000)
+train_data&lt;- train_data %&gt;% 
+mutate(is_station = ifelse(nearest_station == &quot;hyde park corner&quot; | 
+                             nearest_station == &quot;   knightsbridge&quot; |
+                             nearest_station == &quot;south kensington&quot; |
+                             nearest_station == &quot;   holland park&quot; |
+                             nearest_station == &quot;bond street&quot;|
+                             nearest_station == &quot;regents park&quot;|
+                             nearest_station == &quot;high street kensington&quot;|
+                             nearest_station == &quot;gloucester road&quot;|
+                             nearest_station == &quot;sloane square&quot;, TRUE, FALSE ))
+
+test_data&lt;- test_data %&gt;% 
+mutate(is_station = ifelse(nearest_station == &quot;hyde park corner&quot; | 
+                             nearest_station == &quot;   knightsbridge&quot; |
+                             nearest_station == &quot;south kensington&quot; |
+                             nearest_station == &quot;   holland park&quot; |
+                             nearest_station == &quot;bond street&quot;|
+                             nearest_station == &quot;regents park&quot;|
+                             nearest_station == &quot;high street kensington&quot;|
+                             nearest_station == &quot;gloucester road&quot;|
+                             nearest_station == &quot;sloane square&quot;, TRUE, FALSE ))
+
+london_house_prices_2019_out_of_sample&lt;- london_house_prices_2019_out_of_sample %&gt;% 
+mutate(is_station = ifelse(nearest_station == &quot;hyde park corner&quot; | 
+                             nearest_station == &quot;   knightsbridge&quot; |
+                             nearest_station == &quot;south kensington&quot; |
+                             nearest_station == &quot;   holland park&quot; |
+                             nearest_station == &quot;bond street&quot;|
+                             nearest_station == &quot;regents park&quot;|
+                             nearest_station == &quot;high street kensington&quot;|
+                             nearest_station == &quot;gloucester road&quot;|
+                             nearest_station == &quot;sloane square&quot;, TRUE, FALSE ))
+
+
+#Adding a variable is_district with 5 most expensive districts in London
+train_data&lt;- train_data %&gt;% 
+mutate(is_district = ifelse(district == &quot;Kensington and Chelsea&quot; |
+                              district == &quot;Westminster&quot; |
+                              district == &quot;Hammersmith and Fulham&quot; |
+                              district == &quot;Camden&quot; |
+                              district == &quot;Richmond upon Thames&quot;, TRUE, FALSE ))
+
+test_data&lt;- test_data %&gt;% 
+mutate(is_district = ifelse(district == &quot;Kensington and Chelsea&quot; |
+                              district == &quot;Westminster&quot; |
+                              district == &quot;Hammersmith and Fulham&quot; |
+                              district == &quot;Camden&quot; |
+                              district == &quot;Richmond upon Thames&quot;, TRUE, FALSE ))
+
+
+london_house_prices_2019_out_of_sample&lt;- london_house_prices_2019_out_of_sample %&gt;% 
+mutate(is_district = ifelse(district == &quot;Kensington and Chelsea&quot; |
+                              district == &quot;Westminster&quot; |
+                              district == &quot;Hammersmith and Fulham&quot; |
+                              district == &quot;Camden&quot; |
+                              district == &quot;Richmond upon Thames&quot;, TRUE, FALSE ))
+
+#Adding a variable is_postcode with 6 most expensive postcodes in London
+train_data&lt;- train_data %&gt;% 
+mutate(is_postcode = ifelse(postcode_short == &quot;W1B&quot; | 
+                             postcode_short == &quot;    SW1X&quot; |
+                             postcode_short == &quot;W1K&quot; |
+                             postcode_short == &quot;SW1W&quot; |
+                             postcode_short == &quot;W8&quot;|
+                             postcode_short == &quot;S3&quot;|
+                              postcode_short == &quot;W11&quot;, TRUE, FALSE ))
+
+test_data&lt;- test_data %&gt;% 
+mutate(is_postcode = ifelse(postcode_short == &quot;W1B&quot; | 
+                             postcode_short == &quot;    SW1X&quot; |
+                             postcode_short == &quot;W1K&quot; |
+                             postcode_short == &quot;SW1W&quot; |
+                             postcode_short == &quot;W8&quot;|
+                             postcode_short == &quot;S3&quot;|
+                              postcode_short == &quot;W11&quot;, TRUE, FALSE ))
+
+london_house_prices_2019_out_of_sample&lt;- london_house_prices_2019_out_of_sample %&gt;% 
+mutate(is_postcode = ifelse(postcode_short == &quot;W1B&quot; | 
+                             postcode_short == &quot;    SW1X&quot; |
+                             postcode_short == &quot;W1K&quot; |
+                             postcode_short == &quot;SW1W&quot; |
+                             postcode_short == &quot;W8&quot;|
+                             postcode_short == &quot;S3&quot;|
+                              postcode_short == &quot;W11&quot;, TRUE, FALSE ))</code></pre>
+</div>
+<div id="distribution-of-dependent-variable" class="section level1">
+<h1>Distribution of dependent variable</h1>
+<p>I will now check the distirbution of the “price” variable to check if it follows the Normal distribution.</p>
+<pre class="r"><code>#distribution of price 
+train_data %&gt;% 
+  ggplot(aes(x=price))+
+  geom_histogram()+
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        plot.title = element_text(color = &quot;grey80&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(x=&quot;Price&quot;, y=&quot;Count&quot;) </code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#distirbution of log price
+train_data %&gt;% 
+  ggplot(aes(x=log(price)))+
+  geom_histogram()+
+  theme_bw() +
+  theme(panel.grid.major.y = element_line(color = &quot;gray60&quot;, size = 0.1),
+        panel.background = element_rect(fill = &quot;white&quot;, colour = &quot;white&quot;),
+        axis.line = element_line(size = 1, colour = &quot;grey80&quot;),
+        axis.ticks = element_line(size = 3,colour = &quot;grey80&quot;),
+        plot.title = element_text(color = &quot;grey80&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(x=&quot;Log Price&quot;, y=&quot;Count&quot;)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-2-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#train_data_log &lt;- train_data %&gt;% 
+#  mutate(log_price=log(price))</code></pre>
+<p>Price variable is highly right-skewed. For sake of this exercise I will not run the algorithm on the log price as the stack algorithm can use only one dependent variable. Tree based models that I will build in further steps can handle such a distribution much better and possibly will perform even better for price than for log(price). Therefore, to stay consistent, I will stick to “price” for all my models.</p>
+</div>
+<div id="numeric-variables" class="section level1">
+<h1>Numeric variables</h1>
+<p>I will now estimate a correlation table between prices and other continuous variables.</p>
+<pre class="r"><code># produce a correlation table using GGally::ggcor()
+# this takes a while to plot
+
+
+#let&#39;s remember these are only correlations for numeric variables - the correlations for factor data can be also strongly related, what we could observe in the graphs before
+
+train_data %&gt;% 
+  select(-ID) %&gt;% #keep Y variable last
+  ggcorr(method = c(&quot;pairwise&quot;, &quot;pearson&quot;), layout.exp = 2,label_round=2, label = TRUE,label_size = 2,hjust = 1,nbreaks = 5,size = 2,angle = -20)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/correlation%20table-1.png" width="648" style="display: block; margin: auto;" />
+Variables that are most correlated with “price” variable are: average_income, london_zone, co2_emissions_current, co2_emissions_potential, number_habitable_rooms and total_floor_area. Nevertheless, let’s keep in mind, that pairs: co2_emissions_current &amp; co2_emissions_potential and number_habitable_rooms &amp; total_floor_area are highly correlated. In my models i will as well investigate interactions of variables that have a reasonable explanation and are very weakly correlated.</p>
+</div>
+<div id="fit-a-linear-regression-model" class="section level1">
+<h1>Fit a linear regression model</h1>
+<p>First linear model comes from the workshop. I will build on it in future models.</p>
+<div id="model-1" class="section level2">
+<h2>Model 1</h2>
+<pre class="r"><code># creating the control for all my future models - it needs to be the same for all of them in order to be able to stack them togehter in the end
+CVfolds=15
+
+indexProbs=createMultiFolds(train_data$price,times=1)
+control &lt;- trainControl(method = &quot;cv&quot;, number = CVfolds, returnResamp = &quot;final&quot;, 
+                     savePredictions = &quot;final&quot;,  # needs to be final or all
+                     index = indexProbs, sampling=NULL)
+#we are going to train the model and report the results using k-fold cross validation
+#set.seed(1)
+#model1_lm&lt;-train(
+#    price ~ distance_to_station +water_company+property_type+whether_old_or_new+freehold_or_leasehold+latitude+ longitude,
+#    train_data,
+#   method = &quot;lm&quot;,
+#    trControl = control
+#   )
+
+# summary of the results
+#summary(model1_lm)</code></pre>
+</div>
+<div id="model-2" class="section level2">
+<h2>Model 2</h2>
+<pre class="r"><code>#we are going to train the model and report the results using k-fold cross validation
+#set.seed(1)
+#model2_lm&lt;-train(
+#    price ~ total_floor_area+ number_habitable_rooms+ co2_emissions_current+co2_emissions_potential +average_income+ #longitude+num_tube_lines+num_rail_lines+distance_to_station,
+#    train_data,
+#  method = &quot;lm&quot;,
+#    trControl = control
+#   )
+
+# summary of the results
+#summary(model2_lm)</code></pre>
+</div>
+<div id="model-3" class="section level2">
+<h2>Model 3</h2>
+<pre class="r"><code>#we are going to train the model and report the results using k-fold cross validation
+#set.seed(1)
+#model3_lm&lt;-train(
+#    price ~ total_floor_area+ number_habitable_rooms+ co2_emissions_potential +average_income+ longitude+num_tube_lines+property_type+current_energy_rating+windows_energy_eff +district+type_of_closest_station,
+#    train_data,
+#   method = &quot;lm&quot;,
+#    trControl = control
+#   )
+
+# summary of the results
+#summary(model3_lm)</code></pre>
+</div>
+<div id="model-4" class="section level2">
+<h2>Model 4</h2>
+<pre class="r"><code>#we are going to train the model and report the results using k-fold cross validation
+#set.seed(1)
+#model4_lm&lt;-train(
+#    price ~ poly(total_floor_area,3)+sqrt(number_habitable_rooms)+number_habitable_rooms +average_income+ #longitude+num_tube_lines+windows_energy_eff +district+type_of_closest_station+ #property_type*type_of_closest_station+london_zone*distance_to_station+london_zone*property_type,
+#    train_data,
+#  method = &quot;lm&quot;,
+#    trControl = control
+#   )
+
+# summary of the results
+#summary(model4_lm)</code></pre>
+</div>
+<div id="model-5---final-model" class="section level2">
+<h2>Model 5 - Final model</h2>
+<p>In this model, I will add all the significant interactions that I found and the postcode_short variable.</p>
+<pre class="r"><code>#we are going to train the model and report the results using k-fold cross validation
+set.seed(1)
+model5_lm&lt;-train(
+    price ~ poly(total_floor_area,3)+number_habitable_rooms+sqrt(number_habitable_rooms)+average_income+current_energy_rating+windows_energy_eff+ property_type*type_of_closest_station+london_zone*distance_to_station+water_company+num_tube_lines+is_station+total_floor_area:london_zone+total_floor_area:num_tube_lines+average_income:number_habitable_rooms+postcode_short+district,
+    train_data,
+   method = &quot;lm&quot;,
+    trControl = control)
+
+
+# summary of the results
+summary(model5_lm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2990545   -64636     4873    67373  3886414 
+## 
+## Coefficients: (35 not defined because of singularities)
+##                                               Estimate Std. Error t value
+## (Intercept)                                   4.28e+05   9.13e+04    4.69
+## `poly(total_floor_area, 3)1`                  4.89e+07   8.39e+05   58.28
+## `poly(total_floor_area, 3)2`                  4.94e+06   2.98e+05   16.60
+## `poly(total_floor_area, 3)3`                 -2.31e+06   2.57e+05   -8.99
+## number_habitable_rooms                       -2.18e+05   1.65e+04  -13.19
+## `sqrt(number_habitable_rooms)`                4.29e+05   5.67e+04    7.57
+## average_income                               -4.60e+00   7.90e-01   -5.83
+## current_energy_ratingC                       -3.31e+04   1.43e+04   -2.32
+## current_energy_ratingD                       -1.29e+04   1.44e+04   -0.89
+## current_energy_ratingE                       -1.21e+04   1.51e+04   -0.80
+## current_energy_ratingF                       -3.01e+04   1.96e+04   -1.54
+## current_energy_ratingG                       -8.92e+04   3.26e+04   -2.73
+## windows_energy_effGood                        1.42e+04   5.38e+03    2.64
+## windows_energy_effPoor                        3.49e+04   8.10e+03    4.31
+## `windows_energy_effVery Good`                 1.35e+05   9.66e+04    1.39
+## `windows_energy_effVery Poor`                 1.99e+04   7.33e+03    2.72
+## property_typeF                               -1.93e+05   2.77e+04   -6.96
+## property_typeS                               -5.09e+04   2.89e+04   -1.76
+## property_typeT                               -9.60e+04   2.71e+04   -3.54
+## type_of_closest_stationrail                   8.56e+04   2.91e+04    2.94
+## type_of_closest_stationtube                  -3.73e+04   3.36e+04   -1.11
+## london_zone                                   1.36e+05   7.54e+03   18.00
+## distance_to_station                          -7.03e+04   2.31e+04   -3.05
+## `water_companyEssex &amp; Suffolk Water`          4.10e+03   5.33e+04    0.08
+## `water_companyLeep Utilities`                 1.43e+04   1.54e+05    0.09
+## `water_companySES Water`                      3.57e+04   3.82e+04    0.93
+## `water_companyThames Water`                   2.73e+04   2.70e+04    1.01
+## num_tube_lines                               -1.94e+05   9.68e+03  -20.05
+## is_stationTRUE                                2.93e+05   3.94e+04    7.43
+## postcode_shortBR2                            -7.90e+03   2.92e+04   -0.27
+## postcode_shortBR3                             4.84e+04   2.91e+04    1.66
+## postcode_shortBR4                             1.51e+04   3.75e+04    0.40
+## postcode_shortBR5                            -8.75e+04   3.56e+04   -2.46
+## postcode_shortBR6                            -1.36e+03   3.23e+04   -0.04
+## postcode_shortBR7                             5.97e+04   3.99e+04    1.50
+## postcode_shortCR0                            -4.55e+04   2.68e+04   -1.70
+## postcode_shortCR2                            -5.58e+04   3.46e+04   -1.61
+## postcode_shortCR3                            -1.23e+05   2.16e+05   -0.57
+## postcode_shortCR4                             2.81e+04   3.38e+04    0.83
+## postcode_shortCR5                            -7.19e+04   4.66e+04   -1.54
+## postcode_shortCR7                            -3.39e+04   3.78e+04   -0.90
+## postcode_shortCR8                            -4.51e+04   4.20e+04   -1.07
+## postcode_shortDA1                            -9.36e+04   5.81e+04   -1.61
+## postcode_shortDA14                           -1.18e+04   3.90e+04   -0.30
+## postcode_shortDA15                           -2.95e+04   3.20e+04   -0.92
+## postcode_shortDA16                           -6.32e+04   3.21e+04   -1.97
+## postcode_shortDA17                           -5.99e+04   4.50e+04   -1.33
+## postcode_shortDA18                            1.42e+04   1.52e+05    0.09
+## postcode_shortDA5                             7.26e+02   3.83e+04    0.02
+## postcode_shortDA6                            -3.79e+04   5.35e+04   -0.71
+## postcode_shortDA7                            -5.58e+04   3.23e+04   -1.73
+## postcode_shortDA8                            -9.78e+04   3.56e+04   -2.75
+## postcode_shortE1                              3.24e+05   4.40e+04    7.35
+## postcode_shortE10                             1.27e+05   3.78e+04    3.36
+## postcode_shortE11                             1.10e+05   3.37e+04    3.26
+## postcode_shortE12                             3.50e+04   5.25e+04    0.67
+## postcode_shortE13                             1.57e+04   4.57e+04    0.34
+## postcode_shortE14                             1.98e+05   3.53e+04    5.62
+## postcode_shortE15                             8.73e+04   4.00e+04    2.19
+## postcode_shortE16                             4.01e+04   4.25e+04    0.94
+## postcode_shortE17                             1.62e+05   2.85e+04    5.67
+## postcode_shortE18                            -3.65e+03   4.06e+04   -0.09
+## postcode_shortE1W                             2.98e+05   5.10e+04    5.85
+## postcode_shortE2                              3.04e+05   4.66e+04    6.52
+## postcode_shortE3                              2.45e+05   4.01e+04    6.11
+## postcode_shortE4                              4.80e+04   3.08e+04    1.56
+## postcode_shortE5                              2.50e+05   4.19e+04    5.96
+## postcode_shortE6                             -1.95e+03   3.80e+04   -0.05
+## postcode_shortE7                              7.53e+04   4.46e+04    1.69
+## postcode_shortE8                              3.37e+05   4.91e+04    6.86
+## postcode_shortE9                              2.38e+05   4.51e+04    5.27
+## postcode_shortEC1M                            6.80e+05   1.27e+05    5.35
+## postcode_shortEC1N                            3.99e+05   2.15e+05    1.86
+## postcode_shortEC1R                            6.42e+05   1.53e+05    4.19
+## postcode_shortEC1V                            4.48e+05   6.39e+04    7.01
+## postcode_shortEC1Y                            6.95e+05   1.54e+05    4.51
+## postcode_shortEC2Y                            9.87e+05   1.28e+05    7.74
+## postcode_shortEC4R                            5.97e+05   2.15e+05    2.77
+## postcode_shortEC4V                            5.51e+05   1.54e+05    3.59
+## postcode_shortEN1                             1.81e+04   3.49e+04    0.52
+## postcode_shortEN2                             5.48e+04   3.50e+04    1.56
+## postcode_shortEN3                            -1.36e+04   3.95e+04   -0.35
+## postcode_shortEN4                             1.58e+05   5.48e+04    2.89
+## postcode_shortEN5                             1.10e+05   4.65e+04    2.37
+## postcode_shortEN8                            -2.17e+04   1.26e+05   -0.17
+## postcode_shortHA0                             8.08e+04   5.48e+04    1.47
+## postcode_shortHA1                             4.80e+04   4.82e+04    1.00
+## postcode_shortHA2                             5.21e+04   4.44e+04    1.17
+## postcode_shortHA3                             2.12e+04   4.56e+04    0.47
+## postcode_shortHA4                             7.17e+04   4.30e+04    1.67
+## postcode_shortHA5                             7.94e+04   4.35e+04    1.83
+## postcode_shortHA6                             1.35e+05   5.31e+04    2.54
+## postcode_shortHA7                             8.35e+04   4.67e+04    1.79
+## postcode_shortHA8                             7.67e+04   4.46e+04    1.72
+## postcode_shortHA9                             6.73e+04   5.30e+04    1.27
+## postcode_shortIG1                            -2.67e+03   5.52e+04   -0.05
+## postcode_shortIG11                            2.41e+04   5.82e+04    0.41
+## postcode_shortIG2                            -3.70e+04   5.55e+04   -0.67
+## postcode_shortIG3                             1.81e+04   6.16e+04    0.29
+## postcode_shortIG4                             1.34e+04   8.35e+04    0.16
+## postcode_shortIG5                            -7.91e+04   6.35e+04   -1.25
+## postcode_shortIG6                             4.25e+04   4.22e+04    1.01
+## postcode_shortIG7                             6.18e+04   5.79e+04    1.07
+## postcode_shortIG8                             2.58e+04   3.31e+04    0.78
+## postcode_shortIG9                             7.08e+04   1.09e+05    0.65
+## postcode_shortKT1                             1.07e+05   4.54e+04    2.36
+## postcode_shortKT2                             2.15e+05   3.59e+04    5.98
+## postcode_shortKT3                             2.27e+04   3.68e+04    0.62
+## postcode_shortKT4                            -1.03e+04   4.43e+04   -0.23
+## postcode_shortKT5                             2.71e+04   4.06e+04    0.67
+## postcode_shortKT6                             1.15e+05   3.42e+04    3.35
+## postcode_shortKT8                             2.90e+05   1.52e+05    1.91
+## postcode_shortKT9                            -3.31e+04   3.81e+04   -0.87
+## postcode_shortN1                              4.26e+05   3.44e+04   12.36
+## postcode_shortN10                             2.21e+05   4.15e+04    5.32
+## postcode_shortN11                             1.37e+05   4.32e+04    3.18
+## postcode_shortN12                             1.24e+05   4.94e+04    2.51
+## postcode_shortN13                             8.91e+04   4.31e+04    2.07
+## postcode_shortN14                             6.91e+04   4.00e+04    1.73
+## postcode_shortN15                             1.55e+05   4.25e+04    3.65
+## postcode_shortN16                             2.97e+05   3.70e+04    8.02
+## postcode_shortN17                             9.47e+04   4.30e+04    2.20
+## postcode_shortN18                             1.51e+04   5.28e+04    0.29
+## postcode_shortN19                             1.96e+05   4.89e+04    4.02
+## postcode_shortN2                              2.70e+05   4.46e+04    6.07
+## postcode_shortN20                             1.52e+05   5.65e+04    2.69
+## postcode_shortN21                             1.02e+05   3.84e+04    2.65
+## postcode_shortN22                             1.50e+05   4.62e+04    3.26
+## postcode_shortN3                              8.47e+04   5.29e+04    1.60
+## postcode_shortN4                              2.58e+05   3.80e+04    6.79
+## postcode_shortN5                              3.72e+05   4.24e+04    8.76
+## postcode_shortN6                              4.65e+05   4.83e+04    9.62
+## postcode_shortN7                              2.87e+05   4.17e+04    6.88
+## postcode_shortN8                              2.80e+05   3.61e+04    7.76
+## postcode_shortN9                              2.94e+03   3.99e+04    0.07
+## postcode_shortNW1                             4.55e+05   4.01e+04   11.33
+## postcode_shortNW10                            2.24e+05   3.81e+04    5.88
+## postcode_shortNW11                            2.03e+05   4.12e+04    4.93
+## postcode_shortNW2                             1.76e+05   4.07e+04    4.34
+## postcode_shortNW3                             6.71e+05   3.83e+04   17.53
+## postcode_shortNW4                            -1.09e+04   4.80e+04   -0.23
+## postcode_shortNW5                             3.48e+05   4.65e+04    7.48
+## postcode_shortNW6                             4.35e+05   3.75e+04   11.59
+## postcode_shortNW7                             7.79e+04   4.37e+04    1.78
+## postcode_shortNW8                             8.57e+05   4.52e+04   18.96
+## postcode_shortNW9                             1.07e+05   4.89e+04    2.18
+## postcode_shortRM1                            -1.57e+04   6.23e+04   -0.25
+## postcode_shortRM10                           -2.47e+03   6.16e+04   -0.04
+## postcode_shortRM11                            3.00e+04   5.80e+04    0.52
+## postcode_shortRM12                            1.86e+04   5.92e+04    0.31
+## postcode_shortRM13                           -5.75e+04   5.80e+04   -0.99
+## postcode_shortRM14                            5.58e+04   6.23e+04    0.90
+## postcode_shortRM2                             1.21e+05   6.55e+04    1.85
+## postcode_shortRM3                            -7.80e+03   5.81e+04   -0.13
+## postcode_shortRM5                            -1.84e+04   6.50e+04   -0.28
+## postcode_shortRM6                             1.56e+04   6.11e+04    0.26
+## postcode_shortRM7                            -2.09e+04   5.88e+04   -0.36
+## postcode_shortRM8                            -9.08e+03   5.82e+04   -0.16
+## postcode_shortRM9                            -1.54e+04   5.97e+04   -0.26
+## postcode_shortSE1                             4.30e+05   3.79e+04   11.35
+## postcode_shortSE10                            2.06e+05   3.73e+04    5.53
+## postcode_shortSE11                            2.57e+05   5.71e+04    4.51
+## postcode_shortSE12                            2.76e+04   3.57e+04    0.78
+## postcode_shortSE13                            1.01e+05   3.46e+04    2.91
+## postcode_shortSE14                            1.13e+05   6.21e+04    1.81
+## postcode_shortSE15                            2.15e+05   3.50e+04    6.13
+## postcode_shortSE16                            1.98e+05   3.93e+04    5.05
+## postcode_shortSE17                            3.75e+05   5.11e+04    7.34
+## postcode_shortSE18                            6.80e+03   3.25e+04    0.21
+## postcode_shortSE19                            8.04e+04   3.51e+04    2.29
+## postcode_shortSE2                             2.16e+03   5.02e+04    0.04
+## postcode_shortSE20                            6.57e+04   3.69e+04    1.78
+## postcode_shortSE21                            2.43e+05   4.69e+04    5.18
+## postcode_shortSE22                            2.35e+05   3.88e+04    6.06
+## postcode_shortSE23                            6.78e+04   3.32e+04    2.04
+## postcode_shortSE24                            1.70e+05   4.86e+04    3.50
+## postcode_shortSE25                            1.41e+04   3.50e+04    0.40
+## postcode_shortSE26                            5.19e+04   3.59e+04    1.44
+## postcode_shortSE27                            8.79e+04   3.97e+04    2.22
+## postcode_shortSE28                           -2.71e+04   5.05e+04   -0.54
+## postcode_shortSE3                             1.65e+05   3.69e+04    4.47
+## postcode_shortSE4                             1.26e+05   4.06e+04    3.09
+## postcode_shortSE5                             2.38e+05   3.74e+04    6.36
+## postcode_shortSE6                             2.73e+04   3.25e+04    0.84
+## postcode_shortSE7                             7.46e+04   4.65e+04    1.60
+## postcode_shortSE8                             1.32e+05   5.26e+04    2.52
+## postcode_shortSE9                            -7.88e+03   2.85e+04   -0.28
+## postcode_shortSM1                            -5.03e+04   4.07e+04   -1.24
+## postcode_shortSM2                            -2.51e+04   4.53e+04   -0.55
+## postcode_shortSM3                            -9.40e+03   5.18e+04   -0.18
+## postcode_shortSM4                            -1.58e+03   4.15e+04   -0.04
+## postcode_shortSM5                            -1.76e+04   4.19e+04   -0.42
+## postcode_shortSM6                            -3.94e+04   4.28e+04   -0.92
+## postcode_shortSW10                            8.60e+05   6.11e+04   14.07
+## postcode_shortSW11                            3.06e+05   3.24e+04    9.44
+## postcode_shortSW12                            2.25e+05   3.77e+04    5.96
+## postcode_shortSW13                            5.61e+05   4.25e+04   13.20
+## postcode_shortSW14                            2.50e+05   4.35e+04    5.76
+## postcode_shortSW15                            2.32e+05   3.51e+04    6.62
+## postcode_shortSW16                            7.91e+04   2.97e+04    2.66
+## postcode_shortSW17                            1.75e+05   3.03e+04    5.76
+## postcode_shortSW18                            2.08e+05   2.99e+04    6.97
+## postcode_shortSW19                            1.97e+05   2.90e+04    6.78
+## postcode_shortSW1E                            9.13e+05   2.15e+05    4.25
+## postcode_shortSW1H                            6.71e+05   1.27e+05    5.29
+## postcode_shortSW1P                            4.09e+05   7.70e+04    5.31
+## postcode_shortSW1V                            5.35e+05   5.31e+04   10.09
+## postcode_shortSW1W                            1.46e+06   7.05e+04   20.74
+## postcode_shortSW1X                            2.32e+06   7.76e+04   29.93
+## postcode_shortSW1Y                            9.17e+05   2.16e+05    4.25
+## postcode_shortSW2                             1.60e+05   3.22e+04    4.96
+## postcode_shortSW20                            1.11e+05   3.38e+04    3.29
+## postcode_shortSW3                             1.32e+06   5.45e+04   24.32
+## postcode_shortSW4                             2.37e+05   3.92e+04    6.06
+## postcode_shortSW5                             7.13e+05   7.33e+04    9.72
+## postcode_shortSW6                             4.79e+05   3.40e+04   14.10
+## postcode_shortSW7                             7.06e+05   6.61e+04   10.68
+## postcode_shortSW8                             3.07e+05   4.55e+04    6.76
+## postcode_shortSW9                             3.10e+05   4.72e+04    6.58
+## postcode_shortTN16                            1.73e+05   2.20e+05    0.78
+## postcode_shortTW1                             2.46e+05   3.57e+04    6.89
+## postcode_shortTW10                            3.86e+05   4.25e+04    9.08
+## postcode_shortTW11                            2.63e+05   3.73e+04    7.04
+## postcode_shortTW12                            7.44e+04   5.02e+04    1.48
+## postcode_shortTW13                           -5.56e+04   4.18e+04   -1.33
+## postcode_shortTW14                           -5.15e+03   5.52e+04   -0.09
+## postcode_shortTW15                           -6.60e+04   2.16e+05   -0.31
+## postcode_shortTW2                             5.87e+04   3.64e+04    1.61
+## postcode_shortTW3                            -1.93e+04   4.29e+04   -0.45
+## postcode_shortTW4                             2.36e+04   6.33e+04    0.37
+## postcode_shortTW5                             3.16e+03   5.01e+04    0.06
+## postcode_shortTW7                             5.14e+04   3.78e+04    1.36
+## postcode_shortTW8                             1.23e+05   4.83e+04    2.55
+## postcode_shortTW9                             2.41e+05   3.84e+04    6.27
+## postcode_shortUB1                             4.03e+04   6.49e+04    0.62
+## postcode_shortUB10                            6.50e+03   5.20e+04    0.13
+## postcode_shortUB2                             7.55e+04   6.12e+04    1.23
+## postcode_shortUB3                             5.32e+03   5.06e+04    0.11
+## postcode_shortUB4                             3.12e+04   4.62e+04    0.67
+## postcode_shortUB5                             5.98e+04   4.79e+04    1.25
+## postcode_shortUB6                             8.31e+04   5.42e+04    1.54
+## postcode_shortUB7                            -2.62e+04   5.08e+04   -0.52
+## postcode_shortUB8                             9.40e+03   4.68e+04    0.20
+## postcode_shortW10                             4.53e+05   5.79e+04    7.83
+## postcode_shortW11                             1.27e+06   5.13e+04   24.77
+## postcode_shortW12                             2.53e+05   4.50e+04    5.61
+## postcode_shortW13                             1.39e+05   3.82e+04    3.65
+## postcode_shortW14                             3.11e+05   4.48e+04    6.95
+## postcode_shortW1B                             1.09e+06   2.19e+05    4.99
+## postcode_shortW1F                             9.32e+05   2.16e+05    4.32
+## postcode_shortW1G                             9.48e+05   9.76e+04    9.71
+## postcode_shortW1H                             9.28e+05   9.19e+04   10.09
+## postcode_shortW1J                             1.41e+06   2.15e+05    6.57
+## postcode_shortW1K                             2.14e+06   1.07e+05   20.05
+## postcode_shortW1T                             7.66e+05   1.27e+05    6.05
+## postcode_shortW1U                             5.28e+05   9.65e+04    5.47
+## postcode_shortW1W                             4.99e+05   1.00e+05    4.99
+## postcode_shortW2                              7.16e+05   4.38e+04   16.36
+## postcode_shortW3                              1.61e+05   3.80e+04    4.24
+## postcode_shortW4                              3.27e+05   3.52e+04    9.30
+## postcode_shortW5                              1.53e+05   3.48e+04    4.39
+## postcode_shortW6                              3.33e+05   4.26e+04    7.82
+## postcode_shortW7                              1.07e+05   4.00e+04    2.68
+## postcode_shortW8                              1.00e+06   5.08e+04   19.70
+## postcode_shortW9                              4.77e+05   5.08e+04    9.39
+## postcode_shortWC1A                            6.52e+05   2.15e+05    3.03
+## postcode_shortWC1B                            7.11e+05   2.15e+05    3.31
+## postcode_shortWC1E                                  NA         NA      NA
+## postcode_shortWC1H                            5.94e+05   1.27e+05    4.68
+## postcode_shortWC1N                            5.06e+05   1.53e+05    3.30
+## postcode_shortWC1X                            6.20e+05   1.00e+05    6.19
+## postcode_shortWC2B                            6.84e+05   2.15e+05    3.18
+## postcode_shortWC2E                            7.02e+05   1.53e+05    4.57
+## postcode_shortWC2H                                  NA         NA      NA
+## postcode_shortWC2N                            7.17e+05   2.15e+05    3.33
+## postcode_shortCR6                                   NA         NA      NA
+## districtBarnet                                      NA         NA      NA
+## districtBexley                                      NA         NA      NA
+## districtBrent                                       NA         NA      NA
+## districtBromley                                     NA         NA      NA
+## districtCamden                                      NA         NA      NA
+## `districtCity of London`                            NA         NA      NA
+## districtCroydon                                     NA         NA      NA
+## districtEaling                                      NA         NA      NA
+## districtEnfield                                     NA         NA      NA
+## districtGreenwich                                   NA         NA      NA
+## districtHackney                                     NA         NA      NA
+## `districtHammersmith and Fulham`                    NA         NA      NA
+## districtHaringey                                    NA         NA      NA
+## districtHarrow                                      NA         NA      NA
+## districtHavering                                    NA         NA      NA
+## districtHillingdon                                  NA         NA      NA
+## districtHounslow                                    NA         NA      NA
+## districtIslington                                   NA         NA      NA
+## `districtKensington and Chelsea`                    NA         NA      NA
+## `districtKingston upon Thames`                      NA         NA      NA
+## districtLambeth                                     NA         NA      NA
+## districtLewisham                                    NA         NA      NA
+## districtMerton                                      NA         NA      NA
+## districtNewham                                      NA         NA      NA
+## districtRedbridge                                   NA         NA      NA
+## `districtRichmond upon Thames`                      NA         NA      NA
+## districtSouthwark                                   NA         NA      NA
+## districtSutton                                      NA         NA      NA
+## `districtTower Hamlets`                             NA         NA      NA
+## `districtWaltham Forest`                            NA         NA      NA
+## districtWandsworth                                  NA         NA      NA
+## districtWestminster                                 NA         NA      NA
+## `property_typeF:type_of_closest_stationrail` -1.04e+05   3.00e+04   -3.47
+## `property_typeS:type_of_closest_stationrail` -8.78e+04   3.17e+04   -2.77
+## `property_typeT:type_of_closest_stationrail` -9.21e+04   2.98e+04   -3.09
+## `property_typeF:type_of_closest_stationtube`  6.31e+04   3.37e+04    1.87
+## `property_typeS:type_of_closest_stationtube` -1.53e+04   3.50e+04   -0.44
+## `property_typeT:type_of_closest_stationtube`  3.52e+04   3.31e+04    1.06
+## `london_zone:distance_to_station`             1.24e+04   5.01e+03    2.47
+## `london_zone:total_floor_area`               -1.67e+03   4.00e+01  -41.76
+## `num_tube_lines:total_floor_area`             2.26e+03   7.27e+01   31.17
+## `number_habitable_rooms:average_income`       2.19e+00   1.63e-01   13.46
+##                                              Pr(&gt;|t|)    
+## (Intercept)                                   2.8e-06 ***
+## `poly(total_floor_area, 3)1`                  &lt; 2e-16 ***
+## `poly(total_floor_area, 3)2`                  &lt; 2e-16 ***
+## `poly(total_floor_area, 3)3`                  &lt; 2e-16 ***
+## number_habitable_rooms                        &lt; 2e-16 ***
+## `sqrt(number_habitable_rooms)`                3.9e-14 ***
+## average_income                                5.8e-09 ***
+## current_energy_ratingC                        0.02039 *  
+## current_energy_ratingD                        0.37233    
+## current_energy_ratingE                        0.42451    
+## current_energy_ratingF                        0.12421    
+## current_energy_ratingG                        0.00626 ** 
+## windows_energy_effGood                        0.00842 ** 
+## windows_energy_effPoor                        1.7e-05 ***
+## `windows_energy_effVery Good`                 0.16323    
+## `windows_energy_effVery Poor`                 0.00657 ** 
+## property_typeF                                3.5e-12 ***
+## property_typeS                                0.07854 .  
+## property_typeT                                0.00041 ***
+## type_of_closest_stationrail                   0.00328 ** 
+## type_of_closest_stationtube                   0.26676    
+## london_zone                                   &lt; 2e-16 ***
+## distance_to_station                           0.00233 ** 
+## `water_companyEssex &amp; Suffolk Water`          0.93865    
+## `water_companyLeep Utilities`                 0.92607    
+## `water_companySES Water`                      0.35004    
+## `water_companyThames Water`                   0.31112    
+## num_tube_lines                                &lt; 2e-16 ***
+## is_stationTRUE                                1.2e-13 ***
+## postcode_shortBR2                             0.78696    
+## postcode_shortBR3                             0.09632 .  
+## postcode_shortBR4                             0.68777    
+## postcode_shortBR5                             0.01391 *  
+## postcode_shortBR6                             0.96650    
+## postcode_shortBR7                             0.13399    
+## postcode_shortCR0                             0.08955 .  
+## postcode_shortCR2                             0.10734    
+## postcode_shortCR3                             0.56794    
+## postcode_shortCR4                             0.40547    
+## postcode_shortCR5                             0.12296    
+## postcode_shortCR7                             0.37072    
+## postcode_shortCR8                             0.28286    
+## postcode_shortDA1                             0.10756    
+## postcode_shortDA14                            0.76242    
+## postcode_shortDA15                            0.35602    
+## postcode_shortDA16                            0.04927 *  
+## postcode_shortDA17                            0.18325    
+## postcode_shortDA18                            0.92587    
+## postcode_shortDA5                             0.98485    
+## postcode_shortDA6                             0.47852    
+## postcode_shortDA7                             0.08381 .  
+## postcode_shortDA8                             0.00601 ** 
+## postcode_shortE1                              2.1e-13 ***
+## postcode_shortE10                             0.00077 ***
+## postcode_shortE11                             0.00113 ** 
+## postcode_shortE12                             0.50519    
+## postcode_shortE13                             0.73172    
+## postcode_shortE14                             2.0e-08 ***
+## postcode_shortE15                             0.02888 *  
+## postcode_shortE16                             0.34509    
+## postcode_shortE17                             1.4e-08 ***
+## postcode_shortE18                             0.92830    
+## postcode_shortE1W                             5.1e-09 ***
+## postcode_shortE2                              7.3e-11 ***
+## postcode_shortE3                              1.1e-09 ***
+## postcode_shortE4                              0.11892    
+## postcode_shortE5                              2.6e-09 ***
+## postcode_shortE6                              0.95913    
+## postcode_shortE7                              0.09123 .  
+## postcode_shortE8                              7.2e-12 ***
+## postcode_shortE9                              1.4e-07 ***
+## postcode_shortEC1M                            8.9e-08 ***
+## postcode_shortEC1N                            0.06351 .  
+## postcode_shortEC1R                            2.9e-05 ***
+## postcode_shortEC1V                            2.5e-12 ***
+## postcode_shortEC1Y                            6.6e-06 ***
+## postcode_shortEC2Y                            1.1e-14 ***
+## postcode_shortEC4R                            0.00558 ** 
+## postcode_shortEC4V                            0.00033 ***
+## postcode_shortEN1                             0.60442    
+## postcode_shortEN2                             0.11768    
+## postcode_shortEN3                             0.72952    
+## postcode_shortEN4                             0.00392 ** 
+## postcode_shortEN5                             0.01805 *  
+## postcode_shortEN8                             0.86280    
+## postcode_shortHA0                             0.14068    
+## postcode_shortHA1                             0.31882    
+## postcode_shortHA2                             0.24070    
+## postcode_shortHA3                             0.64122    
+## postcode_shortHA4                             0.09516 .  
+## postcode_shortHA5                             0.06766 .  
+## postcode_shortHA6                             0.01122 *  
+## postcode_shortHA7                             0.07389 .  
+## postcode_shortHA8                             0.08565 .  
+## postcode_shortHA9                             0.20448    
+## postcode_shortIG1                             0.96142    
+## postcode_shortIG11                            0.67917    
+## postcode_shortIG2                             0.50444    
+## postcode_shortIG3                             0.76945    
+## postcode_shortIG4                             0.87216    
+## postcode_shortIG5                             0.21303    
+## postcode_shortIG6                             0.31299    
+## postcode_shortIG7                             0.28619    
+## postcode_shortIG8                             0.43572    
+## postcode_shortIG9                             0.51527    
+## postcode_shortKT1                             0.01845 *  
+## postcode_shortKT2                             2.3e-09 ***
+## postcode_shortKT3                             0.53715    
+## postcode_shortKT4                             0.81640    
+## postcode_shortKT5                             0.50529    
+## postcode_shortKT6                             0.00080 ***
+## postcode_shortKT8                             0.05671 .  
+## postcode_shortKT9                             0.38499    
+## postcode_shortN1                              &lt; 2e-16 ***
+## postcode_shortN10                             1.0e-07 ***
+## postcode_shortN11                             0.00148 ** 
+## postcode_shortN12                             0.01200 *  
+## postcode_shortN13                             0.03888 *  
+## postcode_shortN14                             0.08436 .  
+## postcode_shortN15                             0.00026 ***
+## postcode_shortN16                             1.2e-15 ***
+## postcode_shortN17                             0.02752 *  
+## postcode_shortN18                             0.77459    
+## postcode_shortN19                             5.9e-05 ***
+## postcode_shortN2                              1.3e-09 ***
+## postcode_shortN20                             0.00724 ** 
+## postcode_shortN21                             0.00796 ** 
+## postcode_shortN22                             0.00114 ** 
+## postcode_shortN3                              0.10932    
+## postcode_shortN4                              1.1e-11 ***
+## postcode_shortN5                              &lt; 2e-16 ***
+## postcode_shortN6                              &lt; 2e-16 ***
+## postcode_shortN7                              6.4e-12 ***
+## postcode_shortN8                              9.4e-15 ***
+## postcode_shortN9                              0.94126    
+## postcode_shortNW1                             &lt; 2e-16 ***
+## postcode_shortNW10                            4.2e-09 ***
+## postcode_shortNW11                            8.5e-07 ***
+## postcode_shortNW2                             1.5e-05 ***
+## postcode_shortNW3                             &lt; 2e-16 ***
+## postcode_shortNW4                             0.82069    
+## postcode_shortNW5                             7.8e-14 ***
+## postcode_shortNW6                             &lt; 2e-16 ***
+## postcode_shortNW7                             0.07476 .  
+## postcode_shortNW8                             &lt; 2e-16 ***
+## postcode_shortNW9                             0.02945 *  
+## postcode_shortRM1                             0.80144    
+## postcode_shortRM10                            0.96794    
+## postcode_shortRM11                            0.60537    
+## postcode_shortRM12                            0.75368    
+## postcode_shortRM13                            0.32217    
+## postcode_shortRM14                            0.37014    
+## postcode_shortRM2                             0.06438 .  
+## postcode_shortRM3                             0.89335    
+## postcode_shortRM5                             0.77775    
+## postcode_shortRM6                             0.79865    
+## postcode_shortRM7                             0.72244    
+## postcode_shortRM8                             0.87605    
+## postcode_shortRM9                             0.79575    
+## postcode_shortSE1                             &lt; 2e-16 ***
+## postcode_shortSE10                            3.3e-08 ***
+## postcode_shortSE11                            6.5e-06 ***
+## postcode_shortSE12                            0.43818    
+## postcode_shortSE13                            0.00365 ** 
+## postcode_shortSE14                            0.06959 .  
+## postcode_shortSE15                            9.0e-10 ***
+## postcode_shortSE16                            4.4e-07 ***
+## postcode_shortSE17                            2.2e-13 ***
+## postcode_shortSE18                            0.83433    
+## postcode_shortSE19                            0.02188 *  
+## postcode_shortSE2                             0.96563    
+## postcode_shortSE20                            0.07530 .  
+## postcode_shortSE21                            2.3e-07 ***
+## postcode_shortSE22                            1.4e-09 ***
+## postcode_shortSE23                            0.04121 *  
+## postcode_shortSE24                            0.00046 ***
+## postcode_shortSE25                            0.68675    
+## postcode_shortSE26                            0.14906    
+## postcode_shortSE27                            0.02664 *  
+## postcode_shortSE28                            0.59169    
+## postcode_shortSE3                             8.1e-06 ***
+## postcode_shortSE4                             0.00199 ** 
+## postcode_shortSE5                             2.1e-10 ***
+## postcode_shortSE6                             0.40102    
+## postcode_shortSE7                             0.10914    
+## postcode_shortSE8                             0.01191 *  
+## postcode_shortSE9                             0.78222    
+## postcode_shortSM1                             0.21671    
+## postcode_shortSM2                             0.57986    
+## postcode_shortSM3                             0.85603    
+## postcode_shortSM4                             0.96958    
+## postcode_shortSM5                             0.67359    
+## postcode_shortSM6                             0.35720    
+## postcode_shortSW10                            &lt; 2e-16 ***
+## postcode_shortSW11                            &lt; 2e-16 ***
+## postcode_shortSW12                            2.5e-09 ***
+## postcode_shortSW13                            &lt; 2e-16 ***
+## postcode_shortSW14                            8.9e-09 ***
+## postcode_shortSW15                            3.8e-11 ***
+## postcode_shortSW16                            0.00774 ** 
+## postcode_shortSW17                            8.8e-09 ***
+## postcode_shortSW18                            3.3e-12 ***
+## postcode_shortSW19                            1.3e-11 ***
+## postcode_shortSW1E                            2.2e-05 ***
+## postcode_shortSW1H                            1.2e-07 ***
+## postcode_shortSW1P                            1.1e-07 ***
+## postcode_shortSW1V                            &lt; 2e-16 ***
+## postcode_shortSW1W                            &lt; 2e-16 ***
+## postcode_shortSW1X                            &lt; 2e-16 ***
+## postcode_shortSW1Y                            2.1e-05 ***
+## postcode_shortSW2                             7.2e-07 ***
+## postcode_shortSW20                            0.00100 ***
+## postcode_shortSW3                             &lt; 2e-16 ***
+## postcode_shortSW4                             1.4e-09 ***
+## postcode_shortSW5                             &lt; 2e-16 ***
+## postcode_shortSW6                             &lt; 2e-16 ***
+## postcode_shortSW7                             &lt; 2e-16 ***
+## postcode_shortSW8                             1.5e-11 ***
+## postcode_shortSW9                             5.0e-11 ***
+## postcode_shortTN16                            0.43280    
+## postcode_shortTW1                             6.0e-12 ***
+## postcode_shortTW10                            &lt; 2e-16 ***
+## postcode_shortTW11                            2.0e-12 ***
+## postcode_shortTW12                            0.13830    
+## postcode_shortTW13                            0.18352    
+## postcode_shortTW14                            0.92562    
+## postcode_shortTW15                            0.75973    
+## postcode_shortTW2                             0.10648    
+## postcode_shortTW3                             0.65268    
+## postcode_shortTW4                             0.70869    
+## postcode_shortTW5                             0.94976    
+## postcode_shortTW7                             0.17352    
+## postcode_shortTW8                             0.01090 *  
+## postcode_shortTW9                             3.7e-10 ***
+## postcode_shortUB1                             0.53452    
+## postcode_shortUB10                            0.90050    
+## postcode_shortUB2                             0.21706    
+## postcode_shortUB3                             0.91620    
+## postcode_shortUB4                             0.49996    
+## postcode_shortUB5                             0.21221    
+## postcode_shortUB6                             0.12481    
+## postcode_shortUB7                             0.60570    
+## postcode_shortUB8                             0.84084    
+## postcode_shortW10                             5.3e-15 ***
+## postcode_shortW11                             &lt; 2e-16 ***
+## postcode_shortW12                             2.0e-08 ***
+## postcode_shortW13                             0.00026 ***
+## postcode_shortW14                             4.0e-12 ***
+## postcode_shortW1B                             6.2e-07 ***
+## postcode_shortW1F                             1.6e-05 ***
+## postcode_shortW1G                             &lt; 2e-16 ***
+## postcode_shortW1H                             &lt; 2e-16 ***
+## postcode_shortW1J                             5.4e-11 ***
+## postcode_shortW1K                             &lt; 2e-16 ***
+## postcode_shortW1T                             1.5e-09 ***
+## postcode_shortW1U                             4.6e-08 ***
+## postcode_shortW1W                             6.3e-07 ***
+## postcode_shortW2                              &lt; 2e-16 ***
+## postcode_shortW3                              2.2e-05 ***
+## postcode_shortW4                              &lt; 2e-16 ***
+## postcode_shortW5                              1.2e-05 ***
+## postcode_shortW6                              5.9e-15 ***
+## postcode_shortW7                              0.00733 ** 
+## postcode_shortW8                              &lt; 2e-16 ***
+## postcode_shortW9                              &lt; 2e-16 ***
+## postcode_shortWC1A                            0.00242 ** 
+## postcode_shortWC1B                            0.00095 ***
+## postcode_shortWC1E                                 NA    
+## postcode_shortWC1H                            2.9e-06 ***
+## postcode_shortWC1N                            0.00097 ***
+## postcode_shortWC1X                            6.1e-10 ***
+## postcode_shortWC2B                            0.00148 ** 
+## postcode_shortWC2E                            4.9e-06 ***
+## postcode_shortWC2H                                 NA    
+## postcode_shortWC2N                            0.00086 ***
+## postcode_shortCR6                                  NA    
+## districtBarnet                                     NA    
+## districtBexley                                     NA    
+## districtBrent                                      NA    
+## districtBromley                                    NA    
+## districtCamden                                     NA    
+## `districtCity of London`                           NA    
+## districtCroydon                                    NA    
+## districtEaling                                     NA    
+## districtEnfield                                    NA    
+## districtGreenwich                                  NA    
+## districtHackney                                    NA    
+## `districtHammersmith and Fulham`                   NA    
+## districtHaringey                                   NA    
+## districtHarrow                                     NA    
+## districtHavering                                   NA    
+## districtHillingdon                                 NA    
+## districtHounslow                                   NA    
+## districtIslington                                  NA    
+## `districtKensington and Chelsea`                   NA    
+## `districtKingston upon Thames`                     NA    
+## districtLambeth                                    NA    
+## districtLewisham                                   NA    
+## districtMerton                                     NA    
+## districtNewham                                     NA    
+## districtRedbridge                                  NA    
+## `districtRichmond upon Thames`                     NA    
+## districtSouthwark                                  NA    
+## districtSutton                                     NA    
+## `districtTower Hamlets`                            NA    
+## `districtWaltham Forest`                           NA    
+## districtWandsworth                                 NA    
+## districtWestminster                                NA    
+## `property_typeF:type_of_closest_stationrail`  0.00053 ***
+## `property_typeS:type_of_closest_stationrail`  0.00557 ** 
+## `property_typeT:type_of_closest_stationrail`  0.00203 ** 
+## `property_typeF:type_of_closest_stationtube`  0.06145 .  
+## `property_typeS:type_of_closest_stationtube`  0.66328    
+## `property_typeT:type_of_closest_stationtube`  0.28838    
+## `london_zone:distance_to_station`             0.01365 *  
+## `london_zone:total_floor_area`                &lt; 2e-16 ***
+## `num_tube_lines:total_floor_area`             &lt; 2e-16 ***
+## `number_habitable_rooms:average_income`       &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 213000 on 10216 degrees of freedom
+## Multiple R-squared:  0.839,  Adjusted R-squared:  0.834 
+## F-statistic:  188 on 282 and 10216 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>performancelr&lt;- list()
+performancelr[2]&lt;- model5_lm[[4]] %&gt;% 
+  select(RMSE) %&gt;% 
+  pull()
+
+performancelr[1]&lt;- model5_lm[[4]] %&gt;% 
+  select(Rsquared) %&gt;% 
+  pull()
+
+names(performancelr) &lt;- c(&quot;Rsquare&quot;, &quot;RMSE&quot;)
+performancelr</code></pre>
+<pre><code>## $Rsquare
+## [1] 0.82
+## 
+## $RMSE
+## [1] 222161</code></pre>
+</div>
+<div id="model-log" class="section level2">
+<h2>Model log</h2>
+<p>I will now try out how well the log_price performs vs. the unlogged one</p>
+</div>
+<div id="importance" class="section level2">
+<h2>Importance</h2>
+<pre class="r"><code># we can check variable importance as well
+#importance1 &lt;- varImp(model1_lm, scale=TRUE)
+#plot(importance1)
+
+#importance2 &lt;- varImp(model2_lm, scale=TRUE)
+#plot(importance2)
+
+#importance3 &lt;- varImp(model3_lm, scale=TRUE)
+#plot(importance3)
+
+#importance4 &lt;- varImp(model4_lm, scale=TRUE)
+#plot(importance4)
+
+importance5&lt;- varImp(model5_lm, scale=TRUE)
+plot(importance5)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-8-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#importance5_log&lt;- varImp(model5_lm_log, scale=TRUE)
+#plot(importance5_log)</code></pre>
+</div>
+<div id="predict-the-values-in-testing-and-out-of-sample-data" class="section level2">
+<h2>Predict the values in testing and out of sample data</h2>
+<p>Below I use the predict function to test the performance of the model in testing data and summarize the performance of the linear regression model. I can measure the quality of my predictions when looking at vlaues of RMSE and Rsquare. The lower the RMSE, the lower the error we can get in our predicted data. The higher the Rsquared, the more percentage of data is explained by the model.</p>
+<pre class="r"><code># We can predict the testing values
+
+#prediting the results on test_data 
+set.seed(1)
+predictions &lt;- predict(model5_lm,test_data)
+summary(predictions)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -186064  351066  463098  590293  653951 8552732</code></pre>
+<pre class="r"><code>summary(train_data$price) # checking if the values are similar to the true ones</code></pre>
+<pre><code>##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+##    77000   350000   460000   594480   655000 10500000</code></pre>
+<pre class="r"><code>lr_results&lt;-data.frame(  RMSE = RMSE(predictions, test_data$price), 
+                            Rsquare = R2(predictions, test_data$price))
+lr_results </code></pre>
+<pre><code>##     RMSE Rsquare
+## 1 202699   0.842</code></pre>
+<pre class="r"><code>#We can predict prices for out of sample data the same way
+#predictions_oos &lt;- predict(model5_lm,london_house_prices_2019_out_of_sample)
+#predictions_oos</code></pre>
+</div>
+</div>
+<div id="tree-model" class="section level1">
+<h1>Tree model</h1>
+<p>Next I fit a tree model using the same subset of features. Again I will add more variables in the next steps and tune the parameter of my tree to find a better fit.</p>
+<div id="first-model" class="section level2">
+<h2>First model</h2>
+<pre class="r"><code>#model2_tree &lt;- train(
+#  price ~ distance_to_station +water_company+property_type+whether_old_or_new+freehold_or_leasehold+latitude+ longitude,
+#  train_data,
+#  method = &quot;rpart&quot;,
+#  trControl = control,
+#  tuneLength=2
+#    )
+
+#You can view how the tree performs
+#model2_tree$results
+
+#You can view the final tree
+#rpart.plot(model2_tree$finalModel)
+
+#you can also visualize the variable importance
+#importance &lt;- varImp(model2_tree, scale=TRUE)
+#plot(importance)</code></pre>
+</div>
+<div id="model-tree-2" class="section level2">
+<h2>Model tree 2</h2>
+<pre class="r"><code>#model3_tree &lt;- train(
+#  price ~ total_floor_area +average_income+ longitude+num_tube_lines #+property_type+london_zone+distance_to_station+latitude+is_station+number_habitable_rooms+current_energy_rating+windows_energy_eff+ #is_district,
+#  train_data,
+#  method = &quot;rpart&quot;,
+#  trControl = control,
+#  tuneLength=15
+# )
+
+
+#You can view how the tree performs
+#model3_tree$results
+
+#You can view the final tree
+#rpart.plot(model3_tree$finalModel)
+
+#you can also visualize the variable importance
+#importance &lt;- varImp(model3_tree, scale=TRUE)
+#plot(importance)
+#importance</code></pre>
+</div>
+<div id="tree-model-4" class="section level2">
+<h2>Tree model 4</h2>
+<pre class="r"><code>#set.seed(1)
+#model4_tree &lt;- train(
+#  price ~ total_floor_area +average_income+ longitude+latitude+
+#    num_tube_lines +
+#    property_type+london_zone+distance_to_station+is_station+is_district+current_energy_rating+type_of_closest_station,
+#  train_data,
+#  method = &quot;rpart&quot;,
+#  trControl = control,
+#  tuneLength=15
+#    )
+
+#You can view how the tree performs
+#model4_tree$results
+
+#You can view the final tree
+#rpart.plot(model4_tree$finalModel)
+
+#you can also visualize the variable importance
+#importance &lt;- varImp(model4_tree, scale=TRUE)
+#plot(importance)
+
+#varImp(model4_tree)</code></pre>
+</div>
+</div>
+<div id="next-tree-model" class="section level1">
+<h1>Next tree model</h1>
+<pre class="r"><code>#setting seed
+set.seed(1)
+#prediction for next model
+modeltrial2 &lt;- train(
+  price ~ total_floor_area +average_income+ longitude+latitude+current_energy_rating+num_tube_lines +type_of_closest_station+property_type+london_zone+distance_to_station+is_station+is_district+is_postcode,
+  train_data, 
+  method = &quot;rpart&quot;,
+  metric=&quot;Rsquared&quot;,
+ trControl = control,
+  tuneLength=15)
+
+# performance of the tree
+modeltrial2$results</code></pre>
+<pre><code>##         cp   RMSE Rsquared    MAE RMSESD RsquaredSD MAESD
+## 1  0.00678 280228    0.711 158448  28626     0.0613  4687
+## 2  0.00857 286345    0.697 163129  33236     0.0657  4141
+## 3  0.00891 288773    0.692 165861  33296     0.0671  5390
+## 4  0.00904 289539    0.690 166786  32845     0.0660  5116
+## 5  0.00988 290066    0.689 167704  33655     0.0680  6222
+## 6  0.01043 291305    0.686 169564  32881     0.0691  6875
+## 7  0.01117 295575    0.677 172553  32559     0.0659  6828
+## 8  0.01330 299305    0.668 174214  33552     0.0758  7039
+## 9  0.01519 307410    0.650 178251  36428     0.0774  5840
+## 10 0.03224 322109    0.620 181936  40114     0.0658  7637
+## 11 0.03852 332548    0.598 184410  47044     0.0799  9421
+## 12 0.04310 346772    0.558 194132  41461     0.0729  9683
+## 13 0.07590 369473    0.495 214703  42384     0.0995 15876
+## 14 0.16197 424347    0.343 235566  57846     0.0698 10491
+## 15 0.31416 470699    0.294 257490  50547     0.0316 22986</code></pre>
+<pre class="r"><code># view the final tree
+rpart.plot(modeltrial2$finalModel)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-13-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># you can also visualize the variable importance
+#importance &lt;- varImp(modeltrial2, scale=TRUE)
+#plot(importance)
+
+#varImp(modeltrial2)</code></pre>
+<div id="choosing-the-right-split-for-model-tree-4" class="section level2">
+<h2>Choosing the right split for model tree 4</h2>
+<pre class="r"><code>#modelLookup(&quot;rpart&quot;)
+
+#I choose cp values that seems to result in low error based on plot above
+Grid &lt;- expand.grid(cp = seq( 0.000, 0.00085,0.00005))
+
+
+#choosing seed
+set.seed(1)
+#training model
+modeltrial2 &lt;- train(
+  price ~ total_floor_area +average_income+ longitude+latitude+current_energy_rating+num_tube_lines +type_of_closest_station+property_type+london_zone+distance_to_station+postcode_short+district+energy_consumption_current+is_station+is_district+is_postcode,
+  train_data, 
+  method = &quot;rpart&quot;,
+  metric=&quot;Rsquared&quot;,
+  trControl = control,
+  tuneGrid=Grid)
+
+
+#performance of the model
+print(modeltrial2)</code></pre>
+<pre><code>## CART 
+## 
+## 10499 samples
+##    16 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (15 fold) 
+## Summary of sample sizes: 9449, 9450, 9449, 9449, 9448, 9450, ... 
+## Resampling results across tuning parameters:
+## 
+##   cp       RMSE    Rsquared  MAE   
+##   0.00000  238948  0.792     116769
+##   0.00005  238798  0.792     116161
+##   0.00010  239072  0.791     117372
+##   0.00015  240248  0.789     119481
+##   0.00020  240670  0.788     120771
+##   0.00025  241638  0.786     121826
+##   0.00030  241753  0.786     122536
+##   0.00035  242028  0.785     123863
+##   0.00040  243232  0.783     124706
+##   0.00045  244243  0.781     125638
+##   0.00050  245215  0.779     126421
+##   0.00055  245621  0.779     127182
+##   0.00060  245995  0.778     127453
+##   0.00065  246394  0.777     128082
+##   0.00070  246982  0.776     128714
+##   0.00075  247834  0.774     129626
+##   0.00080  248632  0.773     130377
+##   0.00085  249088  0.772     131070
+## 
+## Rsquared was used to select the optimal model using the largest value.
+## The final value used for the model was cp = 0.</code></pre>
+<pre class="r"><code>#plot of the cp values
+plot(modeltrial2)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-14-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plotting the tree
+rpart.plot(modeltrial2$finalModel)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-14-2.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="final-tree-model" class="section level2">
+<h2>Final tree model</h2>
+<pre class="r"><code>#choosing small grid so the algorithm choose the best local cp
+Grid &lt;- expand.grid(cp = seq( 0.00005, 0.00015,0.00005))
+
+#setting seed
+set.seed(1)
+#training model
+model_tree_final &lt;- train(
+  price ~ total_floor_area +average_income+ longitude+latitude+current_energy_rating+num_tube_lines +type_of_closest_station+property_type+london_zone+distance_to_station+postcode_short+district+energy_consumption_current+is_station+is_district+is_postcode,
+  train_data, 
+  method = &quot;rpart&quot;,
+  metric=&quot;Rsquared&quot;,
+  trControl = control,
+  tuneGrid=Grid)
+
+#plotting cp
+plot(model_tree_final)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-15-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plotting tree
+rpart.plot(model_tree_final$finalModel)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-15-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Predict the probabilities using the tree model in testing data
+predictions_tree &lt;- predict(model_tree_final,test_data)
+
+tree_results&lt;-data.frame(  RMSE = RMSE(predictions_tree, test_data$price), 
+                            Rsquare = R2(predictions_tree, test_data$price))
+tree_results </code></pre>
+<pre><code>##     RMSE Rsquare
+## 1 242413   0.777</code></pre>
+<pre class="r"><code>#RMSE &amp; Rsquare of final tree model
+performancetree&lt;- list() #creating list
+performancetree[2]&lt;- model_tree_final[[4]] %&gt;% 
+  filter(cp == model_tree_final$bestTune$cp) %&gt;% #adding RMSE
+  select(RMSE) %&gt;% 
+  pull()
+
+performancetree[1]&lt;- model_tree_final[[4]] %&gt;% 
+  filter(cp == model_tree_final$bestTune$cp) %&gt;% #adding Rsquare
+  select(Rsquared) %&gt;% 
+  pull()
+
+names(performancetree) &lt;- c(&quot;Rsquare&quot;, &quot;RMSE&quot;) #rename
+performancetree</code></pre>
+<pre><code>## $Rsquare
+## [1] 0.792
+## 
+## $RMSE
+## [1] 238798</code></pre>
+<p>As expected a single tree in this case does not perform this well, however it is expected. This is why in my further analysis I will use hundreds of trees. One single tree overfits easily and is not the best predictor.</p>
+</div>
+</div>
+<div id="other-algorithms" class="section level1">
+<h1>Other algorithms</h1>
+<p>I will use three other algorithms to predict prices. I will also tune the parameters of these algorithms in order to obtain best possible performance.</p>
+<div id="lasso-model" class="section level2">
+<h2>LASSO model</h2>
+<pre class="r"><code>#  LASSO model
+
+#we will look for the optimal lambda in this sequence
+lambda_seq &lt;- seq(0, 5000, length = 1000)
+
+
+#LASSO regression with using 5-fold cross validation to select the best lambda amonst the lambdas specified in &quot;lambda_seq&quot;.
+#setting seed
+set.seed(1)
+#training lasso model
+lasso &lt;- train(
+ price~ whether_old_or_new+freehold_or_leasehold+latitude+ longitude+ poly(total_floor_area,3)+average_income+current_energy_rating+windows_energy_eff +district+ property_type*type_of_closest_station+london_zone*distance_to_station+water_company+is_station+number_habitable_rooms+sqrt(number_habitable_rooms)+ num_tube_lines+total_floor_area:london_zone+total_floor_area:num_tube_lines+average_income:number_habitable_rooms+co2_emissions_current+co2_emissions_potential+postcode_short+is_district+is_postcode,
+ data = train_data,
+ method = &quot;glmnet&quot;,
+  preProc = c(&quot;center&quot;, &quot;scale&quot;), #This option standardizes the data before running the LASSO regression
+  trControl = control,
+  tuneGrid = expand.grid(alpha = 1, lambda = lambda_seq) #alpha=1 specifies to run a LASSO regression. If alpha=0 the model would run ridge regression.
+  )
+#plotting lamba values
+plot(lasso)</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-16-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coef(lasso$finalModel, lasso$bestTune$lambda) #best lambda</code></pre>
+<pre><code>## 326 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                                    1
+## (Intercept)                                 594480.4
+## whether_old_or_newY                           1469.3
+## freehold_or_leaseholdL                      -29945.5
+## latitude                                     37562.4
+## longitude                                   -43318.0
+## poly(total_floor_area, 3)1                  455143.9
+## poly(total_floor_area, 3)2                   46558.3
+## poly(total_floor_area, 3)3                  -20441.4
+## average_income                              -28912.0
+## current_energy_ratingC                      -15452.7
+## current_energy_ratingD                      -14435.9
+## current_energy_ratingE                      -18696.7
+## current_energy_ratingF                      -13612.2
+## current_energy_ratingG                      -11020.4
+## windows_energy_effGood                        6063.0
+## windows_energy_effPoor                        8797.1
+## windows_energy_effVery Good                   3024.2
+## windows_energy_effVery Poor                   6204.6
+## districtBarnet                                   .  
+## districtBexley                               -2834.8
+## districtBrent                                  -41.7
+## districtBromley                               1933.5
+## districtCamden                                2306.5
+## districtCity of London                       11082.6
+## districtCroydon                                  .  
+## districtEaling                                   .  
+## districtEnfield                             -11231.3
+## districtGreenwich                                .  
+## districtHackney                              24166.9
+## districtHammersmith and Fulham                   .  
+## districtHaringey                              4618.8
+## districtHarrow                              -10594.1
+## districtHavering                                 .  
+## districtHillingdon                          -16834.8
+## districtHounslow                             -9827.7
+## districtIslington                            37274.6
+## districtKensington and Chelsea               25338.2
+## districtKingston upon Thames                     .  
+## districtLambeth                              18440.6
+## districtLewisham                              5954.1
+## districtMerton                                   .  
+## districtNewham                                   .  
+## districtRedbridge                            -2195.3
+## districtRichmond upon Thames                 -9967.4
+## districtSouthwark                            30210.1
+## districtSutton                               -7605.9
+## districtTower Hamlets                        19019.4
+## districtWaltham Forest                           .  
+## districtWandsworth                           23745.0
+## districtWestminster                          44686.9
+## property_typeF                              -63193.1
+## property_typeS                              -13792.6
+## property_typeT                              -37190.9
+## type_of_closest_stationrail                  49193.4
+## type_of_closest_stationtube                 -11073.6
+## london_zone                                 189026.1
+## distance_to_station                         -26128.3
+## water_companyEssex &amp; Suffolk Water             473.9
+## water_companyLeep Utilities                      .  
+## water_companySES Water                        9373.8
+## water_companyThames Water                    14729.6
+## is_stationTRUE                               31122.6
+## number_habitable_rooms                     -322914.5
+## sqrt(number_habitable_rooms)                151865.2
+## num_tube_lines                             -144742.7
+## co2_emissions_current                        13152.5
+## co2_emissions_potential                      21341.7
+## postcode_shortBR2                              669.7
+## postcode_shortBR3                             4614.2
+## postcode_shortBR4                             1891.8
+## postcode_shortBR5                            -3213.7
+## postcode_shortBR6                             4111.2
+## postcode_shortBR7                             3927.0
+## postcode_shortCR0                            -5705.6
+## postcode_shortCR2                            -3322.8
+## postcode_shortCR3                             -811.0
+## postcode_shortCR4                             -749.0
+## postcode_shortCR5                            -3724.7
+## postcode_shortCR7                            -3118.4
+## postcode_shortCR8                            -2650.9
+## postcode_shortDA1                            -1486.9
+## postcode_shortDA14                            2110.5
+## postcode_shortDA15                               .  
+## postcode_shortDA16                           -3538.3
+## postcode_shortDA17                           -1975.3
+## postcode_shortDA18                             352.1
+## postcode_shortDA5                             3273.0
+## postcode_shortDA6                              153.6
+## postcode_shortDA7                            -1178.2
+## postcode_shortDA8                            -4255.6
+## postcode_shortE1                              6580.1
+## postcode_shortE10                             3649.7
+## postcode_shortE11                             4100.8
+## postcode_shortE12                              -35.9
+## postcode_shortE13                            -1354.7
+## postcode_shortE14                                .  
+## postcode_shortE15                             2044.6
+## postcode_shortE16                              396.4
+## postcode_shortE17                             8967.1
+## postcode_shortE18                            -4136.4
+## postcode_shortE1W                             3707.6
+## postcode_shortE2                              3728.3
+## postcode_shortE3                              2212.7
+## postcode_shortE4                             -4286.4
+## postcode_shortE5                               385.9
+## postcode_shortE6                             -2494.7
+## postcode_shortE7                               841.7
+## postcode_shortE8                              4856.3
+## postcode_shortE9                                 .  
+## postcode_shortEC1M                            4976.5
+## postcode_shortEC1N                             705.4
+## postcode_shortEC1R                            3715.6
+## postcode_shortEC1V                            2452.8
+## postcode_shortEC1Y                            4291.6
+## postcode_shortEC2Y                            6843.5
+## postcode_shortEC4R                             307.9
+## postcode_shortEC4V                               .  
+## postcode_shortEN1                            -2988.7
+## postcode_shortEN2                            -1191.4
+## postcode_shortEN3                            -4158.9
+## postcode_shortEN4                              875.0
+## postcode_shortEN5                            -2744.4
+## postcode_shortEN8                            -1438.1
+## postcode_shortHA0                            -2594.4
+## postcode_shortHA1                            -6787.0
+## postcode_shortHA2                            -1987.4
+## postcode_shortHA3                            -9895.6
+## postcode_shortHA4                                .  
+## postcode_shortHA5                            -1263.4
+## postcode_shortHA6                             2236.2
+## postcode_shortHA7                                .  
+## postcode_shortHA8                            -5982.0
+## postcode_shortHA9                            -3615.4
+## postcode_shortIG1                            -1604.5
+## postcode_shortIG11                             497.8
+## postcode_shortIG2                            -4274.8
+## postcode_shortIG3                               94.2
+## postcode_shortIG4                             -748.3
+## postcode_shortIG5                            -4656.2
+## postcode_shortIG6                                .  
+## postcode_shortIG7                              446.0
+## postcode_shortIG8                            -3016.2
+## postcode_shortIG9                               15.2
+## postcode_shortKT1                             2082.2
+## postcode_shortKT2                            10445.7
+## postcode_shortKT3                            -2689.9
+## postcode_shortKT4                             -755.9
+## postcode_shortKT5                            -1793.6
+## postcode_shortKT6                             4633.8
+## postcode_shortKT8                              655.4
+## postcode_shortKT9                            -5414.0
+## postcode_shortN1                              5039.9
+## postcode_shortN10                             3416.1
+## postcode_shortN11                              886.1
+## postcode_shortN12                             -929.9
+## postcode_shortN13                             1669.7
+## postcode_shortN14                                .  
+## postcode_shortN15                             1088.9
+## postcode_shortN16                             3149.3
+## postcode_shortN17                            -2377.7
+## postcode_shortN18                            -1257.3
+## postcode_shortN19                            -8081.3
+## postcode_shortN2                              9426.4
+## postcode_shortN20                              340.7
+## postcode_shortN21                             2512.7
+## postcode_shortN22                                .  
+## postcode_shortN3                             -2420.6
+## postcode_shortN4                               -90.6
+## postcode_shortN5                                 .  
+## postcode_shortN6                              4872.6
+## postcode_shortN7                             -5695.7
+## postcode_shortN8                              9705.7
+## postcode_shortN9                             -2865.2
+## postcode_shortNW1                             7529.9
+## postcode_shortNW10                            7042.1
+## postcode_shortNW11                            4402.2
+## postcode_shortNW2                           -12879.1
+## postcode_shortNW3                            21702.2
+## postcode_shortNW4                            -7417.2
+## postcode_shortNW5                                .  
+## postcode_shortNW6                            23440.0
+## postcode_shortNW7                            -4512.5
+## postcode_shortNW8                             9534.9
+## postcode_shortNW9                            -2283.9
+## postcode_shortRM1                            -1524.7
+## postcode_shortRM10                               .  
+## postcode_shortRM11                            2917.3
+## postcode_shortRM12                            2453.7
+## postcode_shortRM13                           -2660.0
+## postcode_shortRM14                            5061.2
+## postcode_shortRM2                             5524.4
+## postcode_shortRM3                            -1137.7
+## postcode_shortRM5                            -2477.8
+## postcode_shortRM6                                .  
+## postcode_shortRM7                            -1996.9
+## postcode_shortRM8                            -1609.1
+## postcode_shortRM9                            -1117.6
+## postcode_shortSE1                            14873.1
+## postcode_shortSE10                           12175.7
+## postcode_shortSE11                            3107.4
+## postcode_shortSE12                            -606.1
+## postcode_shortSE13                            3862.1
+## postcode_shortSE14                            1555.6
+## postcode_shortSE15                               .  
+## postcode_shortSE16                           -1818.9
+## postcode_shortSE17                            6730.1
+## postcode_shortSE18                             -86.6
+## postcode_shortSE19                            4149.5
+## postcode_shortSE2                              109.3
+## postcode_shortSE20                            3513.1
+## postcode_shortSE21                            1569.1
+## postcode_shortSE22                            1701.5
+## postcode_shortSE23                             869.9
+## postcode_shortSE24                             506.7
+## postcode_shortSE25                             350.5
+## postcode_shortSE26                               .  
+## postcode_shortSE27                           -3729.0
+## postcode_shortSE28                           -1592.5
+## postcode_shortSE3                             9957.7
+## postcode_shortSE4                             3985.1
+## postcode_shortSE5                             1016.5
+## postcode_shortSE6                            -1329.6
+## postcode_shortSE7                             2359.8
+## postcode_shortSE8                             2677.1
+## postcode_shortSE9                             -344.3
+## postcode_shortSM1                            -2765.4
+## postcode_shortSM2                                .  
+## postcode_shortSM3                                .  
+## postcode_shortSM4                            -3025.7
+## postcode_shortSM5                              704.4
+## postcode_shortSM6                             -382.3
+## postcode_shortSW10                           14169.3
+## postcode_shortSW11                           10807.1
+## postcode_shortSW12                            3126.3
+## postcode_shortSW13                           16431.5
+## postcode_shortSW14                           -1311.9
+## postcode_shortSW15                           11837.3
+## postcode_shortSW16                            4311.4
+## postcode_shortSW17                               .  
+## postcode_shortSW18                            1762.8
+## postcode_shortSW19                           15975.1
+## postcode_shortSW1E                            2423.4
+## postcode_shortSW1H                             633.7
+## postcode_shortSW1P                           -7209.4
+## postcode_shortSW1V                           -5392.4
+## postcode_shortSW1W                           11225.5
+## postcode_shortSW1X                           53181.0
+## postcode_shortSW1Y                            2298.8
+## postcode_shortSW2                                .  
+## postcode_shortSW20                            4318.2
+## postcode_shortSW3                            50926.2
+## postcode_shortSW4                             4203.4
+## postcode_shortSW5                             6098.9
+## postcode_shortSW6                            14205.9
+## postcode_shortSW7                             9097.7
+## postcode_shortSW8                             6855.8
+## postcode_shortSW9                             6917.4
+## postcode_shortTN16                            1938.2
+## postcode_shortTW1                            -2281.7
+## postcode_shortTW10                            6327.9
+## postcode_shortTW11                               .  
+## postcode_shortTW12                           -9108.2
+## postcode_shortTW13                           -7097.4
+## postcode_shortTW14                           -2710.5
+## postcode_shortTW15                            -980.0
+## postcode_shortTW2                           -16027.0
+## postcode_shortTW3                            -4221.1
+## postcode_shortTW4                            -1389.8
+## postcode_shortTW5                            -2612.5
+## postcode_shortTW7                                .  
+## postcode_shortTW8                             3249.9
+## postcode_shortTW9                            -2692.0
+## postcode_shortUB1                            -3275.2
+## postcode_shortUB10                           -3325.5
+## postcode_shortUB2                            -2048.3
+## postcode_shortUB3                            -2315.4
+## postcode_shortUB4                            -1832.2
+## postcode_shortUB5                            -5556.1
+## postcode_shortUB6                            -2661.4
+## postcode_shortUB7                            -4623.5
+## postcode_shortUB8                            -4315.8
+## postcode_shortW10                            -2705.6
+## postcode_shortW11                            12477.5
+## postcode_shortW12                            -4938.3
+## postcode_shortW13                              596.9
+## postcode_shortW14                           -10846.1
+## postcode_shortW1B                              -91.9
+## postcode_shortW1F                             2734.0
+## postcode_shortW1G                             6327.1
+## postcode_shortW1H                             6031.4
+## postcode_shortW1J                             7355.9
+## postcode_shortW1K                            21088.5
+## postcode_shortW1T                             7129.8
+## postcode_shortW1U                            -3414.9
+## postcode_shortW1W                            -3794.6
+## postcode_shortW2                              2662.5
+## postcode_shortW3                              2842.2
+## postcode_shortW4                             21409.0
+## postcode_shortW5                              1922.0
+## postcode_shortW6                                 .  
+## postcode_shortW7                             -1282.5
+## postcode_shortW8                                 .  
+## postcode_shortW9                             -9464.7
+## postcode_shortWC1A                            3184.0
+## postcode_shortWC1B                            3692.8
+## postcode_shortWC1E                               .  
+## postcode_shortWC1H                            4094.4
+## postcode_shortWC1N                            2079.6
+## postcode_shortWC1X                            6076.8
+## postcode_shortWC2B                            3284.5
+## postcode_shortWC2E                             542.9
+## postcode_shortWC2H                               .  
+## postcode_shortWC2N                             697.9
+## postcode_shortCR6                                .  
+## is_districtTRUE                              72749.0
+## is_postcodeTRUE                              43370.1
+## property_typeF:type_of_closest_stationrail  -40651.9
+## property_typeS:type_of_closest_stationrail  -31066.9
+## property_typeT:type_of_closest_stationrail  -39347.3
+## property_typeF:type_of_closest_stationtube   17518.1
+## property_typeS:type_of_closest_stationtube   -6779.0
+## property_typeT:type_of_closest_stationtube    6476.9
+## london_zone:distance_to_station              27016.4
+## london_zone:total_floor_area               -358893.9
+## num_tube_lines:total_floor_area             191029.2
+## average_income:number_habitable_rooms       206976.3</code></pre>
+<pre class="r"><code>#RMSE &amp; Rsquare of the model
+performancelasso&lt;- list() #creating a list
+performancelasso[2]&lt;- lasso[[4]] %&gt;%  #adding RMSE
+  filter(lambda == lasso$bestTune$lambda) %&gt;% 
+  select(RMSE) %&gt;% 
+  pull()
+
+performancelasso[1]&lt;- lasso[[4]] %&gt;%  #adding Rsquare
+  filter(lambda == lasso$bestTune$lambda) %&gt;% 
+  select(Rsquared) %&gt;% 
+  pull()
+
+names(performancelasso) &lt;- c(&quot;Rsquare&quot;, &quot;RMSE&quot;) #rename
+performancelasso</code></pre>
+<pre><code>## $Rsquare
+## [1] 0.823
+## 
+## $RMSE
+## [1] 219953</code></pre>
+<pre class="r"><code>#prediction on test_data
+predictions_lasso &lt;- predict(lasso,test_data)
+
+
+# Model prediction performance
+LASSO_results&lt;-data.frame(  RMSE = RMSE(predictions_lasso, test_data$price), 
+                            Rsquare = R2(predictions_lasso, test_data$price))
+LASSO_results </code></pre>
+<pre><code>##     RMSE Rsquare
+## 1 201073   0.844</code></pre>
+<p>As we can see, the best performance is for lambda=0, which translates for linear regression with no regularization. Therefore, in my multimodel, I will choose only one of these.</p>
+</div>
+<div id="random-forest" class="section level2">
+<h2>RANDOM FOREST</h2>
+<p>Parameters for random forest models in the ranger function that implements random forest i) ‘mtry’: number of randomly chosen variables to do a split each time ii) splitrule: purity measure we use. I will only use gini iii) min.node.size: Minimum size allowed for a leaf iv) ‘importance’: is an option to get a sense of the importance of the variables. We will use it below.</p>
+<pre class="r"><code>modelLookup(&quot;ranger&quot;)</code></pre>
+<pre><code>##    model     parameter                         label forReg forClass probModel
+## 1 ranger          mtry #Randomly Selected Predictors   TRUE     TRUE      TRUE
+## 2 ranger     splitrule                Splitting Rule   TRUE     TRUE      TRUE
+## 3 ranger min.node.size             Minimal Node Size   TRUE     TRUE      TRUE</code></pre>
+<pre class="r"><code># Define the tuning grid: tuneGrid
+Gridtune= data.frame(mtry=c(10:15),
+                     min.node.size = 5,
+                     splitrule=&quot;variance&quot;)
+
+
+
+# we will now train random forest model
+#set seed
+set.seed(1)
+#train model
+rfregFit &lt;- train(price~poly(total_floor_area,2) +average_income+ longitude+latitude+current_energy_rating+num_tube_lines +type_of_closest_station+property_type+london_zone+distance_to_station+is_station+is_district +water_company+freehold_or_leasehold+is_postcode , 
+               data = train_data, 
+               method = &quot;ranger&quot;,
+               trControl=control,
+               # calculate importance
+               importance=&quot;permutation&quot;, 
+               tuneGrid = Gridtune,
+               num.trees = 200)
+
+#importance of variables
+varImp(rfregFit)</code></pre>
+<pre><code>## ranger variable importance
+## 
+##   only 20 most important variables shown (out of 26)
+## 
+##                                    Overall
+## poly(total_floor_area, 2)1         100.000
+## poly(total_floor_area, 2)2          31.097
+## london_zone                         26.664
+## is_districtTRUE                     22.242
+## longitude                           15.167
+## average_income                       8.483
+## is_stationTRUE                       8.187
+## freehold_or_leaseholdL               8.179
+## latitude                             7.732
+## property_typeF                       6.489
+## is_postcodeTRUE                      3.408
+## num_tube_lines                       2.732
+## distance_to_station                  2.241
+## property_typeT                       2.129
+## water_companyThames Water            1.340
+## type_of_closest_stationtube          1.034
+## property_typeS                       0.934
+## type_of_closest_stationrail          0.733
+## water_companyEssex &amp; Suffolk Water   0.441
+## current_energy_ratingC               0.400</code></pre>
+<pre class="r"><code>#plot of important variables
+plot(varImp(rfregFit))</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-17-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#summary of grid tuning &amp; RMSE &amp;Rsquare
+print(rfregFit)</code></pre>
+<pre><code>## Random Forest 
+## 
+## 10499 samples
+##    15 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (15 fold) 
+## Summary of sample sizes: 9449, 9450, 9449, 9449, 9448, 9450, ... 
+## Resampling results across tuning parameters:
+## 
+##   mtry  RMSE    Rsquared  MAE  
+##   10    193471  0.863     93978
+##   11    194828  0.861     94385
+##   12    194761  0.861     94560
+##   13    194908  0.861     94448
+##   14    194910  0.861     94717
+##   15    195655  0.860     95110
+## 
+## Tuning parameter &#39;splitrule&#39; was held constant at a value of variance
+## 
+## Tuning parameter &#39;min.node.size&#39; was held constant at a value of 5
+## RMSE was used to select the optimal model using the smallest value.
+## The final values used for the model were mtry = 10, splitrule = variance
+##  and min.node.size = 5.</code></pre>
+<pre class="r"><code>#predictions for data_test
+predictions_rf &lt;-predict(rfregFit,test_data)
+
+# Model prediction performance
+rf_results&lt;-data.frame(  RMSE = RMSE(predictions_rf, test_data$price), 
+                            Rsquare = R2(predictions_rf, test_data$price))
+rf_results </code></pre>
+<pre><code>##     RMSE Rsquare
+## 1 191418    0.86</code></pre>
+</div>
+<div id="gradient-boosting-machine" class="section level2">
+<h2>GRADIENT BOOSTING MACHINE</h2>
+<pre class="r"><code>modelLookup(&quot;gbm&quot;)</code></pre>
+<pre><code>##   model         parameter                   label forReg forClass probModel
+## 1   gbm           n.trees   # Boosting Iterations   TRUE     TRUE      TRUE
+## 2   gbm interaction.depth          Max Tree Depth   TRUE     TRUE      TRUE
+## 3   gbm         shrinkage               Shrinkage   TRUE     TRUE      TRUE
+## 4   gbm    n.minobsinnode Min. Terminal Node Size   TRUE     TRUE      TRUE</code></pre>
+<pre class="r"><code>#Expand the search grid (see above for definitions)
+grid&lt;-expand.grid(interaction.depth = 8,n.trees = 500,shrinkage =0.05, n.minobsinnode = 5)
+#Train for gbm
+#set seed
+set.seed(1)
+#train model
+gbmFit1 &lt;- train(price~poly(total_floor_area,3) +average_income+ longitude+latitude+current_energy_rating+num_tube_lines +property_type+london_zone*distance_to_station+is_station+is_district +water_company+freehold_or_leasehold+is_postcode+total_floor_area:london_zone+property_type:type_of_closest_station+district, 
+               data = train_data,
+                 method = &quot;gbm&quot;, 
+                 trControl = control,
+                 tuneGrid =grid,
+                   metric = &quot;RMSE&quot;,
+                 verbose = FALSE
+                 )
+
+
+#RMSE &amp; Rsquare
+print(gbmFit1)</code></pre>
+<pre><code>## Stochastic Gradient Boosting 
+## 
+## 10499 samples
+##    16 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (15 fold) 
+## Summary of sample sizes: 9449, 9450, 9449, 9449, 9448, 9450, ... 
+## Resampling results:
+## 
+##   RMSE    Rsquared  MAE  
+##   197973  0.856     97070
+## 
+## Tuning parameter &#39;n.trees&#39; was held constant at a value of 500
+## Tuning
+## 
+## Tuning parameter &#39;shrinkage&#39; was held constant at a value of 0.05
+## 
+## Tuning parameter &#39;n.minobsinnode&#39; was held constant at a value of 5</code></pre>
+<pre class="r"><code>#variables importance
+varImp(gbmFit1)</code></pre>
+<pre><code>## gbm variable importance
+## 
+##   only 20 most important variables shown (out of 67)
+## 
+##                                 Overall
+## poly(total_floor_area, 3)1      100.000
+## london_zone                      29.678
+## is_districtTRUE                  16.556
+## poly(total_floor_area, 3)2       11.677
+## longitude                         9.069
+## districtKensington and Chelsea    8.390
+## average_income                    7.772
+## is_stationTRUE                    6.949
+## london_zone:total_floor_area      5.772
+## is_postcodeTRUE                   4.916
+## latitude                          4.431
+## poly(total_floor_area, 3)3        4.335
+## london_zone:distance_to_station   2.795
+## distance_to_station               2.380
+## districtWestminster               1.383
+## num_tube_lines                    1.352
+## property_typeF                    0.998
+## freehold_or_leaseholdL            0.870
+## current_energy_ratingD            0.489
+## property_typeT                    0.344</code></pre>
+<pre class="r"><code>#plot on variables importance
+plot(varImp(gbmFit1))</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-18-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#performance of predicted values on test_data
+predictions_GBM &lt;-predict(gbmFit1, test_data)
+
+GBM_results&lt;-data.frame(  RMSE = RMSE(predictions_GBM, test_data$price), 
+                            Rsquare = R2(predictions_GBM, test_data$price))
+GBM_results </code></pre>
+<pre><code>##     RMSE Rsquare
+## 1 186632   0.866</code></pre>
+</div>
+</div>
+<div id="all-models-performance-compared" class="section level1">
+<h1>All models’ performance compared</h1>
+<p>Now I will compare performance of all my models. To do so, I will compare the Rsquare (not the Adjusted one!) of all the models.</p>
+<pre class="r"><code>performancelr</code></pre>
+<pre><code>## $Rsquare
+## [1] 0.82
+## 
+## $RMSE
+## [1] 222161</code></pre>
+<pre class="r"><code>performancetree</code></pre>
+<pre><code>## $Rsquare
+## [1] 0.792
+## 
+## $RMSE
+## [1] 238798</code></pre>
+<pre class="r"><code>performancelasso </code></pre>
+<pre><code>## $Rsquare
+## [1] 0.823
+## 
+## $RMSE
+## [1] 219953</code></pre>
+<pre class="r"><code> print(rfregFit)</code></pre>
+<pre><code>## Random Forest 
+## 
+## 10499 samples
+##    15 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (15 fold) 
+## Summary of sample sizes: 9449, 9450, 9449, 9449, 9448, 9450, ... 
+## Resampling results across tuning parameters:
+## 
+##   mtry  RMSE    Rsquared  MAE  
+##   10    193471  0.863     93978
+##   11    194828  0.861     94385
+##   12    194761  0.861     94560
+##   13    194908  0.861     94448
+##   14    194910  0.861     94717
+##   15    195655  0.860     95110
+## 
+## Tuning parameter &#39;splitrule&#39; was held constant at a value of variance
+## 
+## Tuning parameter &#39;min.node.size&#39; was held constant at a value of 5
+## RMSE was used to select the optimal model using the smallest value.
+## The final values used for the model were mtry = 10, splitrule = variance
+##  and min.node.size = 5.</code></pre>
+<pre class="r"><code>print(gbmFit1)</code></pre>
+<pre><code>## Stochastic Gradient Boosting 
+## 
+## 10499 samples
+##    16 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (15 fold) 
+## Summary of sample sizes: 9449, 9450, 9449, 9449, 9448, 9450, ... 
+## Resampling results:
+## 
+##   RMSE    Rsquared  MAE  
+##   197973  0.856     97070
+## 
+## Tuning parameter &#39;n.trees&#39; was held constant at a value of 500
+## Tuning
+## 
+## Tuning parameter &#39;shrinkage&#39; was held constant at a value of 0.05
+## 
+## Tuning parameter &#39;n.minobsinnode&#39; was held constant at a value of 5</code></pre>
+<p>We can compare linear regression &amp; LASSO model - they both perform quite similarly due to the complexity of linear regression.
+On the other hand, when we run the tree model, a single tree performs always much worse than more complex models - Random Forest and Gradient Boosting Machine.
+Nevertheless, in the stacking model, it is good to stack numerous models as they are able to catch different kinds of results. E.g. linear regression is able to catch much better the linear trends.</p>
+</div>
+<div id="stacking" class="section level1">
+<h1>Stacking</h1>
+<p>I will now use stacking to ensemble 4 of my created algorithms.</p>
+<pre class="r"><code>multimodel&lt;- list(tree=model_tree_final,lasso=lasso,ranger= rfregFit, gbm= gbmFit1)
+class(multimodel)&lt;- &quot;caretList&quot;</code></pre>
+<div id="visualising-results" class="section level2">
+<h2>Visualising results</h2>
+<pre class="r"><code>modelCor(resamples(multimodel)) #correlation matrix of the models</code></pre>
+<pre><code>##         tree lasso ranger   gbm
+## tree   1.000 0.860  0.912 0.890
+## lasso  0.860 1.000  0.916 0.866
+## ranger 0.912 0.916  1.000 0.941
+## gbm    0.890 0.866  0.941 1.000</code></pre>
+<pre class="r"><code>dotplot(resamples(multimodel), metric=&quot;Rsquared&quot;) #Rsquare comparison</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-21-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>xyplot(resamples(multimodel), metric=&quot;Rsquared&quot;) #tree vs lasso</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-21-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>splom(resamples(multimodel), metric=&quot;Rsquared&quot;) #all the models&#39; performance interactions</code></pre>
+<p><img src="/portfolio/project-10_files/figure-html/unnamed-chunk-21-3.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="creation-of-the-stack-model" class="section level2">
+<h2>Creation of the stack model</h2>
+<pre class="r"><code>library(caret)
+library(caretEnsemble)
+model_list&lt;- caretStack(multimodel, #creating a model that stacks both models together
+                        trControl=control,
+                        method=&quot;lm&quot;,
+                        metric=&quot;RMSE&quot;)
+
+#summary of the model
+summary(model_list)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -4032689   -49841     1715    50655  4049428 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -2.30e+04   3.08e+03   -7.46  9.2e-14 ***
+## tree         3.35e-03   1.32e-02    0.25      0.8    
+## lasso        2.10e-01   1.36e-02   15.45  &lt; 2e-16 ***
+## ranger       5.79e-01   2.79e-02   20.74  &lt; 2e-16 ***
+## gbm          2.45e-01   2.46e-02    9.92  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 192000 on 10494 degrees of freedom
+## Multiple R-squared:  0.865,  Adjusted R-squared:  0.865 
+## F-statistic: 1.68e+04 on 4 and 10494 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code># RMSE &amp; Rsquaere
+performancefinal&lt;- list() #creating a list
+performancefinal[2]&lt;- model_list[[3]] %&gt;% #adding RMSE
+  select(RMSE) %&gt;% 
+  pull()
+
+performancefinal[1]&lt;- model_list[[3]] %&gt;% #adding Rsquare
+  select(Rsquared) %&gt;% 
+  pull()
+
+names(performancefinal) &lt;- c(&quot;Rsquare&quot;, &quot;RMSE&quot;) #rename
+performancefinal #check the values</code></pre>
+<pre><code>## $Rsquare
+## [1] 0.868
+## 
+## $RMSE
+## [1] 189661</code></pre>
+<p>As we can see, the Rsuqared achieves the best results in comparison to our all previous models. the RMSE is equal to 189661.2 and the Rsquare equals 86.8%. Therefore, we will use this model as an estimation engine to guide the investment on the housing market in London.</p>
+</div>
+</div>
+<div id="performance-on-test-data" class="section level1">
+<h1>Performance on test data</h1>
+<p>First I will check the preformance of our model on the test dataset.</p>
+<pre class="r"><code>numchoose=200 #choosing number of investments
+set.seed(1) #set seed
+random_mult&lt;-1/(1-runif(nrow(test_data),min=-0.2, max=0.2))
+test_data$asking_price&lt;-test_data$price*random_mult #creating the asking_price simulation
+
+#Assume that these are asking prices
+
+#now predict the value of houses
+test_data$predict&lt;-predict(model_list,test_data)
+
+#choose the ones that you want to invest here
+
+#Let’s find the profit margin given our predicted price and asking price
+
+test_data&lt;-test_data %&gt;% 
+  mutate(profitMargin=(predict-asking_price)/(asking_price)) %&gt;% 
+  arrange(-profitMargin)
+#Make sure you chooses exactly 200 of them
+test_data$invest=0
+test_data[1:numchoose,]$invest=1
+
+#let&#39;s find the actual profit
+test_data&lt;-test_data %&gt;% 
+  mutate(profit=(price-asking_price)/(asking_price), actualProfit=invest*profit)
+
+mean(test_data$profit)</code></pre>
+<pre><code>## [1] 0.0019</code></pre>
+<pre class="r"><code>sum(test_data$actualProfit)/numchoose</code></pre>
+<pre><code>## [1] 0.0678</code></pre>
+<p>The silumation gives us positice results with the average profit on all the investments amouting to 0.19% and the average profit from 200 best investments equal o 6%.</p>
+</div>
+<div id="picking-investment-portfolio" class="section level1">
+<h1>Picking investment portfolio</h1>
+<p>In this section I will use the best algorithm I identified to choose 200 properties from the out of sample data.</p>
+<pre class="r"><code>numchoose=200 # choosing number of properties we will invest in
+
+oos&lt;-london_house_prices_2019_out_of_sample
+#predict the value of houses
+oos$predict&lt;-predict(model_list,oos)
+#Choose the ones you want to invest here
+#Make sure you choose exactly 200 of them
+
+oos&lt;-oos %&gt;% 
+  mutate(profitMargin=(predict-asking_price)/(asking_price)) %&gt;% 
+  arrange(-profitMargin)
+#Make sure you chooses exactly 200 of them
+oos$buy=0
+oos[1:numchoose,]$buy=1
+oos&lt;-oos %&gt;% mutate( actualProfit=buy*profitMargin)
+#let&#39;s find the actual profit
+mean(oos$profitMargin)</code></pre>
+<pre><code>## [1] 0.0387</code></pre>
+<pre class="r"><code>sum(oos$actualProfit)/numchoose</code></pre>
+<pre><code>## [1] 0.685</code></pre>
+<pre class="r"><code>  #oos %&gt;% 
+  #mutate(revenue=(predict-asking_price)) %&gt;% 
+  #filter(buy==1) %&gt;% 
+  #summarise(sum(revenue))
+
+#I will output my choices to the csv file that will be also included to my final submission
+write.csv(oos,&quot;Prawda_Agnieszka.csv&quot;)</code></pre>
+<p>Final perdictions lead us to the following results. The average profit margin of all the properties in the data set equals 3.86%, whereas the average profit from 200 best investments equals 68.45%. Our engine works. I will provide the documentation of all the steps taken and explanantion of all the models in my technial report.</p>
+<p>Thank you.</p>
+</div>
+
+          </div>
+          <div class="site-project-single-image">
+            
+          </div>
+          
+          <div class="site-project-single-action">
+            <a href="/portfolio/project-02/">
+              <span class="link-area">
+                <span data-text="Next Project">
+                  Next Project
+                </span>
+              </span>
+              <img src="/images/to-top.svg" alt="next project">
+            </a>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  
+  <section class="site-cta" style='background-image: url("/images/backgrounds/cta-background.jpg");'>
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h1 class="site-cta-title">Contact me</h1>
+          <ul class="site-cta-buttons">
+            <li>
+              <a href="/contact" class="btn btn-secondary">
+                <span class="btn-area">
+                  <span data-text="Send an email">
+                    Send an email
+                  </span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="/portfolio" class="btn btn-primary">
+                <span class="btn-area">
+                  <span data-text="See more portfolio">
+                    See more portfolio
+                  </span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+
+
+        </main><footer class="site-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="site-footer-logo"><a href="/"><img src="/images/logo-footer.png" alt="logo-footer"></a></div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Contact Info</h5>
+          <p class="site-footer-widget-description">
+            Regent's Park, London NW1 4SA
+            <br>
+            <a href="tel:&#43;447762727403">&#43;447762727403</a>
+            <br>
+            <a href="mailto:aprawda.mam2021@london.edu">aprawda.mam2021@london.edu</a>
+          </p>
+        </div>
+      </div>
+      
+      
+      
+      <div class="col-lg-2 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Social Media</h5>
+          <ul class="site-footer-widget-links">
+            
+              <li><a href="https://www.linkedin.com/in/agnieszka-prawda/">Linkedin</a></li>
+            
+          </ul>
+        </div>
+      </div>
+      
+      
+      <div class="col-lg-2 col-12">
+        <a href="#top" class="site-footer-widget-top">
+          <img src="/images/to-top.svg" alt="back-to-top">
+          <p>
+            I want to 
+            <br>
+            visit again
+          </p>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script src="/js/formhandler.min.js"></script>
+
+<script src="/js/vendor.min.js"></script>
+
+<script src="/js/script.min.js"></script></body>
+</html>
