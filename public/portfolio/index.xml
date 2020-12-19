@@ -14,7 +14,7 @@
     <item>
       <title>Predicting Survival of Titanic Passengers in Python</title>
       <link>/portfolio/project-09/</link>
-      <pubDate>Wed, 23 Dec 2020 15:44:46 +0600</pubDate>
+      <pubDate>Sun, 13 Dec 2020 15:44:46 +0600</pubDate>
       
       <guid>/portfolio/project-09/</guid>
       <description>IMPORT LIBRARIES import numpy as np import pandas as pd import matplotlib.pyplot as plt import random
@@ -84,36 +84,6 @@ from sklearn.preprocessing import LabelEncoder from sklearn.neural_network impor
       
       <guid>/portfolio/project-02/</guid>
       <description>Omega Group plc- Pay Discrimination At the last board meeting of Omega Group Plc., the headquarters of a large multinational company, the issue was raised that women were being discriminated in the company, in the sense that the salaries were not the same for male and female executives.</description>
-    </item>
-    
-    <item>
-      <title>USE-LESS BRAND</title>
-      <link>/portfolio/use-less-brand/</link>
-      <pubDate>Mon, 23 Dec 2019 15:58:10 +0600</pubDate>
-      
-      <guid>/portfolio/use-less-brand/</guid>
-      <description>The “Seamless Watch” watch has all the features that users expect in a digital watch, and some unusual features.
-The watch has the following features:</description>
-    </item>
-    
-    <item>
-      <title>OSEN CLOCK</title>
-      <link>/portfolio/osen-clock/</link>
-      <pubDate>Mon, 23 Dec 2019 15:56:43 +0600</pubDate>
-      
-      <guid>/portfolio/osen-clock/</guid>
-      <description>The “Seamless Watch” watch has all the features that users expect in a digital watch, and some unusual features.
-The watch has the following features:</description>
-    </item>
-    
-    <item>
-      <title>SEAMLESS WATCH</title>
-      <link>/portfolio/seamless-watch/</link>
-      <pubDate>Mon, 23 Dec 2019 15:55:44 +0600</pubDate>
-      
-      <guid>/portfolio/seamless-watch/</guid>
-      <description>The “Seamless Watch” watch has all the features that users expect in a digital watch, and some unusual features.
-The watch has the following features:</description>
     </item>
     
   </channel>
