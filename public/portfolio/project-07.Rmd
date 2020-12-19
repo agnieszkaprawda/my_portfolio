@@ -2,7 +2,7 @@
 category:
 - Machine Learning in R
 date: "2020-12-02T15:58:10+06:00"
-image: images/projects/lendingclub3.jpg
+image: images/projects/bbcplayer3.jpg
 project_images:
 title: Building Recommendation Systems for BBC iPlayer users
 type: portfolio

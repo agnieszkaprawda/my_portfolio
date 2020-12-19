@@ -22,48 +22,9 @@ knitr::opts_chunk$set(
   fig.align = "center"
 )
 ```
-<!--begin html code: I will mark the html code in my markdown files, these are not directly related to the course material-->
 
 
-
-
-</style>
-<style>
-body {
-text-align: justify}
-
-</style>
-
-
-<style>
-img {
-  border-radius: 15px;
-}
-
-
-<style>
-div.grey { background-color:#808080; border-radius: 5px; padding: 20px; border-style: groove;}
-</style>
-
-<style>
-div.font {color="red"}
-</style>
-
-<style>
-div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
-
-</style>
-
-
-<style>
-div.navy { background-color:#A2A2B6; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
-
-</style>
-
-<!--end html code-->
-
-
-```{r setup, include=FALSE}
+```{r}
 
 #install.packages("remotes")
 #remotes::install_github("vqv/ggbiplot", force = TRUE)
@@ -78,10 +39,6 @@ library(MASS)
 library(rsample)
 library(dplyr)
 library(stats)
-
-knitr::opts_chunk$set(
-  tidy = FALSE,   # display code as typed
-  size = "small") # slightly smaller font for code
 ```
 
 # **QUESTION 1: PRINCIPAL COMPONENT ANALYSIS**
