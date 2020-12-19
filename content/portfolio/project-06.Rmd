@@ -2,7 +2,7 @@
 category:
 - Data Science in R
 date: "2020-11-15T15:58:10+06:00"
-image: images/projects/bbcplayer1.jpg
+image: images/projects/bbciplayer1.jpg
 project_images:
 title: Clustering BBC iPlayer users using K means, PAM and H-Clustering  methods
 type: portfolio
