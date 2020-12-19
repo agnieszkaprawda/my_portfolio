@@ -1,10 +1,10 @@
 ---
 category:
-- Machine Learning in Python
+- Machine Learning using Python
 date: "2020-12-16T15:44:46+06:00"
 image: images/projects/project-thumb-four.jpg
 project_images:
-title: Predicting Survival of Titanic Passengers in Python
+title: Predicting Survival of Titanic Passengers using Python
 type: portfolio
 ---
 
