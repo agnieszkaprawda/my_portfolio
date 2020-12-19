@@ -2,7 +2,7 @@
 category:
 - Machine Learning in Python
 date: "2020-12-13T15:44:46+06:00"
-image: images/projects/titanic1jpg
+image: images/projects/titanic1.jpg
 project_images:
 title: Predicting Survival of Titanic Passengers in Python
 type: portfolio
