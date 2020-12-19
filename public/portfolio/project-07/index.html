@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+  <meta charset="utf-8" />
+  <title>Building Recommendation Systems for BBC iPlayer users</title>
+
+  <!-- mobile responsive meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  
+  <meta name="author" content="StaticMania">
+  
+  <meta name="generator" content="Hugo 0.74.3" />
+
+  <!-- Bootstrap -->
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <!-- font-awesome -->
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css" />
+  <!-- Main Stylesheets -->
+  
+  <link href="/scss/style.min.css" rel="stylesheet" />
+
+  
+  <link rel="shortcut icon" href="/images/favicon.png" type="image/x-icon" />
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+</head><body><nav class="navbar navbar-expand-lg site-navigation">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <img src="/images/logo.png" alt="logo" />
+    </a>
+    <button
+      class="navbar-toggler collapsed"
+      type="button"
+      data-toggle="collapse"
+      data-target="#sitenavbar"
+    >
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sitenavbar">
+      <ul class="navbar-nav ml-auto main-nav">
+         
+         
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/"
+              >Home</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/portfolio"
+              >Portfolio</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/blog"
+              >Other Projects</a
+            >
+          </li>
+           
+         
+          
+          <li class="nav-item">
+            <a
+              class="nav-link btn btn-sm btn-primary btn-sm-rounded"
+              href="/contact"
+            >
+              <span class="btn-area">
+                <span data-text="Get in touch">
+                  Get in touch
+                </span>
+              </span>
+            </a>
+          </li>
+           
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+<main>
+
+<section class="site-project-single-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="site-project-single">
+          <h1>
+            Building Recommendation Systems for BBC iPlayer users
+          </h1>
+          <div class="site-project-single-description">
+            
+
+
+<!--begin html code: I will mark the html code in my markdown files, these are not directly related to the course material-->
+</style>
+<style>
+body {
+text-align: justify}
+
+</style>
+<style>
+<p>img {
+border-radius: 15px;
+}</p>
+<style>
+div.grey { background-color:#808080; border-radius: 5px; padding: 20px; border-style: groove;}
+</style>
+<style>
+div.font {color="red"}
+</style>
+<style>
+div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+<style>
+div.navy { background-color:#A2A2B6; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+<!--end html code-->
+<div id="data-preparation" class="section level1">
+<h1>DATA PREPARATION</h1>
+<div id="installing-packages" class="section level4">
+<h4>Installing Packages</h4>
+<pre class="r"><code>#installing needed packages
+library(tidyverse)
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+library(skimr)
+library(janitor)
+library(ggthemes)
+library(showtext)
+font_add_google(&quot;Montserrat&quot;, &quot;Montserrat&quot;) #downloading fonts from Google
+showtext_auto()</code></pre>
+</div>
+<div id="loading-the-data" class="section level4">
+<h4>Loading the Data</h4>
+<pre class="r"><code>#Loadning the needed 2 datasets
+movie_data &lt;- fread(input=&quot;~/Documents/LBS/Machine Learning/Session 02/data/movies.csv&quot;,
+                    stringsAsFactors = FALSE) #9742 number of rows
+
+rating_data &lt;- fread(input = &quot;~/Documents/LBS/Machine Learning/Session 02/data/ratings.csv&quot;,nrows = 1e6) #100836 number of rows
+
+#Creating the genre list for my data
+list_genre &lt;- c(&quot;Action&quot;, &quot;Adventure&quot;, &quot;Animation&quot;, &quot;Children&quot;, 
+                &quot;Comedy&quot;, &quot;Crime&quot;,&quot;Documentary&quot;, &quot;Drama&quot;, &quot;Fantasy&quot;,
+                &quot;Film-Noir&quot;, &quot;Horror&quot;, &quot;Musical&quot;, &quot;Mystery&quot;,&quot;Romance&quot;,
+                &quot;Sci-Fi&quot;, &quot;Thriller&quot;, &quot;War&quot;, &quot;Western&quot;)</code></pre>
+</div>
+<div id="cleaning-the-data" class="section level3">
+<h3>Cleaning the Data</h3>
+<div id="cleaning-movies-data" class="section level5">
+<h5>Cleaning Movies Data</h5>
+<pre class="r"><code>#Cleaning up the movie_data from the movies that appear more than once
+
+#Finding the movies that appeard more than once
+repeatMovies &lt;- movie_data %&gt;% 
+  group_by(title) %&gt;% 
+  summarise(n = n()) %&gt;% 
+  filter(n &gt; 1) %&gt;% 
+  pull(title)
+
+repeatMovies # 5 movies appear more than once</code></pre>
+<pre><code>## [1] &quot;Men with Guns (1997)&quot;     &quot;War of the Worlds (2005)&quot;</code></pre>
+<pre class="r"><code># [1] &quot;Confessions of a Dangerous Mind (2002)&quot; &quot;Emma (1996)&quot;                           
+# [3] &quot;Eros (2004)&quot;                            &quot;Saturn 3 (1980)&quot;                       
+# [5] &quot;War of the Worlds (2005)&quot; 
+
+removeRows &lt;- 0  #Initialising  the variable that stores the rows we have to remove later (the duplicates)
+
+##### REMOVE REPEATS IN RATING DATA ####
+
+for(i in repeatMovies){
+  repeatMovieLoc &lt;- which(movie_data$title == i) #Getting the indices of the rows where the current movie (with title i) is stored 
+  
+  tempGenre &lt;- paste(movie_data$genres[repeatMovieLoc], collapse=&quot;|&quot;)   #Collapsing the genres assigned to the duplicated movies, separated by |
+  
+tempGenre &lt;- paste(unique(unlist(strsplit(tempGenre, split = &quot;\\|&quot;)[[1]])), collapse = &quot;|&quot;)   #Splitting the string up again, taking only the unique values
+
+movie_data$genres[repeatMovieLoc[1]] &lt;- tempGenre   #Bringing the new genre string to the first appearance of the movie in the dataframe
+  
+
+removeRows &lt;- c(removeRows, repeatMovieLoc[-1])  #Adding the duplicate entry (row 6271) to the list of rows I want to remove later
+  
+### REMOVE DUPLICATES IN RATINGS DATA ###
+
+  
+repeatMovieIdLoc &lt;- which(rating_data$movieId %in% movie_data$movieId[removeRows]) #Searching for all the entries in the rating_data dataframe that refer to duplicate movies in movie_data
+  
+rating_data$movieId[repeatMovieIdLoc] &lt;- movie_data$movieId[repeatMovieLoc[1]]  #Changing movieId to the movieId that remains in our movie_data dataframe
+}
+
+#Removing the duplicate rows in the movie_data
+movie_data &lt;- movie_data[-removeRows,]
+movie_data</code></pre>
+<pre><code>##        movieId                               title
+##     1:       1                    Toy Story (1995)
+##     2:       2                      Jumanji (1995)
+##     3:       3             Grumpier Old Men (1995)
+##     4:       4            Waiting to Exhale (1995)
+##     5:       5  Father of the Bride Part II (1995)
+##    ---                                            
+## 10323:  146684       Cosmic Scrat-tastrophe (2015)
+## 10324:  146878          Le Grand Restaurant (1966)
+## 10325:  148238      A Very Murray Christmas (2015)
+## 10326:  148626                The Big Short (2015)
+## 10327:  149532 Marco Polo: One Hundred Eyes (2015)
+##                                             genres
+##     1: Adventure|Animation|Children|Comedy|Fantasy
+##     2:                  Adventure|Children|Fantasy
+##     3:                              Comedy|Romance
+##     4:                        Comedy|Drama|Romance
+##     5:                                      Comedy
+##    ---                                            
+## 10323:                   Animation|Children|Comedy
+## 10324:                                      Comedy
+## 10325:                                      Comedy
+## 10326:                                       Drama
+## 10327:                          (no genres listed)</code></pre>
+</div>
+<div id="cleaning-ratings-data" class="section level5">
+<h5>Cleaning Ratings Data</h5>
+<p>There is a risk that the same user has rated a movie multiple times. I would like to keep only the best rating.</p>
+<p>I will group by userId and movieId, and only take the highest (maximum) rating In the end, I will produce a dataframe, where there is (at most) 1 rating of a user for a movie. This is a constraint needed to build up a proper user-movie-interaction-matrix</p>
+<pre class="r"><code>rating_data &lt;- rating_data %&gt;% 
+  group_by(userId, movieId) %&gt;% 
+  summarise(rating = max(rating)) %&gt;% 
+  ungroup()
+
+length(unique(rating_data$movieId)) #Identifying movies that have not been yet rated by any user. They are safe to ignore for now, since they shouldn&#39;t affect our recommendations</code></pre>
+<pre><code>## [1] 10323</code></pre>
+<pre class="r"><code>length(unique(movie_data$movieId))</code></pre>
+<pre><code>## [1] 10327</code></pre>
+<pre class="r"><code>setdiff(unique(movie_data$movieId), unique(rating_data$movieId)) </code></pre>
+<pre><code>## [1]   7243   8785  54290 128991</code></pre>
+<pre class="r"><code>rating_data</code></pre>
+<pre><code>## # A tibble: 105,335 x 3
+##    userId movieId rating
+##     &lt;int&gt;   &lt;int&gt;  &lt;dbl&gt;
+##  1      1      16    4  
+##  2      1      24    1.5
+##  3      1      32    4  
+##  4      1      47    4  
+##  5      1      50    4  
+##  6      1     110    4  
+##  7      1     150    3  
+##  8      1     161    4  
+##  9      1     165    3  
+## 10      1     204    0.5
+## # … with 105,325 more rows</code></pre>
+</div>
+<div id="checking-the-data-is-clean" class="section level5">
+<h5>Checking the Data is Clean</h5>
+<pre class="r"><code>#movie_data
+skim(movie_data)</code></pre>
+<table>
+<caption>(#tab:performing_data_checks)Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">movie_data</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">10327</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">3</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">character</td>
+<td align="left">2</td>
+</tr>
+<tr class="odd">
+<td align="left">numeric</td>
+<td align="left">1</td>
+</tr>
+<tr class="even">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">min</th>
+<th align="right">max</th>
+<th align="right">empty</th>
+<th align="right">n_unique</th>
+<th align="right">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">title</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">8</td>
+<td align="right">134</td>
+<td align="right">0</td>
+<td align="right">10327</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">genres</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">77</td>
+<td align="right">0</td>
+<td align="right">938</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">movieId</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">31922</td>
+<td align="right">37737</td>
+<td align="right">1</td>
+<td align="right">3239</td>
+<td align="right">7087</td>
+<td align="right">59875</td>
+<td align="right">149532</td>
+<td align="left">▇▂▂▁▁</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>summary(movie_data)    </code></pre>
+<pre><code>##     movieId          title              genres         
+##  Min.   :     1   Length:10327       Length:10327      
+##  1st Qu.:  3239   Class :character   Class :character  
+##  Median :  7087   Mode  :character   Mode  :character  
+##  Mean   : 31922                                        
+##  3rd Qu.: 59875                                        
+##  Max.   :149532</code></pre>
+<pre class="r"><code>head(movie_data)</code></pre>
+<pre><code>##    movieId                              title
+## 1:       1                   Toy Story (1995)
+## 2:       2                     Jumanji (1995)
+## 3:       3            Grumpier Old Men (1995)
+## 4:       4           Waiting to Exhale (1995)
+## 5:       5 Father of the Bride Part II (1995)
+## 6:       6                        Heat (1995)
+##                                         genres
+## 1: Adventure|Animation|Children|Comedy|Fantasy
+## 2:                  Adventure|Children|Fantasy
+## 3:                              Comedy|Romance
+## 4:                        Comedy|Drama|Romance
+## 5:                                      Comedy
+## 6:                       Action|Crime|Thriller</code></pre>
+<pre class="r"><code>#rating_data
+skim(movie_data)</code></pre>
+<table>
+<caption>(#tab:performing_data_checks)Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">movie_data</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">10327</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">3</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">character</td>
+<td align="left">2</td>
+</tr>
+<tr class="odd">
+<td align="left">numeric</td>
+<td align="left">1</td>
+</tr>
+<tr class="even">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">min</th>
+<th align="right">max</th>
+<th align="right">empty</th>
+<th align="right">n_unique</th>
+<th align="right">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">title</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">8</td>
+<td align="right">134</td>
+<td align="right">0</td>
+<td align="right">10327</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">genres</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">77</td>
+<td align="right">0</td>
+<td align="right">938</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">movieId</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">31922</td>
+<td align="right">37737</td>
+<td align="right">1</td>
+<td align="right">3239</td>
+<td align="right">7087</td>
+<td align="right">59875</td>
+<td align="right">149532</td>
+<td align="left">▇▂▂▁▁</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>summary(rating_data)   </code></pre>
+<pre><code>##      userId       movieId           rating    
+##  Min.   :  1   Min.   :     1   Min.   :0.50  
+##  1st Qu.:192   1st Qu.:  1073   1st Qu.:3.00  
+##  Median :383   Median :  2496   Median :3.50  
+##  Mean   :365   Mean   : 13380   Mean   :3.52  
+##  3rd Qu.:557   3rd Qu.:  5991   3rd Qu.:4.00  
+##  Max.   :668   Max.   :149532   Max.   :5.00</code></pre>
+<pre class="r"><code>head(rating_data)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   userId movieId rating
+##    &lt;int&gt;   &lt;int&gt;  &lt;dbl&gt;
+## 1      1      16    4  
+## 2      1      24    1.5
+## 3      1      32    4  
+## 4      1      47    4  
+## 5      1      50    4  
+## 6      1     110    4</code></pre>
+<pre class="r"><code>dupes_movie&lt;-movie_data%&gt;%get_dupes(movieId,title) # checking for dupes once again
+dupes_movie # no dupes</code></pre>
+<pre><code>## Empty data.table (0 rows and 4 cols): movieId,title,dupe_count,genres</code></pre>
+<pre class="r"><code>dupes_rating&lt;-rating_data%&gt;%get_dupes(userId,movieId)
+dupes_rating # no dupes</code></pre>
+<pre><code>## # A tibble: 0 x 4
+## # … with 4 variables: userId &lt;int&gt;, movieId &lt;int&gt;, dupe_count &lt;int&gt;,
+## #   rating &lt;dbl&gt;</code></pre>
+<pre class="r"><code>movie_data</code></pre>
+<pre><code>##        movieId                               title
+##     1:       1                    Toy Story (1995)
+##     2:       2                      Jumanji (1995)
+##     3:       3             Grumpier Old Men (1995)
+##     4:       4            Waiting to Exhale (1995)
+##     5:       5  Father of the Bride Part II (1995)
+##    ---                                            
+## 10323:  146684       Cosmic Scrat-tastrophe (2015)
+## 10324:  146878          Le Grand Restaurant (1966)
+## 10325:  148238      A Very Murray Christmas (2015)
+## 10326:  148626                The Big Short (2015)
+## 10327:  149532 Marco Polo: One Hundred Eyes (2015)
+##                                             genres
+##     1: Adventure|Animation|Children|Comedy|Fantasy
+##     2:                  Adventure|Children|Fantasy
+##     3:                              Comedy|Romance
+##     4:                        Comedy|Drama|Romance
+##     5:                                      Comedy
+##    ---                                            
+## 10323:                   Animation|Children|Comedy
+## 10324:                                      Comedy
+## 10325:                                      Comedy
+## 10326:                                       Drama
+## 10327:                          (no genres listed)</code></pre>
+<pre class="r"><code>searchMatrix &lt;- movie_data %&gt;% 
+  separate_rows(genres, sep = &quot;\\|&quot;) %&gt;% #Splitting the genres assigned to movies into multiple rows
+  mutate(values = 1) %&gt;% 
+  pivot_wider(names_from = genres, values_from = values) %&gt;%    #Pivoting the dataframe so that each genre is assigned its own column
+  replace(is.na(.), 0)
+
+searchMatrix %&gt;%  #Some movies have no genres listed, this is not problematic for the recommendation model, since it is purely collaborative, rather than content-based
+  filter(`(no genres listed)`==1) %&gt;% 
+  length()</code></pre>
+<pre><code>## [1] 22</code></pre>
+</div>
+<div id="building-the-rating-matrix-user-movie-interactions-matrix" class="section level4">
+<h4>Building the Rating Matrix (User-Movie-Interactions Matrix)</h4>
+<pre class="r"><code>ratingMatrix &lt;- rating_data %&gt;% #A ratings matrix consists of userId&#39;s as rows and movieId&#39;s as columns
+  arrange(movieId) %&gt;% 
+  pivot_wider(names_from = movieId, values_from = rating) %&gt;%   #allocating each movie to its own column
+  arrange(userId) %&gt;% 
+  select(-userId)   #dropping userId
+
+
+ratingMatrix &lt;- as.matrix(ratingMatrix) #converting the dataframe created above into a matrix
+
+#Ordering the rows and columns so that those with the fewest NAs are furthest to the top left, which is crucial for selecting the most popular movies and most frequent users
+ratingMatrix &lt;- ratingMatrix[order(rowSums(is.na(ratingMatrix))),order(colSums(is.na(ratingMatrix)))]
+
+
+ratingMatrix &lt;- as(ratingMatrix, &quot;realRatingMatrix&quot;) #Converting the rating matrix into a recommenderlab sparse matrix</code></pre>
+</div>
+</div>
+</div>
+<div id="step-1---exploratory-analysis" class="section level1">
+<h1>STEP 1 - EXPLORATORY ANALYSIS</h1>
+<div id="preparing-the-data" class="section level4">
+<h4>Preparing the Data</h4>
+<div id="ratings-counts" class="section level5">
+<h5>Ratings Counts</h5>
+<pre class="r"><code>rating_data %&gt;% 
+  group_by(rating) %&gt;% 
+  summarise(n = n()) #Creating a count of movie ratings</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    rating     n
+##     &lt;dbl&gt; &lt;int&gt;
+##  1    0.5  1198
+##  2    1    3258
+##  3    1.5  1567
+##  4    2    7942
+##  5    2.5  5484
+##  6    3   21727
+##  7    3.5 12237
+##  8    4   28879
+##  9    4.5  8187
+## 10    5   14856</code></pre>
+<pre class="r"><code>movie_rating_count &lt;- rating_data %&gt;% 
+  group_by(movieId) %&gt;% 
+  summarise(ratings = n()) %&gt;% 
+  left_join(movie_data, by = &quot;movieId&quot;) %&gt;% 
+  select(movieId, title, ratings) %&gt;% 
+  arrange(desc(ratings)) #Creating a table with number of ratings per movie
+
+head(movie_rating_count) #previewing </code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   movieId title                                     ratings
+##     &lt;int&gt; &lt;chr&gt;                                       &lt;int&gt;
+## 1     296 Pulp Fiction (1994)                           325
+## 2     356 Forrest Gump (1994)                           311
+## 3     318 Shawshank Redemption, The (1994)              308
+## 4     480 Jurassic Park (1993)                          294
+## 5     593 Silence of the Lambs, The (1991)              290
+## 6     260 Star Wars: Episode IV - A New Hope (1977)     273</code></pre>
+<pre class="r"><code>user_rating_count &lt;- rating_data %&gt;%  #Creating a table with number of ratings per user
+  group_by(userId) %&gt;% 
+  summarise(ratings = n()) %&gt;% 
+  arrange(desc(ratings))
+
+
+head(user_rating_count) #preaviewing</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   userId ratings
+##    &lt;int&gt;   &lt;int&gt;
+## 1    668    5677
+## 2    575    2836
+## 3    458    2085
+## 4    232    1421
+## 5    310    1287
+## 6    475    1249</code></pre>
+</div>
+</div>
+<div id="how-similar-the-100-most-popular-movies-are-to-eachother" class="section level4">
+<h4>How similar the 100 most popular movies are to eachother</h4>
+<pre class="r"><code>movie_similarity &lt;- similarity(ratingMatrix[, 1:100], 
+                               method = &quot;cosine&quot;,
+                               which = &quot;items&quot;)
+
+
+movie_similarity &lt;- as.matrix(movie_similarity) + diag(100) #Adding diag(100) - the similarity of a movie with itself is always 1
+
+image(movie_similarity, main = &quot;Top 100 Popular Movies&#39; Similarity&quot;)</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/similarity_100_popular_movies-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div id="how-similar-the-100-most-frequent-users-are-to-eachother" class="section level4">
+<h4>How similar the 100 most frequent users are to eachother</h4>
+<pre class="r"><code>#I produce a matrix which calculates how similar users are to one another
+user_similarity &lt;- similarity(ratingMatrix[1:100, ],
+                              method = &quot;cosine&quot;,
+                              which = &quot;users&quot;)
+
+#I also add diag(100), since the similarity of a user with themselves is 1
+user_similarity &lt;- as.matrix(user_similarity) + diag(100)
+
+image(user_similarity, main = &quot;100 Top active users&#39; similarity&quot;)</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/similarity_100_frequent_users-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div id="build-a-histogram-to-show-the-frequency-of-ratings-of-all-movies" class="section level4">
+<h4>Build a Histogram to Show the Frequency of Ratings of All Movies</h4>
+<pre class="r"><code>rating_data %&gt;% 
+  group_by(rating) %&gt;% 
+  count()</code></pre>
+<pre><code>## # A tibble: 10 x 2
+## # Groups:   rating [10]
+##    rating     n
+##     &lt;dbl&gt; &lt;int&gt;
+##  1    0.5  1198
+##  2    1    3258
+##  3    1.5  1567
+##  4    2    7942
+##  5    2.5  5484
+##  6    3   21727
+##  7    3.5 12237
+##  8    4   28879
+##  9    4.5  8187
+## 10    5   14856</code></pre>
+<pre class="r"><code>rating_data %&gt;%  #Building a histogram
+  ggplot(aes(rating)) + 
+  geom_bar() +
+  labs(title=&quot;Movies were most frequently rated for 4.0 &quot;,subtitle = &quot;Movie rating frequency&quot;,x=&quot;Rating&quot;,y=&quot;Count&quot;) + 
+  theme_minimal() + 
+  theme(plot.title = element_text(color = &quot;gray60&quot;,size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        plot.subtitle = element_text(color = &quot;gray60&quot;, face=&quot;plain&quot;, ,size= 10,family= &quot;Montserrat&quot;),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;plain&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7))+
+  scale_x_continuous(limits=c(0,5.5)) +
+  scale_y_continuous(limits=c(0,30000))</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/histogram_frequency_movie_ratings-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>(rating_data)</code></pre>
+<pre><code>## # A tibble: 105,335 x 3
+##    userId movieId rating
+##     &lt;int&gt;   &lt;int&gt;  &lt;dbl&gt;
+##  1      1      16    4  
+##  2      1      24    1.5
+##  3      1      32    4  
+##  4      1      47    4  
+##  5      1      50    4  
+##  6      1     110    4  
+##  7      1     150    3  
+##  8      1     161    4  
+##  9      1     165    3  
+## 10      1     204    0.5
+## # … with 105,325 more rows</code></pre>
+</div>
+</div>
+<div id="step-2---select-most-common-users-and-movies" class="section level1">
+<h1>STEP 2 - SELECT MOST COMMON USERS AND MOVIES</h1>
+<div id="select-movies-with-more-than-m-ratings-and-users-who-have-given-more-than-n-ratings-where-m---c10-20-50-100-200-n---m" class="section level4">
+<h4>Select movies with more than ‘m’ ratings and users who have given more than ‘n’ ratings, where m &lt;- c(10, 20, 50, 100, 200); n &lt;- m</h4>
+<pre class="r"><code>#Since the rows (users) and columns (movies) of my ratingMatrix are already ranked in decreasing order of frequency/popularity, we are just slicing the matrix
+
+#movies rated more than 10 times and users who have rated more than 10 movies
+top10_rate &lt;- ratingMatrix[rowCounts(ratingMatrix) &gt; 10,colCounts(ratingMatrix) &gt; 10] 
+
+#movies rated more than 20 times and users who have rated more than 20 movies
+top20_rate &lt;- ratingMatrix[rowCounts(ratingMatrix) &gt; 20,colCounts(ratingMatrix) &gt; 20] 
+
+#movies rated more than 50 times and users who have rated more than 50 movies
+top50_rate &lt;- ratingMatrix[rowCounts(ratingMatrix) &gt; 50,colCounts(ratingMatrix) &gt; 50] 
+
+#movies rated more than 100 times and users who have rated more than 100 movies
+top100_rate &lt;- ratingMatrix[rowCounts(ratingMatrix) &gt; 100,colCounts(ratingMatrix) &gt; 100] 
+#top100_rate &lt;- top100_rate[rowCounts(top100_rate) &gt; 5, ]
+
+#movies rated more than 200 times and users who have rated more than 200 movies
+top200_rate &lt;- ratingMatrix[rowCounts(ratingMatrix) &gt; 200,colCounts(ratingMatrix) &gt; 200]</code></pre>
+</div>
+</div>
+<div id="step-3---building-recommendation-systems" class="section level1">
+<h1>STEP 3 - BUILDING RECOMMENDATION SYSTEMS</h1>
+<div id="splitting-each-subset-into-test-and-training-data" class="section level4">
+<h4>Splitting each subset into test and training data</h4>
+<pre class="r"><code>set.seed(1234) # setting seed
+top10_split &lt;- evaluationScheme(top10_rate, method=&quot;split&quot;, train=0.8, given=-5) # splitting all the data to 80% training data and 20% remaining for the testing
+top10_split</code></pre>
+<pre><code>## Evaluation scheme using all-but-5 items
+## Method: &#39;split&#39; with 1 run(s).
+## Training set proportion: 0.800
+## Good ratings: NA
+## Data set: 668 x 2160 rating matrix of class &#39;realRatingMatrix&#39; with 82500 ratings.</code></pre>
+<pre class="r"><code>set.seed(1234)
+top20_rate &lt;- top20_rate[rowCounts(top20_rate) &gt; 5, ]
+top20_split &lt;- evaluationScheme(top20_rate, method=&quot;split&quot;, train=0.8, given=-5)
+top20_split</code></pre>
+<pre><code>## Evaluation scheme using all-but-5 items
+## Method: &#39;split&#39; with 1 run(s).
+## Training set proportion: 0.800
+## Good ratings: NA
+## Data set: 648 x 1261 rating matrix of class &#39;realRatingMatrix&#39; with 68925 ratings.</code></pre>
+<pre class="r"><code>set.seed(1234)
+top50_split &lt;- evaluationScheme(top50_rate, method=&quot;split&quot;, train=0.8, given=-5)
+top50_split</code></pre>
+<pre><code>## Evaluation scheme using all-but-5 items
+## Method: &#39;split&#39; with 1 run(s).
+## Training set proportion: 0.800
+## Good ratings: NA
+## Data set: 420 x 447 rating matrix of class &#39;realRatingMatrix&#39; with 38341 ratings.</code></pre>
+<pre class="r"><code>set.seed(1234)
+top100_rate &lt;- top100_rate[rowCounts(top100_rate) &gt; 5, ]
+top100_split &lt;- evaluationScheme(top100_rate, method=&quot;split&quot;, train=0.8, given=-5)
+
+set.seed(1234)
+top200_rate &lt;- top200_rate[rowCounts(top200_rate) &gt; 5, ]
+top200_split &lt;- evaluationScheme(top200_rate, method=&quot;split&quot;, train=0.8, given=-5)</code></pre>
+</div>
+<div id="build-three-separate-recommendations-systems-for-each-of-the-values-of-n-and-m-5-versions-for-each-type-of-rs" class="section level4">
+<h4>Build three separate recommendations systems for each of the values of ‘n’ and ‘m’ (5 versions for each type of RS)</h4>
+</div>
+<div id="item-based-cf" class="section level4">
+<h4>Item Based CF</h4>
+<pre class="r"><code>#TOP10
+set.seed(1234) # setting seed
+top10_IBCF &lt;- Recommender(getData(top10_split, &quot;train&quot;), method = &quot;IBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;,k=350))
+#TOP20 
+set.seed(1234) # setting seed
+top20_IBCF &lt;- Recommender(getData(top20_split, &quot;train&quot;), method = &quot;IBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;,k=350))
+#TOP50
+set.seed(1234) # setting seed
+top50_IBCF &lt;- Recommender(getData(top50_split, &quot;train&quot;), method = &quot;IBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;,k=350))
+#TOP100
+set.seed(1234) # setting seed
+top100_IBCF &lt;- Recommender(getData(top100_split, &quot;train&quot;), method = &quot;IBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;,k=350))
+#TOP200
+set.seed(1234) # setting seed
+top200_IBCF &lt;- Recommender(getData(top200_split, &quot;train&quot;), method = &quot;IBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;,k=350))</code></pre>
+</div>
+<div id="user-based-cf" class="section level4">
+<h4>User Based CF</h4>
+<pre class="r"><code>#TOP10
+set.seed(1234) # setting seed
+top10_UBCF &lt;- Recommender(getData(top10_split, &quot;train&quot;), method = &quot;UBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;, nn=25))
+#TOP20
+set.seed(1234) # setting seed
+top20_UBCF &lt;- Recommender(getData(top20_split, &quot;train&quot;), method = &quot;UBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;, nn=25))
+#TOP50
+set.seed(1234) # setting seed
+top50_UBCF &lt;- Recommender(getData(top50_split, &quot;train&quot;), method = &quot;UBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;, nn=25))
+#TOP100
+set.seed(1234) # setting seed
+top100_UBCF &lt;- Recommender(getData(top100_split, &quot;train&quot;), method = &quot;UBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;, nn=25))
+#TOP200
+set.seed(1234) # setting seed
+top200_UBCF &lt;- Recommender(getData(top200_split, &quot;train&quot;), method = &quot;UBCF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;, nn=25))</code></pre>
+</div>
+<div id="model-based-cf-using-matrix-factorisation" class="section level4">
+<h4>Model Based CF using Matrix Factorisation</h4>
+<pre class="r"><code>#TOP10
+set.seed(1234) # setting seed
+top10_LIBMF &lt;- Recommender(getData(top10_split, &quot;train&quot;), method = &quot;LIBMF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;))</code></pre>
+<pre><code>## Available parameter (with default values):
+## dim   =  10
+## costp_l2  =  0.01
+## costq_l2  =  0.01
+## nthread   =  1
+## verbose   =  FALSE</code></pre>
+<pre class="r"><code>#TOP20
+set.seed(1234) # setting seed
+top20_LIBMF &lt;- Recommender(getData(top20_split, &quot;train&quot;), method = &quot;LIBMF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;))</code></pre>
+<pre><code>## Available parameter (with default values):
+## dim   =  10
+## costp_l2  =  0.01
+## costq_l2  =  0.01
+## nthread   =  1
+## verbose   =  FALSE</code></pre>
+<pre class="r"><code>#TOP50
+set.seed(1234) # setting seed
+top50_LIBMF &lt;- Recommender(getData(top50_split, &quot;train&quot;), method = &quot;LIBMF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;))</code></pre>
+<pre><code>## Available parameter (with default values):
+## dim   =  10
+## costp_l2  =  0.01
+## costq_l2  =  0.01
+## nthread   =  1
+## verbose   =  FALSE</code></pre>
+<pre class="r"><code>#TOP100
+set.seed(1234) # setting seed
+top100_LIBMF &lt;- Recommender(getData(top100_split, &quot;train&quot;), method = &quot;LIBMF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;))</code></pre>
+<pre><code>## Available parameter (with default values):
+## dim   =  10
+## costp_l2  =  0.01
+## costq_l2  =  0.01
+## nthread   =  1
+## verbose   =  FALSE</code></pre>
+<pre class="r"><code>#TOP200
+set.seed(1234) # setting seed
+top200_LIBMF &lt;- Recommender(getData(top200_split, &quot;train&quot;), method = &quot;LIBMF&quot;, param=list(normalize = &quot;center&quot;, method=&quot;Cosine&quot;))</code></pre>
+<pre><code>## Available parameter (with default values):
+## dim   =  10
+## costp_l2  =  0.01
+## costq_l2  =  0.01
+## nthread   =  1
+## verbose   =  FALSE</code></pre>
+</div>
+<div id="step-4---computing-rmse-of-each-model-and-combination-of-m-x-n" class="section level4">
+<h4>STEP 4 - Computing RMSE of each model and combination of m x n</h4>
+</div>
+<div id="assess-performance-of-the-above-models-for-different-number-of-items-and-users.-remember-cf-methods-are-most-appropriate-for-high-volume-items-often-watched-movies-and-frequent-users.-so-if-you-use-nm-20-then-performance-changes-as-opposed-to-when-you-use-n-50." class="section level4">
+<h4>Assess performance of the above models for different number of ‘items’ and ‘users’. Remember CF methods are most appropriate for high volume items (often watched movies) and frequent users. So, if you use n,m == 20 then performance changes as opposed to when you use n, == 50.</h4>
+</div>
+<div id="for-each-recommendation-system-we-expect-to-see-5-rmse-numbers-corresponding-to-nm-102050100200" class="section level4">
+<h4>For each recommendation system we expect to see 5 RMSE numbers, corresponding to n,m == {10,20,50,100,200}</h4>
+</div>
+<div id="rmse_item_based_cf" class="section level4">
+<h4>RMSE_item_based_CF</h4>
+<pre class="r"><code>set.seed(1234) # setting seed
+#TOP10
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+
+top10_IBCF_predict &lt;- predict(top10_IBCF, getData(top10_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+
+top10_IBCF_RMSE &lt;- calcPredictionAccuracy(top10_IBCF_predict, getData(top10_split, &quot;unknown&quot;))[1]
+top10_IBCF_RMSE</code></pre>
+<pre><code>## RMSE 
+## 1.05</code></pre>
+<pre class="r"><code>#TOP20
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top20_IBCF_predict &lt;- predict(top20_IBCF, getData(top20_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top20_IBCF_RMSE &lt;- calcPredictionAccuracy(top20_IBCF_predict, getData(top20_split, &quot;unknown&quot;))[1]
+top20_IBCF_RMSE</code></pre>
+<pre><code>## RMSE 
+## 0.99</code></pre>
+<pre class="r"><code>#TOP20
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top50_IBCF_predict &lt;- predict(top50_IBCF, getData(top50_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top50_IBCF_RMSE &lt;- calcPredictionAccuracy(top50_IBCF_predict, getData(top50_split, &quot;unknown&quot;))[1]
+top50_IBCF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.902</code></pre>
+<pre class="r"><code>#TOP20
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top100_IBCF_predict &lt;- predict(top100_IBCF, getData(top100_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top100_IBCF_RMSE &lt;- calcPredictionAccuracy(top100_IBCF_predict, getData(top100_split, &quot;unknown&quot;))[1]
+top100_IBCF_RMSE</code></pre>
+<pre><code>## RMSE 
+## 0.87</code></pre>
+<pre class="r"><code>#TOP200
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top200_IBCF_predict &lt;- predict(top200_IBCF, getData(top200_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top200_IBCF_RMSE &lt;- calcPredictionAccuracy(top200_IBCF_predict, getData(top200_split, &quot;unknown&quot;))[1]
+top200_IBCF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.831</code></pre>
+</div>
+<div id="rmse_user_based_cf" class="section level4">
+<h4>RMSE_user_based_CF</h4>
+<pre class="r"><code>set.seed(1234) # setting seed
+#TOP10
+top10_UBCF_predict &lt;- predict(top10_UBCF, getData(top10_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+top10_UBCF_RMSE &lt;- calcPredictionAccuracy(top10_UBCF_predict, getData(top10_split, &quot;unknown&quot;))[1]
+top10_UBCF_RMSE</code></pre>
+<pre><code>## RMSE 
+## 1.15</code></pre>
+<pre class="r"><code>#TOP20
+top20_UBCF_predict &lt;- predict(top20_UBCF, getData(top20_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+top20_UBCF_RMSE &lt;- calcPredictionAccuracy(top20_UBCF_predict, getData(top20_split, &quot;unknown&quot;))[1]
+top20_UBCF_RMSE</code></pre>
+<pre><code>## RMSE 
+## 1.21</code></pre>
+<pre class="r"><code>#TOP50
+top50_UBCF_predict &lt;- predict(top50_UBCF, getData(top50_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+top50_UBCF_RMSE &lt;- calcPredictionAccuracy(top50_UBCF_predict, getData(top50_split, &quot;unknown&quot;))[1]
+top50_UBCF_RMSE</code></pre>
+<pre><code>## RMSE 
+## 1.12</code></pre>
+<pre class="r"><code>#TOP100
+top100_UBCF_predict &lt;- predict(top100_UBCF, getData(top100_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+top100_UBCF_RMSE &lt;- calcPredictionAccuracy(top100_UBCF_predict, getData(top100_split, &quot;unknown&quot;))[1]
+top100_UBCF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.864</code></pre>
+<pre class="r"><code>#TOP200
+top200_UBCF_predict &lt;- predict(top200_UBCF, getData(top200_split, &quot;known&quot;), type=&quot;ratings&quot;)
+
+top200_UBCF_RMSE &lt;- calcPredictionAccuracy(top200_UBCF_predict, getData(top200_split, &quot;unknown&quot;))[1]
+top200_UBCF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.731</code></pre>
+</div>
+<div id="rmse_model_based_cf_using_mf" class="section level4">
+<h4>RMSE_model_based_CF_using_MF</h4>
+<pre class="r"><code>set.seed(1234) # setting seed
+#TOP10
+top10_LIBMF_predict &lt;- predict(top10_LIBMF, getData(top10_split, &quot;known&quot;), type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.1931   1.2286e+05
+##    1       0.8487   6.5370e+04
+##    2       0.8276   6.2632e+04
+##    3       0.8058   5.9847e+04
+##    4       0.7892   5.7780e+04
+##    5       0.7780   5.6427e+04
+##    6       0.7691   5.5340e+04
+##    7       0.7622   5.4519e+04
+##    8       0.7566   5.3849e+04
+##    9       0.7513   5.3229e+04
+##   10       0.7467   5.2700e+04
+##   11       0.7425   5.2208e+04
+##   12       0.7386   5.1754e+04
+##   13       0.7348   5.1326e+04
+##   14       0.7312   5.0923e+04
+##   15       0.7275   5.0511e+04
+##   16       0.7239   5.0121e+04
+##   17       0.7205   4.9741e+04
+##   18       0.7171   4.9364e+04
+##   19       0.7137   4.9012e+04</code></pre>
+<pre class="r"><code>top10_LIBMF_RMSE &lt;- calcPredictionAccuracy(top10_LIBMF_predict, getData(top10_split, &quot;unknown&quot;))[1]
+top10_LIBMF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.885</code></pre>
+<pre class="r"><code>#TOP20
+top20_LIBMF_predict &lt;- predict(top20_LIBMF, getData(top20_split, &quot;known&quot;), type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.1809   1.0044e+05
+##    1       0.8451   5.4019e+04
+##    2       0.8248   5.1878e+04
+##    3       0.8017   4.9425e+04
+##    4       0.7863   4.7840e+04
+##    5       0.7756   4.6750e+04
+##    6       0.7683   4.6002e+04
+##    7       0.7627   4.5464e+04
+##    8       0.7577   4.4970e+04
+##    9       0.7536   4.4558e+04
+##   10       0.7499   4.4216e+04
+##   11       0.7463   4.3870e+04
+##   12       0.7433   4.3587e+04
+##   13       0.7399   4.3259e+04
+##   14       0.7370   4.2994e+04
+##   15       0.7341   4.2711e+04
+##   16       0.7312   4.2440e+04
+##   17       0.7284   4.2194e+04
+##   18       0.7256   4.1931e+04
+##   19       0.7230   4.1697e+04</code></pre>
+<pre class="r"><code>top20_LIBMF_RMSE &lt;- calcPredictionAccuracy(top20_LIBMF_predict, getData(top20_split, &quot;unknown&quot;))[1]
+top20_LIBMF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.867</code></pre>
+<pre class="r"><code>#TOP50
+top50_LIBMF_predict &lt;- predict(top50_LIBMF, getData(top50_split, &quot;known&quot;), type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.1526   5.3300e+04
+##    1       0.8314   2.9129e+04
+##    2       0.8197   2.8448e+04
+##    3       0.8070   2.7723e+04
+##    4       0.7933   2.6948e+04
+##    5       0.7804   2.6211e+04
+##    6       0.7703   2.5663e+04
+##    7       0.7629   2.5249e+04
+##    8       0.7565   2.4896e+04
+##    9       0.7514   2.4620e+04
+##   10       0.7475   2.4410e+04
+##   11       0.7437   2.4214e+04
+##   12       0.7402   2.4028e+04
+##   13       0.7371   2.3861e+04
+##   14       0.7342   2.3714e+04
+##   15       0.7315   2.3576e+04
+##   16       0.7288   2.3438e+04
+##   17       0.7263   2.3306e+04
+##   18       0.7237   2.3174e+04
+##   19       0.7212   2.3046e+04</code></pre>
+<pre class="r"><code>top50_LIBMF_RMSE &lt;- calcPredictionAccuracy(top50_LIBMF_predict, getData(top50_split, &quot;unknown&quot;))[1]
+top50_LIBMF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.829</code></pre>
+<pre class="r"><code>#TOP100
+top100_LIBMF_predict &lt;- predict(top100_LIBMF, getData(top100_split, &quot;known&quot;), type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.1714   2.2182e+04
+##    1       0.7937   1.0842e+04
+##    2       0.7815   1.0571e+04
+##    3       0.7652   1.0212e+04
+##    4       0.7458   9.7887e+03
+##    5       0.7319   9.4947e+03
+##    6       0.7229   9.3027e+03
+##    7       0.7168   9.1792e+03
+##    8       0.7116   9.0680e+03
+##    9       0.7073   8.9800e+03
+##   10       0.7044   8.9212e+03
+##   11       0.7009   8.8544e+03
+##   12       0.6979   8.7919e+03
+##   13       0.6951   8.7349e+03
+##   14       0.6926   8.6866e+03
+##   15       0.6899   8.6353e+03
+##   16       0.6871   8.5756e+03
+##   17       0.6850   8.5405e+03
+##   18       0.6825   8.4912e+03
+##   19       0.6800   8.4413e+03</code></pre>
+<pre class="r"><code>top100_LIBMF_RMSE &lt;- calcPredictionAccuracy(top100_LIBMF_predict, getData(top100_split, &quot;unknown&quot;))[1]
+top100_LIBMF_RMSE</code></pre>
+<pre><code>##  RMSE 
+## 0.793</code></pre>
+<pre class="r"><code>#TOP200
+top200_LIBMF_predict &lt;- predict(top200_LIBMF, getData(top200_split, &quot;known&quot;), type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.4951   5.2363e+03
+##    1       0.7868   1.5972e+03
+##    2       0.7705   1.5421e+03
+##    3       0.7618   1.5123e+03
+##    4       0.7484   1.4683e+03
+##    5       0.7332   1.4217e+03
+##    6       0.7189   1.3791e+03
+##    7       0.7037   1.3318e+03
+##    8       0.6911   1.2943e+03
+##    9       0.6823   1.2689e+03
+##   10       0.6727   1.2415e+03
+##   11       0.6640   1.2163e+03
+##   12       0.6578   1.1980e+03
+##   13       0.6511   1.1797e+03
+##   14       0.6454   1.1636e+03
+##   15       0.6398   1.1477e+03
+##   16       0.6350   1.1347e+03
+##   17       0.6298   1.1202e+03
+##   18       0.6251   1.1073e+03
+##   19       0.6205   1.0960e+03</code></pre>
+<pre class="r"><code>top200_LIBMF_RMSE &lt;- calcPredictionAccuracy(top200_LIBMF_predict, getData(top200_split, &quot;unknown&quot;))[1]
+top200_LIBMF_RMSE</code></pre>
+<pre><code>## RMSE 
+##  0.7</code></pre>
+</div>
+</div>
+<div id="step-5---reporting-plots-showing-how-rmse-changes-given-the-model-and-values-of-n-and-m" class="section level1">
+<h1>STEP 5 - REPORTING PLOTS SHOWING HOW RMSE CHANGES GIVEN THE MODEL AND VALUES OF ‘N’ AND ‘M’</h1>
+<div id="your-x-axis-should-be-values-of-nm-and-your-y-axis-should-be-rmse" class="section level4">
+<h4>Your X-axis should be values of n,m and your y-axis should be RMSE</h4>
+<pre class="r"><code>rmse_ibcf &lt;- data.frame(top10_IBCF_RMSE, top20_IBCF_RMSE, top50_IBCF_RMSE, top100_IBCF_RMSE, top200_IBCF_RMSE)
+value_mn &lt;- c(10, 20, 50, 100, 200)
+rmse_ibcf </code></pre>
+<pre><code>##      top10_IBCF_RMSE top20_IBCF_RMSE top50_IBCF_RMSE top100_IBCF_RMSE
+## RMSE            1.05            0.99           0.902             0.87
+##      top200_IBCF_RMSE
+## RMSE            0.831</code></pre>
+<pre class="r"><code>rmse_ibcf &lt;- rmse_ibcf %&gt;% 
+  pivot_longer(cols = c(&quot;top10_IBCF_RMSE&quot;, &quot;top20_IBCF_RMSE&quot;, &quot;top50_IBCF_RMSE&quot;, &quot;top100_IBCF_RMSE&quot;, &quot;top200_IBCF_RMSE&quot; ),names_to = &quot;a&quot;, values_to = &quot;value&quot;) 
+
+p1&lt;- ggplot(data = rmse_ibcf,  aes(x=value_mn, y = value)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()+
+  theme( plot.title = element_text(size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+         axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(title= &quot;RMSE for IBCF&quot;, x=&quot;m &amp; n value&quot;, y=&quot; RMSE&quot;)
+p1</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/RMSE_plots_item_based_CF-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>rmse_ubcf &lt;- data.frame(top10_UBCF_RMSE, top20_UBCF_RMSE, top50_UBCF_RMSE, top100_UBCF_RMSE, top200_UBCF_RMSE)
+value_mn &lt;- c(10, 20, 50, 100, 200)
+rmse_ubcf </code></pre>
+<pre><code>##      top10_UBCF_RMSE top20_UBCF_RMSE top50_UBCF_RMSE top100_UBCF_RMSE
+## RMSE            1.15            1.21            1.12            0.864
+##      top200_UBCF_RMSE
+## RMSE            0.731</code></pre>
+<pre class="r"><code>rmse_ubcf &lt;- rmse_ubcf %&gt;% 
+  pivot_longer(cols = c(&quot;top10_UBCF_RMSE&quot;, &quot;top20_UBCF_RMSE&quot;, &quot;top50_UBCF_RMSE&quot;, &quot;top100_UBCF_RMSE&quot;, &quot;top200_UBCF_RMSE&quot; ),names_to = &quot;a&quot;, values_to = &quot;value&quot;) 
+
+p2&lt;-ggplot(data = rmse_ubcf,  aes(x=value_mn, y = value)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()+
+  theme(plot.title = element_text(size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(title= &quot;RMSE for UBCF&quot;, x=&quot;m &amp; n value&quot;, y=&quot; RMSE&quot;)
+p2</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/RMSE_plots_user_based_CF-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>rmse_libmf &lt;- data.frame(top10_LIBMF_RMSE, top20_LIBMF_RMSE, top50_LIBMF_RMSE, top100_LIBMF_RMSE, top200_LIBMF_RMSE)
+value_mn &lt;- c(10, 20, 50, 100, 200)
+rmse_libmf </code></pre>
+<pre><code>##      top10_LIBMF_RMSE top20_LIBMF_RMSE top50_LIBMF_RMSE top100_LIBMF_RMSE
+## RMSE            0.885            0.867            0.829             0.793
+##      top200_LIBMF_RMSE
+## RMSE               0.7</code></pre>
+<pre class="r"><code>rmse_libmf &lt;- rmse_libmf %&gt;% 
+  pivot_longer(cols = c(&quot;top10_LIBMF_RMSE&quot;, &quot;top20_LIBMF_RMSE&quot;, &quot;top50_LIBMF_RMSE&quot;, &quot;top100_LIBMF_RMSE&quot;, &quot;top200_LIBMF_RMSE&quot; ),names_to = &quot;a&quot;, values_to = &quot;value&quot;) 
+
+p3&lt;- ggplot(data = rmse_libmf,  aes(x=value_mn, y = value)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()+
+  theme(plot.title = element_text(size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+    labs(title= &quot;RMSE for LIBMF&quot;, x=&quot;m &amp; n value&quot;, y=&quot; RMSE&quot;)
+p3</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/RMSE_plots_model_based_CF_using_MF-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(gridExtra)
+grid.arrange(p1,p2,p3, nrow = 3)</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/unnamed-chunk-1-1.png" width="384" style="display: block; margin: auto;" />
+# Second verison of RMSEs</p>
+<pre class="r"><code>rmse_ibcf&lt;-c()
+rmse_ubcf&lt;-c()
+rmse_libmf&lt;-c()
+
+rmse_ibcf &lt;- c(top10_IBCF_RMSE, top20_IBCF_RMSE, top50_IBCF_RMSE, top100_IBCF_RMSE, top200_IBCF_RMSE)
+rmse_ubcf &lt;- c(top10_UBCF_RMSE, top20_UBCF_RMSE, top50_UBCF_RMSE, top100_UBCF_RMSE, top200_UBCF_RMSE)
+rmse_libmf &lt;- c(top10_LIBMF_RMSE, top20_LIBMF_RMSE, top50_LIBMF_RMSE, top100_LIBMF_RMSE, top200_LIBMF_RMSE)
+
+n &lt;- c(10, 20, 50, 100, 200)
+
+models&lt;-c(&quot;IBCF&quot;,&quot;IBCF&quot;,&quot;IBCF&quot;,&quot;IBCF&quot;,&quot;IBCF&quot;,
+          &quot;UBCF&quot;,&quot;UBCF&quot;,&quot;UBCF&quot;,&quot;UBCF&quot;,&quot;UBCF&quot;,
+          &quot;LIBMF&quot;,&quot;LIBMF&quot;,&quot;LIBMF&quot;,&quot;LIBMF&quot;,&quot;LIBMF&quot;)
+
+df_rmse&lt;- tibble(rmse = c(rmse_ibcf, rmse_ubcf, rmse_libmf),
+                 lambda = c(n, n, n),
+                 model = models)
+
+glimpse(df_rmse)</code></pre>
+<pre><code>## Rows: 15
+## Columns: 3
+## $ rmse   &lt;dbl&gt; 1.053, 0.990, 0.902, 0.870, 0.831, 1.152, 1.205, 1.119, 0.864,…
+## $ lambda &lt;dbl&gt; 10, 20, 50, 100, 200, 10, 20, 50, 100, 200, 10, 20, 50, 100, 2…
+## $ model  &lt;chr&gt; &quot;IBCF&quot;, &quot;IBCF&quot;, &quot;IBCF&quot;, &quot;IBCF&quot;, &quot;IBCF&quot;, &quot;UBCF&quot;, &quot;UBCF&quot;, &quot;UBCF&quot;…</code></pre>
+<pre class="r"><code>ggplot(df_rmse, aes(x=lambda,y=rmse,colour=model)) +
+  geom_line() +
+geom_point() +
+  theme_minimal()+
+  theme(plot.title = element_text(size=15,face=&quot;bold&quot;, family= &quot;Montserrat&quot;),
+        plot.subtitle = element_text(size=10,face=&quot;plain&quot;, family= &quot;Montserrat&quot;),
+        axis.title.y = element_text(size = 8, angle = 90, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.y=element_text(family=&quot;Montserrat&quot;, size=7),
+        axis.title.x = element_text(size = 8, family=&quot;Montserrat&quot;, face = &quot;bold&quot;),
+        axis.text.x=element_text(family=&quot;Montserrat&quot;, size=7))+
+  labs(title = &quot;Recommendation performance works best for LIMBF model&quot;,
+       subtitle = &quot;RMSEs of particular recommendations system models&quot;,
+       x = &quot;n &amp; m values&quot;,
+       y = &quot;RMSE&quot;,
+       colour = &quot;Model&quot;) +
+  
+  theme(title = element_text(family=&quot;Courier&quot;, face=&quot;bold&quot;))</code></pre>
+<p><img src="/portfolio/project-07_files/figure-html/unnamed-chunk-2-1.png" width="648" style="display: block; margin: auto;" />
+n=m=50 Matrix Factorisation model is the best -&gt; it is based on the interactions between users and items.</p>
+</div>
+</div>
+<div id="step-6---choosing-the-optimal-model-and-evaluating-its-recommendations" class="section level1">
+<h1>STEP 6 - CHOOSING THE OPTIMAL MODEL AND EVALUATING ITS RECOMMENDATIONS</h1>
+<pre class="r"><code>set.seed(1234) # setting seed
+#this is our recommended model
+recommen_model &lt;- Recommender(getData(top100_split, &quot;train&quot;), 
+                              method = &quot;LIBMF&quot;, 
+                              param=list(normalize = &quot;center&quot;, 
+                                         method=&quot;Cosine&quot;))</code></pre>
+<pre><code>## Available parameter (with default values):
+## dim   =  10
+## costp_l2  =  0.01
+## costq_l2  =  0.01
+## nthread   =  1
+## verbose   =  FALSE</code></pre>
+<pre class="r"><code>predition_LIBMF &lt;- predict(recommen_model, getData(top100_split, &quot;known&quot;), type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.1624   2.1872e+04
+##    1       0.7930   1.0829e+04
+##    2       0.7778   1.0484e+04
+##    3       0.7553   1.0001e+04
+##    4       0.7375   9.6122e+03
+##    5       0.7267   9.3824e+03
+##    6       0.7194   9.2302e+03
+##    7       0.7145   9.1296e+03
+##    8       0.7102   9.0394e+03
+##    9       0.7068   8.9702e+03
+##   10       0.7033   8.9011e+03
+##   11       0.7003   8.8390e+03
+##   12       0.6972   8.7766e+03
+##   13       0.6945   8.7236e+03
+##   14       0.6922   8.6800e+03
+##   15       0.6895   8.6227e+03
+##   16       0.6868   8.5702e+03
+##   17       0.6844   8.5253e+03
+##   18       0.6818   8.4729e+03
+##   19       0.6793   8.4242e+03</code></pre>
+<pre class="r"><code>#building a matrix
+prediction_2 &lt;- predict(recommen_model, top100_rate[1:25, ], type=&quot;ratings&quot;)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.1577   2.1499e+04
+##    1       0.7764   1.0328e+04
+##    2       0.7606   9.9944e+03
+##    3       0.7379   9.5129e+03
+##    4       0.7199   9.1336e+03
+##    5       0.7089   8.9111e+03
+##    6       0.7027   8.7863e+03
+##    7       0.6977   8.6870e+03
+##    8       0.6942   8.6102e+03
+##    9       0.6910   8.5549e+03
+##   10       0.6875   8.4825e+03
+##   11       0.6852   8.4405e+03
+##   12       0.6827   8.3865e+03
+##   13       0.6802   8.3418e+03
+##   14       0.6776   8.2892e+03
+##   15       0.6755   8.2493e+03
+##   16       0.6730   8.2039e+03
+##   17       0.6706   8.1603e+03
+##   18       0.6683   8.1142e+03
+##   19       0.6662   8.0766e+03</code></pre>
+<pre class="r"><code>as(prediction_2, &quot;matrix&quot;)[,1:10]</code></pre>
+<pre><code>##       296  356  318  480 593 260 2571 589  110  527
+##  [1,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+##  [2,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+##  [3,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+##  [4,]  NA   NA   NA   NA  NA  NA   NA  NA   NA 4.66
+##  [5,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+##  [6,]  NA   NA   NA 3.66   4  NA   NA  NA   NA 4.27
+##  [7,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+##  [8,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+##  [9,]  NA   NA   NA   NA  NA  NA   NA  NA 4.33   NA
+## [10,]  NA   NA   NA   NA  NA  NA   NA  NA   NA 4.12
+## [11,]  NA 3.89   NA   NA  NA  NA   NA  NA   NA 4.51
+## [12,]  NA   NA   NA   NA  NA  NA   NA  NA   NA 4.37
+## [13,]  NA   NA   NA   NA  NA  NA   NA  NA 3.68   NA
+## [14,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+## [15,]  NA   NA   NA   NA  NA  NA   NA  NA   NA 4.05
+## [16,]  NA   NA   NA   NA  NA  NA   NA  NA   NA 4.75
+## [17,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+## [18,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+## [19,]  NA   NA   NA   NA  NA 3.7   NA  NA   NA   NA
+## [20,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+## [21,]  NA   NA   NA   NA  NA  NA 4.69  NA   NA   NA
+## [22,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+## [23,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA
+## [24,]  NA 4.68 5.24   NA  NA  NA   NA  NA   NA 5.08
+## [25,]  NA   NA   NA   NA  NA  NA   NA  NA   NA   NA</code></pre>
+<pre class="r"><code>#finding recommended 5 movies for user 9
+top100_rate[1,]</code></pre>
+<pre><code>## 1 x 150 rating matrix of class &#39;realRatingMatrix&#39; with 145 ratings.</code></pre>
+<pre class="r"><code>recommended.items.u9&lt;- predict(recommen_model, top100_rate[9,], n=5)</code></pre>
+<pre><code>## iter      tr_rmse          obj
+##    0       1.2147   1.9028e+04
+##    1       0.7907   8.6268e+03
+##    2       0.7805   8.4355e+03
+##    3       0.7682   8.2201e+03
+##    4       0.7518   7.9407e+03
+##    5       0.7371   7.6909e+03
+##    6       0.7254   7.4898e+03
+##    7       0.7170   7.3487e+03
+##    8       0.7111   7.2525e+03
+##    9       0.7054   7.1603e+03
+##   10       0.7009   7.0836e+03
+##   11       0.6967   7.0149e+03
+##   12       0.6932   6.9610e+03
+##   13       0.6896   6.9033e+03
+##   14       0.6863   6.8515e+03
+##   15       0.6832   6.8017e+03
+##   16       0.6804   6.7587e+03
+##   17       0.6771   6.7067e+03
+##   18       0.6746   6.6709e+03
+##   19       0.6718   6.6260e+03</code></pre>
+<pre class="r"><code>as(recommended.items.u9, &quot;list&quot;)[[1]]</code></pre>
+<pre><code>## [1] &quot;8961&quot;  &quot;33794&quot; &quot;1193&quot;  &quot;58559&quot; &quot;1213&quot;</code></pre>
+<pre class="r"><code># [1] &quot;608&quot;  &quot;1213&quot; &quot;4878&quot; &quot;1265&quot; &quot;1197&quot; movieIDs
+
+movies_u9&lt;- c()
+movies_u9&lt;- append(movies_u9,movie_data$title[movie_data$movieId %in% &quot;608&quot;])
+# &quot;Fargo (1996)&quot;
+
+movies_u9&lt;- append(movies_u9,movie_data$title[movie_data$movieId %in% &quot;1213&quot;])
+# &quot;Goodfellas (1990)&quot;
+
+movies_u9&lt;- append(movies_u9,movie_data$title[movie_data$movieId %in% &quot;4878&quot;])
+# &quot;Donnie Darko (2001)&quot;
+
+movies_u9&lt;- append(movies_u9,movie_data$title[movie_data$movieId %in% &quot;1265&quot;])
+# &quot;Groundhog Day (1993)&quot;
+
+movies_u9&lt;- append(movies_u9,movie_data$title[movie_data$movieId %in% &quot;1197&quot;])
+# &quot;Princess Bride, The (1987)&quot;
+
+movies_u9</code></pre>
+<pre><code>## [1] &quot;Fargo (1996)&quot;               &quot;Goodfellas (1990)&quot;         
+## [3] &quot;Donnie Darko (2001)&quot;        &quot;Groundhog Day (1993)&quot;      
+## [5] &quot;Princess Bride, The (1987)&quot;</code></pre>
+<p>— END —</p>
+</div>
+
+          </div>
+          <div class="site-project-single-image">
+            
+          </div>
+          
+          <div class="site-project-single-action">
+            <a href="/portfolio/kio-tape/">
+              <span class="link-area">
+                <span data-text="Next Project">
+                  Next Project
+                </span>
+              </span>
+              <img src="/images/to-top.svg" alt="next project">
+            </a>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  
+  <section class="site-cta" style='background-image: url("/images/backgrounds/cta-background.jpg");'>
+    <div class="container">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h1 class="site-cta-title">Contact me</h1>
+          <ul class="site-cta-buttons">
+            <li>
+              <a href="/contact" class="btn btn-secondary">
+                <span class="btn-area">
+                  <span data-text="Send an email">
+                    Send an email
+                  </span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="/portfolio" class="btn btn-primary">
+                <span class="btn-area">
+                  <span data-text="See more portfolio">
+                    See more portfolio
+                  </span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+
+
+        </main><footer class="site-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="site-footer-logo"><a href="/"><img src="/images/logo-footer.png" alt="logo-footer"></a></div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Contact Info</h5>
+          <p class="site-footer-widget-description">
+            Regent's Park, London NW1 4SA
+            <br>
+            <a href="tel:&#43;447762727403">&#43;447762727403</a>
+            <br>
+            <a href="mailto:aprawda.mam2021@london.edu">aprawda.mam2021@london.edu</a>
+          </p>
+        </div>
+      </div>
+      
+      
+      
+      <div class="col-lg-2 col-md-6">
+        <div class="site-footer-widget">
+          <h5 class="site-footer-widget-title">Social Media</h5>
+          <ul class="site-footer-widget-links">
+            
+              <li><a href="https://www.linkedin.com/in/agnieszka-prawda/">Linkedin</a></li>
+            
+          </ul>
+        </div>
+      </div>
+      
+      
+      <div class="col-lg-2 col-12">
+        <a href="#top" class="site-footer-widget-top">
+          <img src="/images/to-top.svg" alt="back-to-top">
+          <p>
+            I want to 
+            <br>
+            visit again
+          </p>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script src="/js/formhandler.min.js"></script>
+
+<script src="/js/vendor.min.js"></script>
+
+<script src="/js/script.min.js"></script></body>
+</html>

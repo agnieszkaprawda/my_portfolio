@@ -1,0 +1,585 @@
+---
+category:
+- Machine Learning in R
+date: "2020-12-15T15:58:10+06:00"
+image: images/projects/lendingclub3.jpg
+project_images:
+title: PCA and LDA training
+type: portfolio
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+<!--begin html code: I will mark the html code in my markdown files, these are not directly related to the course material-->
+
+
+
+
+</style>
+<style>
+body {
+text-align: justify}
+
+</style>
+
+
+<style>
+img {
+  border-radius: 15px;
+}
+
+
+<style>
+div.grey { background-color:#808080; border-radius: 5px; padding: 20px; border-style: groove;}
+</style>
+
+<style>
+div.font {color="red"}
+</style>
+
+<style>
+div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+
+
+<style>
+div.navy { background-color:#A2A2B6; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+
+<!--end html code-->
+
+
+```{r setup, include=FALSE}
+
+#install.packages("remotes")
+#remotes::install_github("vqv/ggbiplot", force = TRUE)
+library(ggplot2)  
+library(ggbiplot)
+#remotes::install_github("kassambara/factoextra")
+library(factoextra)
+library(tidyverse)
+library(ggbiplot) 
+library(reshape2)
+library(MASS)
+library(rsample)
+library(dplyr)
+library(stats)
+
+knitr::opts_chunk$set(
+  tidy = FALSE,   # display code as typed
+  size = "small") # slightly smaller font for code
+```
+
+# **QUESTION 1: PRINCIPAL COMPONENT ANALYSIS**
+
+You are going to analyse a D = 11 data set called 'mtcars' which comes with R distribution. 
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+
+The features of this data set are:
+
+* mpg	  Miles/(US) gallon
+* cyl	  Number of cylinders
+* disp	Displacement (cu.in.)
+* hp	  Gross horsepower
+* drat	Rear axle ratio
+* wt	  Weight (1000 lbs)
+* qsec	1/4 mile time
+* vs	  Engine (0 = V-shaped, 1 = straight)
+* am	  Transmission (0 = automatic, 1 = manual)
+* gear	Number of forward gears
+* carb	Number of carburetors
+
+#### a) Data loading and initial analysis
+
+- Load and attach the "mtcars" data to the current session.
+- Display the dataset and observe the inputs.
+
+```{r Data Loading}
+
+#Load data
+data(mtcars)
+attach(mtcars)
+
+#View the dataframe
+print(mtcars)
+```
+
+- State which variables are binary in the mtcars dataset.
+
+
+>ANSWER: Variables 'vs' and 'am' are binary.  "vs" stand for type of engine (0 = V-shaped, 1 = straight) while 'am' stands for transmission type (0 = automatic, 1 = manual). I will delete them later from my dataframe as the PCA works best for variables that are numeric.
+
+- State the Dataset Requirements for PCA 
+
+>ANSWER: The Principle Component Analysis works best on the data that is as follows:
+- numeric data (non binary one), 
+- correlated data 
+- standardised:
+- centered in order to avoid instability
+- scaled ( if variables are in deifferent units)
+
+#### b) Data pre-processing
+
+- Carefully consider which variables should form inputs into the PCA model, given the numerical data requirements such that PCA works best. Create a data frame called $\mathbb{X}$  which will contain all columns except the binary ones.
+- Find the dimensionality of $\mathbb{X}$ and assign it to variable dims.
+- How many features will you be working on which are relevant for the purposes of dimensionality reduction?
+- Assign number of observations to variable N and number of features to variable D
+- Perform necessary analysis in order to establish whether the data needs centering and/or scaling. 
+  * To help with visual examination of variance, extract the diagonal from the covariance matrix.
+  * Using information you obtained explain your decision.
+
+```{r Data Preprocessing}
+#PCA works best for variables that are numeric. Therefore I will delete from the dataset the binary varaibles - 'vs' and 'am'
+X <- data.frame()
+X=mtcars %>% dplyr::select(-c(vs,am))
+
+#Obtain dims
+dims <- dim(X)
+dims
+#[1] 32  9
+
+N <- dims[[1]]  # number of observations
+D <- dims[[2]]  # number of features 
+
+# Correlation matrix dimensionality to determine if the data needs to be standardised
+cov_data <- cov(X)
+print(cov_data)
+
+cor_data <- cor(X)
+print(cor_data)
+
+
+```
+>SUMMARY
+
+The data usually needs centering to ensure the numerical stability of the PCA algorithm. Therefore I will set later the "center=True" parameter when scaling.
+
+The Variances of variables (the ones on the diagonal) are very different in scale. That suggests that the data has different units.
+Therefore it is necessary to scale mtcars data in such a situation. Also, we can notice directly from the data frame that the variables are delivered in different units such as miles/gallon, weight in 1000lbsl qsec (time) .
+
+#### c) PCA Analysis 
+
+PCA Analysis - Theoretical Questions.
+
+- Give definition of what Principal Component Analysis is and whether it is a supervised or unsupervised technique. Explain what supervised and unsupervised means in the context of Machine Learning. 
+
+>ANSWER: The Principal Component Analysis is a method of dimension reduction by linear transformation of variables, with the final outcome of smaller dataset, that still containts the majority (aim 60-80%) of information from the orginal large dataset. PCA is an unsupervised technique. It means that the method has no teacher signal and does not use an algorithm with any labels. Instead due to the dimension reduction it uses the principle components to come up with the final solution.
+
+- Explain what orthogonality means when it comes to random variables being interpreted geometrically. 
+
+>ANSWER: Ortogonality in this context means that the variables are not correlated with each other. It guarantees that they retain the maximum amount of variance of the dataset, which translates to explaining more variables (particularly more than 1, explained below).These orthogonal variables create na new space with less dimensions where the original, yet now uncorrelated, dataset will be represented. 
+
+- State the key formula (using linear algebra notation) which allows you to find the projection of vector $\mathbb{x}_n \in R^{D}$ onto M-dimensional sub-space U. 
+
+
+>ANSWER:
+
+$\tilde {\mathbb{x}}_n = \sum\limits_{i=1}^\mathbb{M}\mathbb{b}_iz_{ni} = \mathbb{B}\mathbb{z} =\mathbb{B}\mathbb{B}^T\mathbb{x}_n$
+ 
+Where:
+$\tilde {\mathbb{x}}_n$ - projected vector in $R^{D}$ space
+
+$\mathbb{b}_i$ - Principal Component Loading Vector
+/ Basis Vector / Eigenvector” $\in R^{D}$
+
+$z_{ni}$ - “Principal Component Score / Coordinates”  $\in R^{M}$ (scalar)
+
+
+- Is it correct to say that covariance matrix plays key part in PCA? If so, state in which mathematical expression is it used such that it forms a crucial part of the PCA?
+
+
+>ANSWER: The covariance matrix S indeed plays the crucial role in the Principal Component Analysis. It is because we aim to minimise the average squared reconstruction error. The optimisation leads to an eigenvalues problem, the solution of which we can find as follows:
+The eigenvectors of the covariance matrix S determine the directions of the new feature space (i.e. eigenvectors form the axes in the sub-space).
+The eigenvalues of the covariance matrix S explain the variance of data along the new feature
+axes (i.e. represent the projections of variance of data).
+
+The crucial expression that forms a crucial part of the PCA is as follows:
+$𝓙=\frac1{N}\sum\limits_{n=1}^\mathbb{N}||\mathbb{x}_n-\tilde {\mathbb{x}}_n||=\sum\limits_{j=M+1}^\mathbb{D}\mathbb{b}^T_j(\frac1{N}\sum\limits_{n=1}^\mathbb{N}\mathbb{x}_n\mathbb{x}_n^T)\mathbb{b}_j$
+
+Where $\frac1{N}\sum\limits_{n=1}^\mathbb{N}\mathbb{x}_n\mathbb{x}_n^T$ is the Data Covariance Martix S
+
+
+- State how the directions of the first and second principal components (basis vectors) are chosen?
+
+>ANSWER: The directions of the first and second principal components are chosen using the Data Covariance Matrix S that returns the eigenvectors (called Principal Component Loadings or PCs). They are ordered by the amount variance  their correspoing eigenvalues explain in an descending order. The PCs are stored in the PCA model. They give directions of the new axes (the rotation). These are chosen by the most respective varianance of data.
+
+- List 4 purposes for which PCA can be used on data? Provide an explanation of what each one means.
+
+>ANSWER: The PCA can be used for the following purposes:
+> a) data visualition - PCA enables plotting data in a 2dimensional space (called principle compenent space) through dimension reduction.  The visualisation with fewer dimension becomes much more meaningful.
+
+> b) data compression - PCA helps in reduction of storage requirements of data what speeds up the learning algorithms substantially. It is especially useful in the era of big Data that is sometimes impossible to be processed in a reasonable amount of time. 
+
+> c) feature extraction - PCA keeps only the important ones in order to approximate data to the desired level and removes the rest that is less meaninful. Instead of choosing features for regression or clustering, we can run PCA on our data and and obtain points projected in the new space and use the obtained result as an input to these algorithms.
+
+> d) noise filtering - PCA can help reduce noice  in the data e.g. in speach de-noising or image de-noising.
+
+PCA Analysis - Practical Questions.
+
+- Perform PCA analysis on the data we called $\mathbb{X}$ above and store result into variable $\texttt{pca}$. If you decided the data required centering and/or scaling, please do this using optional arguments of the  $\texttt{prcomp()}$ function.
+
+```{r}
+#Standardise the data using prcomp
+pca <- prcomp(X, center = TRUE, scale. = TRUE) 
+typeof(pca) # resulting object is a list (containing 5 elements) 
+
+```
+
+- Use function structure, $\texttt{str()}$, to look inside your object. You should already have a good understanding of what each variable belonging to $\texttt{pca}$ object describes. 
+```{r}
+#Looking inside the data
+str(pca)
+```
+
+- State which $\texttt{pca}$ object's variables are the loadings and which are the scores. Create 2 variables: loadings and scores, into which you store -loadings and -scores (i.e. the basis vectors and z pointing in the positive direction). Give at least one alternative name you know loadings and scores. 
+```{r}
+#Create load
+#Loadings are the basis vectors / eigenvectors / PCs (matrix DxD) - they take name "rotation" in our data set
+#I will use minus in order to provide more intuitive position direction pointing vectors
+loadings<- - pca$rotation
+loadings
+#Create scores
+#Scores are the rotated data coordinates (again I need to reverse the sign)
+scores <- - pca$x 
+scores
+```
+
+- Examine the center and scale variables stored inside object $\texttt{pca}$. What do these provide? 
+```{r}
+#Examine center and scale variables in 'pca'
+
+#The 'center' provides centering information extracted from X attributes data  (mu that was used for each variable to center it)
+pca$center # previous centering info stored, mu used)
+
+#      mpg        cyl       disp         hp       drat         wt       qsec       gear       carb 
+# 20.090625   6.187500 230.721875 146.687500   3.596563   3.217250  17.848750   3.687500   2.812500 
+
+#The scale' provides scaling inforomation extracted from X attributes data  (the sigma that was used for each variable to scale it)
+pca$scale 
+
+#        mpg         cyl        disp          hp        drat          wt        qsec        gear        carb 
+#  6.0269481   1.7859216 123.9386938  68.5628685   0.5346787   0.9784574   1.7869432   0.7378041   1.6152000 
+
+
+```
+
+PCA Analysis - Theory in Practice Question.
+
+You have seen that a coordinate / score located along PC1 (or any other PC for that matter), can be calculated using Equation 10.2 p376 of ISLR book or as shown in Lecture 4 at bottom of slide 24 for z_n_i example. 
+You are required to find the projection of the 5th x point (${x}_{5,*}$) along PC1 i.e. all of the data in the 5th row of X should be used. 
+This 5th z point value is given by pca$x[5,1] and equals 1.586974.
+You are required to use the linear algebra approach: $\mathbf{x}_n^T b$ equation. 
+
+```{r}
+
+X_scaled<- scale(X, center = TRUE, scale = TRUE) # standardise the X
+
+b1<- loadings[,1]  #finding b1
+X5<-X_scaled[5,] #finding X5
+
+Z51<- b1 %*% X5
+Z51
+
+```
+
+#### d) Data Visualisation.
+
+- Create a biplot displaying the projected data points (written as row names) and the loadings vectos showing contribution of each feature to the PC1 and PC2. 
+```{r}
+loadings_negative <- - pca$rotation
+scores_negative <- - pca$x
+
+# using 1st and 2nd column of scores_negative (the coordinates) - PC1 & PC2
+par(pty="s")
+plot(scores_negative[, 1], scores_negative[, 2], pch = 16, col = "green", 
+     ylim = c(-3, 3), xlim = c(-3, 3),
+     xlab = "PC1", ylab = "PC2", main = "Coordinates in 2D Principal Sub-Space")
+
+# The plot shows the coordinates (scores) obtained along the 1st and 2nd PC. 
+
+# Create a new object which we will plot, such that this object contains x and 
+# rotation variables oriented in the positive direction
+pca_posDir <- pca 
+pca_posDir$x <- scores
+pca_posDir$rotation <- loadings
+
+ggbiplot::ggbiplot(pca_posDir, labels = rownames(mtcars))  
+
+```
+- When cars group together / are near each other in the biplot, what does it mean? 
+
+>ANSWER: When cars group together, it indicates that they have similar features. In such a way we can identify our direct competitors in the market.
+
+- What can you say about the cars Ferrari, Ford Pantera L and Masserati? 
+
+>ANSWER: These cars are quite similr to each other, mostly in terms of PC2.
+> What is mostly similar about them is the fact that they are bascially very fast cars (what we can deduct from PC2 - [qsec + {-gear}])
+>Additionally, Maserati Bora is a high quality car with best features and effiency (PC1), where For Pantera L and Ferreri Dino tend to be also high quality cars, however not this efficient and featured.
+
+
+Let's improve the ggbiplot by using:
+<https://www.rdocumentation.org/packages/ggbiplot/versions/0.55> and here: <https://www.rdocumentation.org/packages/ggbiplot/versions/0.55/topics/ggbiplot>.
+- Given country labels plot a new ggbiplot function, such that your labels are formed using row names, and the groups are formed using the countries provided.
+Alter the ggbiplot by removing the arrows from variable axes all together, such that the clusters are better revealed.
+
+- What can you say about the 3 potential clusters and their separation? 
+>ANSWER: Japanese and US cars are clearly different from each other, where European cars tends to be quite centrly located but also difer between each other a lot.
+
+- What are American cars characterised by?
+
+>ANSWER: American cars tend to have a good technology (right side of PC1) - strong engines (ho, disp, cyl), however they are quite heavy because of it. Therefore, they tend to have a tail in the group, that is not this fast (qsec). However, thanks to technology provided, they use less miles/ (US) gallon. 
+
+- What are Japanese cars characterised by?
+
+>ANSWER: Japanese cars are not this petrol efficient, they use much more miles'(US) gallon (left side of PC1), however, they are much lighter. Thanks to it they tends to be in general a bit faster than American ones (more centered on PC2 than the oponents.
+
+
+
+```{r Biplot}
+country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+
+#Biplot with variable axes
+ggbiplot(pca, obs.scale = 1, var.scale = 1,
+  groups = country, labels=rownames(mtcars) ,ellipse = TRUE, circle = TRUE) +
+  scale_color_discrete(name = '') +
+  theme(legend.direction = 'horizontal', legend.position = 'top')
+
+#Biplot without variable axes
+ggbiplot(pca, obs.scale = 1, var.scale = 1,var.axes=FALSE,
+  groups = country, labels=rownames(mtcars) ,ellipse = TRUE, circle = TRUE) +
+  scale_color_discrete(name = '') +
+  theme(legend.direction = 'horizontal', legend.position = 'top')
+
+
+mtcars
+
+```
+
+#### e) Variance Analysis
+
+Perform variance analysis. 
+
+- To recap: how many PCs do we have in total? 
+>ANSWER: We have 9 PCs in total.
+
+- Check the amount of variance explained by each PC 
+```{r}
+# Proportion of Variance explained by each PC:
+summary(pca)$importance 
+
+#                            PC1      PC2       PC3       PC4       PC5       PC6       PC7       PC8       PC9
+#Standard deviation     2.378222 1.442948 0.7100809 0.5148082 0.4279704 0.3518426 0.3241326 0.2418962 0.1489644
+#Proportion of Variance 0.628440 0.231340 0.0560200 0.0294500 0.0203500 0.0137500 0.0116700 0.0065000 0.0024700
+#Cumulative Proportion  0.628440 0.859780 0.9158100 0.9452500 0.9656000 0.9793600 0.9910300 0.9975300 1.0000000
+```
+- Obtain the total variance
+```{r}
+X_scaled <- scale(mtcars, center = TRUE, scale = TRUE)
+covX <- cov(X_scaled)
+VT <- sum(diag(covX))
+VT
+```
+- Comment on which PCs show variance of <1? i.e. what do you know about such PCs? Justify your answer.
+>ANSWER: All the PCs except PC1 & PC2 show the standard deviation (variation) of less than 1. It means that there is no sense in using them as they explain less than 1 variable. In such a case we are better of using the original variable itself.
+
+- Obtain the scree plot and establish where the 'elbow' occurs using fviz_screeplot() function such that labels showing percentages of variance explaiend are also shown on the plot.
+```{r}
+fviz_screeplot(pca, addlabels = TRUE, ylim = c(0,100))
+```
+
+- Argue how many PCs you should keep
+> We should use only PC1 and PC2 as they are the only ones that explain more than 10% of the data and whose variance is greater than 1.
+
+
+# ---------------------------------------------------------------------------------------
+# **QUESTION 2: LINEAR DISCRIMINANT ANALYSIS**
+
+#### a) Theoretical Questions
+
+- Provide a definition of what is a discriminant?
+
+>ANSWER: 
+A discriminant is a function that takes input vector 
+
+$\mathbf{x}$ 
+
+>and assigns it to one and only one class
+
+$C_k$ out of $k$ classes.
+
+- What are the 2 assumptions for data such that LDA can be applied?
+>ANSWER: 
+1) The data should be composed of classes that are normally distributed and have equal covariances
+2) No constant variables should be in the dataset.
+
+- Does data need to be normalised?
+
+>ANSWER: No, the data does not need to be neither centered nor scaled.
+
+- Is LDA a supervised or an unsupervised learning algorithm?
+
+>ANSWER: It is a supervised learning algorithm. It means that the LDA takes labels into account.
+
+- Explain the effect the desired decision boundary should have on the projected data?
+
+>ANSWER: The decision boundary should be constructed in such a way that is easily assigns each point to one of the classes:
+
+>1) in case of 2 classes :  the decision boundary is a line. It is defined by the equasion: 
+
+$𝑦(𝕩) = 𝕨^T𝕩 +w_0= 0$. 
+
+>If the value of the point is >0, assign to class 1, otherwise, to class 2.
+
+>2) in case of K classes: Assign point 𝕩 to class:
+
+$𝐶_k$ if $y_k(𝕩)>𝑦_j(𝕩)$
+
+>The decision boundary should not only not only separate well classes, but also maximise marigin between them.
+ 
+- What is the key performance criterion for LDA as opposed to PCA?
+
+>ANSWER: PCA aims to maximise variance, where LDA's amin objective is to create groups (axes) that maximise class separation.
+
+- State the 'Difference of Class Means' criterion of LDA? What is its limitation?
+
+>ANSWER: Maximise separation between projected class means: 
+
+$𝕨 ∝ (𝐦_2 −𝐦_1)$. 
+
+>The problem with such an approach is that the points in to different classes may intermix and overlap.
+
+
+- State the Fisher criterion.
+
+>ANSWER: States the same as "Difference of Class Means" criterion but at the same time it aims to minimize the variance of each class: 
+
+$𝕨 ∝ 𝕊_{W}^{-1}(𝐦_2 −𝐦_1)$.
+
+>Where
+
+$𝕊_{W}$ is the Total within-class covariance matrix
+
+> Fisher cirterion's goal is to also maximise the variance between classes. Such an appoach allows to create classes that are well separated.
+
+- Explain how minimisation of within class variance of each class helps with classification of the projected points?
+
+>ANSWER: As explained above, thanks to minimalisation of the variances within each class, we also maximise the variance between classes - it helps us to better separate the classes and prevent overlapping of data points and class intermixing. Such an apporach comes from differentiating the cost function
+
+$J(\mathbb{w})$ to $𝕨 ∝ 𝕊_{W}^{-1}(𝐦_2 −𝐦_1)$.
+
+#### b) Create Country Labels
+
+We are going to continue working with the mtcars data set from above and utilise LDA for the classification purposes, such that we attempt to create K = 3 classes based on country of origin for each car. 
+
+The code below uses the variable you have created above, $\mathbb{X}$, stores the variable ${country}$ in the first column of $\mathbb{X}$ and calls that column ${label}$.
+```{r Create Data Set Containing Country Labels}
+class(X) # X is a data frame
+
+country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", 
+             rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+
+X <- data.frame(cbind(label = country, X)) # (1 pt) data.frame; (1 pt) cbind
+```
+
+#### c) Pre-Process Data and Fit Model
+
+- Randomly shuffle the data, ensuring to keep the labels attached to correct observations. This will ensure that when you split the data into train/test sets next, you don't by accident end up with all data of the same label in one set.
+- Fit LDA model to the training data set
+
+
+```{r Fit LDA Model}
+
+# randomly shuffle the data
+set.seed(1234)
+X_shuffled<- sample(nrow(X))
+X_shuffled<- X[X_shuffled,]
+
+# split into training / testing
+set.seed(1234)
+# Create the training dataset
+train_test_split <- initial_split(X, prop = 0.75) #training set contains 75% of the data
+set.seed(1234)
+train_data <- training(train_test_split)
+# Create the testing dataset
+test_data <- testing(train_test_split)
+# fit LDA using training data points
+fit_LDA <- lda(formula= label ~ ., data = train_data) 
+
+# print()
+print(fit_LDA)
+
+```
+
+- Print out the fitted model and from the display, report what is the percentage of amount of between-group variance explained by each linear discriminant.
+
+>ANSWER: The amount of between-group variance explained by each LD is as follows:
+Proportion of trace:
+   LD1    LD2 
+0.8308 0.1692 
+It can be understood as the pertentage of separation achieved by each discriminant function.
+
+- Is this a quantity that LDA aims to maximise?
+>ANSWER: Yes, this is indeed the number that LDA aims to maximise - the between-group variance.
+
+#### d) Model Accuracy On Unseen Data
+
+Next use the testing data set to investigate the accuracy of your model on unseen data (i.e. data not used during training).
+
+- Obtain predictions for train and test data sets.
+```{r}
+#Predictions using stats library
+predict_train <- predict(fit_LDA, newdata = train_data) # for the train dataset
+predict_test <- predict(fit_LDA, newdata = test_data) # for the test dataset
+```
+- Produce 2 tables (one for each of the above) showing classification accuracy. Explain the general meaning of values on the diagonal.
+```{r}
+# Classification accuracy on training data
+classTbl_train <- table(train_data$label, predict_train$class)
+print(classTbl_train)
+
+# 2 errors occured - two actual Japanese cars predicted to belong to 'Europe' class
+
+# Classification accuracy on testing data
+classTbl_test <- table(test_data$label, predict_test$class)
+print(classTbl_test)
+
+# 1 error occured - one actual European car predicted to belong to 'Japan' class
+```
+- Obtain the same tables containing entries in a fraction format.
+```{r}
+# Classification accuracy on training data in percent
+prop.table(classTbl_train, 1)
+
+# Classification accuracy on testing data in percent
+prop_test<-prop.table(classTbl_test,1)
+prop_test
+```
+- Obtain and comment the total percent correct classification for training and testing data sets. 
+```{r}
+sum(diag(prop.table(classTbl_train))) #0.9166667
+
+
+#As for test set there are no predictions for the actual Japanese cars in seed 1234, I will count the acurracy manually
+(prop_test[1,1]+prop_test[2,3])/2 #0.875
+
+```
+
+
+- Do you expect to obtain higher classification accuracy on a training or testing data and why?
+
+>ANSWER: I would expect the acurracy to be higher in the training set for two reasons - first of all, this is the data for which the model was trained. Second of all - the training data contains more rows than the testing data, so the mistake cost is automatically lower what we can see from the analysis above (2 errors in train_data, 1 error in test_data, however classification accuracy higher for training dataset. )
+

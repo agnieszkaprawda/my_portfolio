@@ -6,10 +6,31 @@
     <description>Recent content on Agnieszka Prawda - Portfolio</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 23 Nov 2020 13:45:06 +0600</lastBuildDate>
+    <lastBuildDate>Wed, 23 Dec 2020 15:44:46 +0600</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Predicting Survival of Titanic Passengers in Python</title>
+      <link>/portfolio/kio-tape/</link>
+      <pubDate>Wed, 23 Dec 2020 15:44:46 +0600</pubDate>
+      
+      <guid>/portfolio/kio-tape/</guid>
+      <description>#!/usr/bin/env python3
+-- coding: utf-8 -- &amp;quot;&amp;rdquo;&amp;rdquo; Author : AGNIESZKA PRAWDA Year : 2020 Individual Assignment Answers: Predicting Survival of Titanic Passengers &amp;quot;&amp;rdquo;&amp;rdquo;
+#%% IMPORT LIBRARIES import numpy as np import pandas as pd import matplotlib.</description>
+    </item>
+    
+    <item>
+      <title>Building Recommendation Systems for BBC iPlayer users</title>
+      <link>/portfolio/project-07/</link>
+      <pubDate>Wed, 02 Dec 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/portfolio/project-07/</guid>
+      <description>body { text-align: justify}   img { border-radius: 15px; }
+ div.grey { background-color:#808080; border-radius: 5px; padding: 20px; border-style: groove;}   div.</description>
+    </item>
     
     <item>
       <title>Oxford Hack 2020 - Meetable MVP</title>
@@ -18,6 +39,16 @@
       
       <guid>/blog/design-inspiration-the-best-projects-from-december/</guid>
       <description>Oxford Hack 2020 - Meetable What is Meetable? Meetable is an app that enables you to find friends during the lockdown. It matches you with a small group of other students from your university every week and sets weekly challenges for you basing on your common interests.</description>
+    </item>
+    
+    <item>
+      <title>Clustering BBC iPlayer users using K means, PAM and H-Clustering  methods</title>
+      <link>/portfolio/project-06/</link>
+      <pubDate>Sun, 15 Nov 2020 15:58:10 +0600</pubDate>
+      
+      <guid>/portfolio/project-06/</guid>
+      <description>body { text-align: justify}   img { border-radius: 15px; }
+ div.grey { background-color:#808080; border-radius: 5px; padding: 20px; border-style: groove;}   div.</description>
     </item>
     
     <item>
@@ -100,16 +131,6 @@ The watch has the following features:</description>
       <pubDate>Mon, 23 Dec 2019 15:55:44 +0600</pubDate>
       
       <guid>/portfolio/seamless-watch/</guid>
-      <description>The “Seamless Watch” watch has all the features that users expect in a digital watch, and some unusual features.
-The watch has the following features:</description>
-    </item>
-    
-    <item>
-      <title>KIO TAPE</title>
-      <link>/portfolio/kio-tape/</link>
-      <pubDate>Mon, 23 Dec 2019 15:44:46 +0600</pubDate>
-      
-      <guid>/portfolio/kio-tape/</guid>
       <description>The “Seamless Watch” watch has all the features that users expect in a digital watch, and some unusual features.
 The watch has the following features:</description>
     </item>

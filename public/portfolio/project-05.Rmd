@@ -4,7 +4,7 @@ category:
 date: "2020-10-27T15:58:10+06:00"
 image: images/projects/lendingclub3.jpg
 project_images:
-title: Interest rate analysis in R using logistic models
+title: Interest rate analysis in R using logistic models 
 type: portfolio
 ---
 ```{r, setup, include=FALSE}

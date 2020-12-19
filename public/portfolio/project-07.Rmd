@@ -1,0 +1,749 @@
+---
+category:
+- Machine Learning in R
+date: "2020-12-02T15:58:10+06:00"
+image: images/projects/lendingclub3.jpg
+project_images:
+title: Building Recommendation Systems for BBC iPlayer users
+type: portfolio
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+<!--begin html code: I will mark the html code in my markdown files, these are not directly related to the course material-->
+
+
+
+
+</style>
+<style>
+body {
+text-align: justify}
+
+</style>
+
+
+<style>
+img {
+  border-radius: 15px;
+}
+
+
+<style>
+div.grey { background-color:#808080; border-radius: 5px; padding: 20px; border-style: groove;}
+</style>
+
+<style>
+div.font {color="red"}
+</style>
+
+<style>
+div.navy1 { background-color:#686868; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+
+
+<style>
+div.navy { background-color:#A2A2B6; border-radius: 5px; padding: 20px; border-style: groove; color: #ffffff;}
+
+</style>
+
+<!--end html code-->
+
+# DATA PREPARATION
+
+#### Installing Packages
+
+```{r installing_packages}
+
+#installing needed packages
+library(tidyverse)
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+library(skimr)
+library(janitor)
+library(ggthemes)
+library(showtext)
+font_add_google("Montserrat", "Montserrat") #downloading fonts from Google
+showtext_auto()
+
+```
+
+#### Loading the Data
+
+```{r loading_data}
+
+#Loadning the needed 2 datasets
+movie_data <- fread(input="~/Documents/LBS/Machine Learning/Session 02/data/movies.csv",
+                    stringsAsFactors = FALSE) #9742 number of rows
+
+rating_data <- fread(input = "~/Documents/LBS/Machine Learning/Session 02/data/ratings.csv",nrows = 1e6) #100836 number of rows
+
+#Creating the genre list for my data
+list_genre <- c("Action", "Adventure", "Animation", "Children", 
+                "Comedy", "Crime","Documentary", "Drama", "Fantasy",
+                "Film-Noir", "Horror", "Musical", "Mystery","Romance",
+                "Sci-Fi", "Thriller", "War", "Western")
+
+```
+
+### Cleaning the Data
+
+##### Cleaning Movies Data
+
+```{r cleaning_movies_data}
+
+#Cleaning up the movie_data from the movies that appear more than once
+
+#Finding the movies that appeard more than once
+repeatMovies <- movie_data %>% 
+  group_by(title) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 1) %>% 
+  pull(title)
+
+repeatMovies # 5 movies appear more than once
+
+# [1] "Confessions of a Dangerous Mind (2002)" "Emma (1996)"                           
+# [3] "Eros (2004)"                            "Saturn 3 (1980)"                       
+# [5] "War of the Worlds (2005)" 
+
+removeRows <- 0  #Initialising  the variable that stores the rows we have to remove later (the duplicates)
+
+##### REMOVE REPEATS IN RATING DATA ####
+
+for(i in repeatMovies){
+  repeatMovieLoc <- which(movie_data$title == i) #Getting the indices of the rows where the current movie (with title i) is stored 
+  
+  tempGenre <- paste(movie_data$genres[repeatMovieLoc], collapse="|")   #Collapsing the genres assigned to the duplicated movies, separated by |
+  
+tempGenre <- paste(unique(unlist(strsplit(tempGenre, split = "\\|")[[1]])), collapse = "|")   #Splitting the string up again, taking only the unique values
+
+movie_data$genres[repeatMovieLoc[1]] <- tempGenre   #Bringing the new genre string to the first appearance of the movie in the dataframe
+  
+
+removeRows <- c(removeRows, repeatMovieLoc[-1])  #Adding the duplicate entry (row 6271) to the list of rows I want to remove later
+  
+### REMOVE DUPLICATES IN RATINGS DATA ###
+
+  
+repeatMovieIdLoc <- which(rating_data$movieId %in% movie_data$movieId[removeRows]) #Searching for all the entries in the rating_data dataframe that refer to duplicate movies in movie_data
+  
+rating_data$movieId[repeatMovieIdLoc] <- movie_data$movieId[repeatMovieLoc[1]]  #Changing movieId to the movieId that remains in our movie_data dataframe
+}
+
+#Removing the duplicate rows in the movie_data
+movie_data <- movie_data[-removeRows,]
+movie_data
+```
+
+##### Cleaning Ratings Data
+
+There is a risk that the same user has rated a movie multiple times. I would like to keep only the best rating.
+
+I will group by userId and movieId, and only take the highest (maximum) rating In the end, I will produce a dataframe, where there is (at most) 1 rating of a user for a movie. This is a constraint needed to build up a proper user-movie-interaction-matrix
+
+```{r cleaning_ratings_data}
+
+rating_data <- rating_data %>% 
+  group_by(userId, movieId) %>% 
+  summarise(rating = max(rating)) %>% 
+  ungroup()
+
+length(unique(rating_data$movieId)) #Identifying movies that have not been yet rated by any user. They are safe to ignore for now, since they shouldn't affect our recommendations
+length(unique(movie_data$movieId))
+setdiff(unique(movie_data$movieId), unique(rating_data$movieId)) 
+
+rating_data
+```
+
+##### Checking the Data is Clean
+
+```{r performing_data_checks}
+
+#movie_data
+skim(movie_data)
+summary(movie_data)    
+head(movie_data)
+
+#rating_data
+skim(movie_data)
+summary(rating_data)   
+head(rating_data)
+
+
+dupes_movie<-movie_data%>%get_dupes(movieId,title) # checking for dupes once again
+dupes_movie # no dupes
+
+dupes_rating<-rating_data%>%get_dupes(userId,movieId)
+dupes_rating # no dupes
+
+movie_data
+```
+
+```{r cross_matrix_of_genres}
+
+searchMatrix <- movie_data %>% 
+  separate_rows(genres, sep = "\\|") %>% #Splitting the genres assigned to movies into multiple rows
+  mutate(values = 1) %>% 
+  pivot_wider(names_from = genres, values_from = values) %>%    #Pivoting the dataframe so that each genre is assigned its own column
+  replace(is.na(.), 0)
+
+searchMatrix %>%  #Some movies have no genres listed, this is not problematic for the recommendation model, since it is purely collaborative, rather than content-based
+  filter(`(no genres listed)`==1) %>% 
+  length()
+
+```
+
+#### Building the Rating Matrix (User-Movie-Interactions Matrix)
+
+```{r rating_matrix}
+
+ratingMatrix <- rating_data %>% #A ratings matrix consists of userId's as rows and movieId's as columns
+  arrange(movieId) %>% 
+  pivot_wider(names_from = movieId, values_from = rating) %>%   #allocating each movie to its own column
+  arrange(userId) %>% 
+  select(-userId)   #dropping userId
+
+
+ratingMatrix <- as.matrix(ratingMatrix) #converting the dataframe created above into a matrix
+
+#Ordering the rows and columns so that those with the fewest NAs are furthest to the top left, which is crucial for selecting the most popular movies and most frequent users
+ratingMatrix <- ratingMatrix[order(rowSums(is.na(ratingMatrix))),order(colSums(is.na(ratingMatrix)))]
+
+
+ratingMatrix <- as(ratingMatrix, "realRatingMatrix") #Converting the rating matrix into a recommenderlab sparse matrix
+
+```
+
+# STEP 1 - EXPLORATORY ANALYSIS
+
+#### Preparing the Data
+
+##### Ratings Counts 
+```{r evaluating_the_data_for_exploratory_analysis}
+
+
+rating_data %>% 
+  group_by(rating) %>% 
+  summarise(n = n()) #Creating a count of movie ratings
+
+movie_rating_count <- rating_data %>% 
+  group_by(movieId) %>% 
+  summarise(ratings = n()) %>% 
+  left_join(movie_data, by = "movieId") %>% 
+  select(movieId, title, ratings) %>% 
+  arrange(desc(ratings)) #Creating a table with number of ratings per movie
+
+head(movie_rating_count) #previewing 
+
+user_rating_count <- rating_data %>%  #Creating a table with number of ratings per user
+  group_by(userId) %>% 
+  summarise(ratings = n()) %>% 
+  arrange(desc(ratings))
+
+
+head(user_rating_count) #preaviewing
+
+```
+
+#### How similar the 100 most popular movies are to eachother
+```{r similarity_100_popular_movies, fig.height=4, fig.width=4}
+
+movie_similarity <- similarity(ratingMatrix[, 1:100], 
+                               method = "cosine",
+                               which = "items")
+
+
+movie_similarity <- as.matrix(movie_similarity) + diag(100) #Adding diag(100) - the similarity of a movie with itself is always 1
+
+image(movie_similarity, main = "Top 100 Popular Movies' Similarity")
+
+```
+
+#### How similar the 100 most frequent users are to eachother
+```{r similarity_100_frequent_users, fig.height=4, fig.width=4}
+
+#I produce a matrix which calculates how similar users are to one another
+user_similarity <- similarity(ratingMatrix[1:100, ],
+                              method = "cosine",
+                              which = "users")
+
+#I also add diag(100), since the similarity of a user with themselves is 1
+user_similarity <- as.matrix(user_similarity) + diag(100)
+
+image(user_similarity, main = "100 Top active users' similarity")
+
+```
+
+#### Build a Histogram to Show the Frequency of Ratings of All Movies
+
+```{r histogram_frequency_movie_ratings}
+
+rating_data %>% 
+  group_by(rating) %>% 
+  count()
+
+rating_data %>%  #Building a histogram
+  ggplot(aes(rating)) + 
+  geom_bar() +
+  labs(title="Movies were most frequently rated for 4.0 ",subtitle = "Movie rating frequency",x="Rating",y="Count") + 
+  theme_minimal() + 
+  theme(plot.title = element_text(color = "gray60",size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "plain"),
+        plot.subtitle = element_text(color = "gray60", face="plain", ,size= 10,family= "Montserrat"),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "plain"),
+        axis.text.x=element_text(family="Montserrat", size=7),
+        axis.text.y=element_text(family="Montserrat", size=7))+
+  scale_x_continuous(limits=c(0,5.5)) +
+  scale_y_continuous(limits=c(0,30000))
+
+(rating_data)
+
+```
+
+# STEP 2 - SELECT MOST COMMON USERS AND MOVIES
+
+#### Select movies with more than 'm' ratings and users who have given more than 'n' ratings, where m <- c(10, 20, 50, 100, 200); n <- m
+
+```{r m most common movies and n most common users}
+
+#Since the rows (users) and columns (movies) of my ratingMatrix are already ranked in decreasing order of frequency/popularity, we are just slicing the matrix
+
+#movies rated more than 10 times and users who have rated more than 10 movies
+top10_rate <- ratingMatrix[rowCounts(ratingMatrix) > 10,colCounts(ratingMatrix) > 10] 
+
+#movies rated more than 20 times and users who have rated more than 20 movies
+top20_rate <- ratingMatrix[rowCounts(ratingMatrix) > 20,colCounts(ratingMatrix) > 20] 
+
+#movies rated more than 50 times and users who have rated more than 50 movies
+top50_rate <- ratingMatrix[rowCounts(ratingMatrix) > 50,colCounts(ratingMatrix) > 50] 
+
+#movies rated more than 100 times and users who have rated more than 100 movies
+top100_rate <- ratingMatrix[rowCounts(ratingMatrix) > 100,colCounts(ratingMatrix) > 100] 
+#top100_rate <- top100_rate[rowCounts(top100_rate) > 5, ]
+
+#movies rated more than 200 times and users who have rated more than 200 movies
+top200_rate <- ratingMatrix[rowCounts(ratingMatrix) > 200,colCounts(ratingMatrix) > 200]
+
+
+```
+
+# STEP 3 - BUILDING RECOMMENDATION SYSTEMS
+
+#### Splitting each subset into test and training data
+
+```{r splitting into training and testing data}
+set.seed(1234) # setting seed
+top10_split <- evaluationScheme(top10_rate, method="split", train=0.8, given=-5) # splitting all the data to 80% training data and 20% remaining for the testing
+top10_split
+
+set.seed(1234)
+top20_rate <- top20_rate[rowCounts(top20_rate) > 5, ]
+top20_split <- evaluationScheme(top20_rate, method="split", train=0.8, given=-5)
+top20_split
+
+set.seed(1234)
+top50_split <- evaluationScheme(top50_rate, method="split", train=0.8, given=-5)
+top50_split
+
+set.seed(1234)
+top100_rate <- top100_rate[rowCounts(top100_rate) > 5, ]
+top100_split <- evaluationScheme(top100_rate, method="split", train=0.8, given=-5)
+
+set.seed(1234)
+top200_rate <- top200_rate[rowCounts(top200_rate) > 5, ]
+top200_split <- evaluationScheme(top200_rate, method="split", train=0.8, given=-5)
+
+```
+
+#### Build three separate recommendations systems for each of the values of 'n' and 'm' (5 versions for each type of RS)
+
+#### Item  Based CF
+
+```{r item_based_CF}
+
+#TOP10
+set.seed(1234) # setting seed
+top10_IBCF <- Recommender(getData(top10_split, "train"), method = "IBCF", param=list(normalize = "center", method="Cosine",k=350))
+#TOP20 
+set.seed(1234) # setting seed
+top20_IBCF <- Recommender(getData(top20_split, "train"), method = "IBCF", param=list(normalize = "center", method="Cosine",k=350))
+#TOP50
+set.seed(1234) # setting seed
+top50_IBCF <- Recommender(getData(top50_split, "train"), method = "IBCF", param=list(normalize = "center", method="Cosine",k=350))
+#TOP100
+set.seed(1234) # setting seed
+top100_IBCF <- Recommender(getData(top100_split, "train"), method = "IBCF", param=list(normalize = "center", method="Cosine",k=350))
+#TOP200
+set.seed(1234) # setting seed
+top200_IBCF <- Recommender(getData(top200_split, "train"), method = "IBCF", param=list(normalize = "center", method="Cosine",k=350))
+
+```
+
+#### User Based CF
+
+```{r user_based_CF}
+#TOP10
+set.seed(1234) # setting seed
+top10_UBCF <- Recommender(getData(top10_split, "train"), method = "UBCF", param=list(normalize = "center", method="Cosine", nn=25))
+#TOP20
+set.seed(1234) # setting seed
+top20_UBCF <- Recommender(getData(top20_split, "train"), method = "UBCF", param=list(normalize = "center", method="Cosine", nn=25))
+#TOP50
+set.seed(1234) # setting seed
+top50_UBCF <- Recommender(getData(top50_split, "train"), method = "UBCF", param=list(normalize = "center", method="Cosine", nn=25))
+#TOP100
+set.seed(1234) # setting seed
+top100_UBCF <- Recommender(getData(top100_split, "train"), method = "UBCF", param=list(normalize = "center", method="Cosine", nn=25))
+#TOP200
+set.seed(1234) # setting seed
+top200_UBCF <- Recommender(getData(top200_split, "train"), method = "UBCF", param=list(normalize = "center", method="Cosine", nn=25))
+
+
+```
+
+#### Model Based CF using Matrix Factorisation
+
+```{r model_based_cf_using_mf}
+#TOP10
+set.seed(1234) # setting seed
+top10_LIBMF <- Recommender(getData(top10_split, "train"), method = "LIBMF", param=list(normalize = "center", method="Cosine"))
+#TOP20
+set.seed(1234) # setting seed
+top20_LIBMF <- Recommender(getData(top20_split, "train"), method = "LIBMF", param=list(normalize = "center", method="Cosine"))
+#TOP50
+set.seed(1234) # setting seed
+top50_LIBMF <- Recommender(getData(top50_split, "train"), method = "LIBMF", param=list(normalize = "center", method="Cosine"))
+#TOP100
+set.seed(1234) # setting seed
+top100_LIBMF <- Recommender(getData(top100_split, "train"), method = "LIBMF", param=list(normalize = "center", method="Cosine"))
+#TOP200
+set.seed(1234) # setting seed
+top200_LIBMF <- Recommender(getData(top200_split, "train"), method = "LIBMF", param=list(normalize = "center", method="Cosine"))
+
+
+```
+
+#### STEP 4 - Computing RMSE of each model and combination of m x n ####
+
+#### Assess performance of the above models for different number of 'items' and 'users'. Remember CF methods are most appropriate for high volume items (often watched movies) and frequent users. So, if you use n,m == 20 then performance changes as opposed to when you use n, == 50.
+#### For each recommendation system we expect to see 5 RMSE numbers, corresponding to n,m == {10,20,50,100,200}
+
+#### RMSE_item_based_CF
+
+```{r RMSE_item_based_CF}
+
+set.seed(1234) # setting seed
+#TOP10
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+
+top10_IBCF_predict <- predict(top10_IBCF, getData(top10_split, "known"), type="ratings")
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+
+top10_IBCF_RMSE <- calcPredictionAccuracy(top10_IBCF_predict, getData(top10_split, "unknown"))[1]
+top10_IBCF_RMSE
+
+#TOP20
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top20_IBCF_predict <- predict(top20_IBCF, getData(top20_split, "known"), type="ratings")
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top20_IBCF_RMSE <- calcPredictionAccuracy(top20_IBCF_predict, getData(top20_split, "unknown"))[1]
+top20_IBCF_RMSE
+
+#TOP20
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top50_IBCF_predict <- predict(top50_IBCF, getData(top50_split, "known"), type="ratings")
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top50_IBCF_RMSE <- calcPredictionAccuracy(top50_IBCF_predict, getData(top50_split, "unknown"))[1]
+top50_IBCF_RMSE
+
+#TOP20
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top100_IBCF_predict <- predict(top100_IBCF, getData(top100_split, "known"), type="ratings")
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top100_IBCF_RMSE <- calcPredictionAccuracy(top100_IBCF_predict, getData(top100_split, "unknown"))[1]
+top100_IBCF_RMSE
+
+#TOP200
+
+#I compute predicted ratings by giving the model the known part of the test data (i.e. the data of the users for all but 5 movies for each user)
+top200_IBCF_predict <- predict(top200_IBCF, getData(top200_split, "known"), type="ratings")
+
+#Finally, I can calculate RMSE between the predictions and the unknown part of the test data (i.e. for the 5 movies that were held out)
+top200_IBCF_RMSE <- calcPredictionAccuracy(top200_IBCF_predict, getData(top200_split, "unknown"))[1]
+top200_IBCF_RMSE
+
+
+
+```
+
+#### RMSE_user_based_CF
+
+```{r RMSE_user_based_CF}
+set.seed(1234) # setting seed
+#TOP10
+top10_UBCF_predict <- predict(top10_UBCF, getData(top10_split, "known"), type="ratings")
+
+top10_UBCF_RMSE <- calcPredictionAccuracy(top10_UBCF_predict, getData(top10_split, "unknown"))[1]
+top10_UBCF_RMSE
+
+#TOP20
+top20_UBCF_predict <- predict(top20_UBCF, getData(top20_split, "known"), type="ratings")
+
+top20_UBCF_RMSE <- calcPredictionAccuracy(top20_UBCF_predict, getData(top20_split, "unknown"))[1]
+top20_UBCF_RMSE
+
+#TOP50
+top50_UBCF_predict <- predict(top50_UBCF, getData(top50_split, "known"), type="ratings")
+
+top50_UBCF_RMSE <- calcPredictionAccuracy(top50_UBCF_predict, getData(top50_split, "unknown"))[1]
+top50_UBCF_RMSE
+
+#TOP100
+top100_UBCF_predict <- predict(top100_UBCF, getData(top100_split, "known"), type="ratings")
+
+top100_UBCF_RMSE <- calcPredictionAccuracy(top100_UBCF_predict, getData(top100_split, "unknown"))[1]
+top100_UBCF_RMSE
+
+#TOP200
+top200_UBCF_predict <- predict(top200_UBCF, getData(top200_split, "known"), type="ratings")
+
+top200_UBCF_RMSE <- calcPredictionAccuracy(top200_UBCF_predict, getData(top200_split, "unknown"))[1]
+top200_UBCF_RMSE
+
+```
+
+
+#### RMSE_model_based_CF_using_MF
+
+```{r RMSE_model_based_CF_using_MF}
+set.seed(1234) # setting seed
+#TOP10
+top10_LIBMF_predict <- predict(top10_LIBMF, getData(top10_split, "known"), type="ratings")
+
+top10_LIBMF_RMSE <- calcPredictionAccuracy(top10_LIBMF_predict, getData(top10_split, "unknown"))[1]
+top10_LIBMF_RMSE
+
+#TOP20
+top20_LIBMF_predict <- predict(top20_LIBMF, getData(top20_split, "known"), type="ratings")
+
+top20_LIBMF_RMSE <- calcPredictionAccuracy(top20_LIBMF_predict, getData(top20_split, "unknown"))[1]
+top20_LIBMF_RMSE
+
+#TOP50
+top50_LIBMF_predict <- predict(top50_LIBMF, getData(top50_split, "known"), type="ratings")
+
+top50_LIBMF_RMSE <- calcPredictionAccuracy(top50_LIBMF_predict, getData(top50_split, "unknown"))[1]
+top50_LIBMF_RMSE
+
+#TOP100
+top100_LIBMF_predict <- predict(top100_LIBMF, getData(top100_split, "known"), type="ratings")
+
+top100_LIBMF_RMSE <- calcPredictionAccuracy(top100_LIBMF_predict, getData(top100_split, "unknown"))[1]
+top100_LIBMF_RMSE
+
+#TOP200
+top200_LIBMF_predict <- predict(top200_LIBMF, getData(top200_split, "known"), type="ratings")
+
+top200_LIBMF_RMSE <- calcPredictionAccuracy(top200_LIBMF_predict, getData(top200_split, "unknown"))[1]
+top200_LIBMF_RMSE
+
+
+```
+
+# STEP 5 - REPORTING PLOTS SHOWING HOW RMSE CHANGES GIVEN THE MODEL AND VALUES OF 'N' AND 'M'
+
+#### Your X-axis should be values of n,m and your y-axis should be RMSE
+
+```{r RMSE_plots_item_based_CF}
+rmse_ibcf <- data.frame(top10_IBCF_RMSE, top20_IBCF_RMSE, top50_IBCF_RMSE, top100_IBCF_RMSE, top200_IBCF_RMSE)
+value_mn <- c(10, 20, 50, 100, 200)
+rmse_ibcf 
+rmse_ibcf <- rmse_ibcf %>% 
+  pivot_longer(cols = c("top10_IBCF_RMSE", "top20_IBCF_RMSE", "top50_IBCF_RMSE", "top100_IBCF_RMSE", "top200_IBCF_RMSE" ),names_to = "a", values_to = "value") 
+
+p1<- ggplot(data = rmse_ibcf,  aes(x=value_mn, y = value)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()+
+  theme( plot.title = element_text(size=15,face="bold", family= "Montserrat"),
+         axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "bold"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "bold"),
+        axis.text.x=element_text(family="Montserrat", size=7))+
+    labs(title= "RMSE for IBCF", x="m & n value", y=" RMSE")
+p1
+
+```
+
+```{r RMSE_plots_user_based_CF}
+rmse_ubcf <- data.frame(top10_UBCF_RMSE, top20_UBCF_RMSE, top50_UBCF_RMSE, top100_UBCF_RMSE, top200_UBCF_RMSE)
+value_mn <- c(10, 20, 50, 100, 200)
+rmse_ubcf 
+rmse_ubcf <- rmse_ubcf %>% 
+  pivot_longer(cols = c("top10_UBCF_RMSE", "top20_UBCF_RMSE", "top50_UBCF_RMSE", "top100_UBCF_RMSE", "top200_UBCF_RMSE" ),names_to = "a", values_to = "value") 
+
+p2<-ggplot(data = rmse_ubcf,  aes(x=value_mn, y = value)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()+
+  theme(plot.title = element_text(size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "bold"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "bold"),
+        axis.text.x=element_text(family="Montserrat", size=7))+
+    labs(title= "RMSE for UBCF", x="m & n value", y=" RMSE")
+p2
+
+
+```
+
+```{r RMSE_plots_model_based_CF_using_MF}
+rmse_libmf <- data.frame(top10_LIBMF_RMSE, top20_LIBMF_RMSE, top50_LIBMF_RMSE, top100_LIBMF_RMSE, top200_LIBMF_RMSE)
+value_mn <- c(10, 20, 50, 100, 200)
+rmse_libmf 
+rmse_libmf <- rmse_libmf %>% 
+  pivot_longer(cols = c("top10_LIBMF_RMSE", "top20_LIBMF_RMSE", "top50_LIBMF_RMSE", "top100_LIBMF_RMSE", "top200_LIBMF_RMSE" ),names_to = "a", values_to = "value") 
+
+p3<- ggplot(data = rmse_libmf,  aes(x=value_mn, y = value)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()+
+  theme(plot.title = element_text(size=15,face="bold", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "bold"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "bold"),
+        axis.text.x=element_text(family="Montserrat", size=7))+
+    labs(title= "RMSE for LIBMF", x="m & n value", y=" RMSE")
+p3
+```
+
+
+```{r, fig.height=4, fig.width=4}
+library(gridExtra)
+grid.arrange(p1,p2,p3, nrow = 3)
+
+```
+# Second verison of RMSEs
+
+```{r}
+
+rmse_ibcf<-c()
+rmse_ubcf<-c()
+rmse_libmf<-c()
+
+rmse_ibcf <- c(top10_IBCF_RMSE, top20_IBCF_RMSE, top50_IBCF_RMSE, top100_IBCF_RMSE, top200_IBCF_RMSE)
+rmse_ubcf <- c(top10_UBCF_RMSE, top20_UBCF_RMSE, top50_UBCF_RMSE, top100_UBCF_RMSE, top200_UBCF_RMSE)
+rmse_libmf <- c(top10_LIBMF_RMSE, top20_LIBMF_RMSE, top50_LIBMF_RMSE, top100_LIBMF_RMSE, top200_LIBMF_RMSE)
+
+n <- c(10, 20, 50, 100, 200)
+
+models<-c("IBCF","IBCF","IBCF","IBCF","IBCF",
+          "UBCF","UBCF","UBCF","UBCF","UBCF",
+          "LIBMF","LIBMF","LIBMF","LIBMF","LIBMF")
+
+df_rmse<- tibble(rmse = c(rmse_ibcf, rmse_ubcf, rmse_libmf),
+                 lambda = c(n, n, n),
+                 model = models)
+
+glimpse(df_rmse)
+
+ggplot(df_rmse, aes(x=lambda,y=rmse,colour=model)) +
+  geom_line() +
+geom_point() +
+  theme_minimal()+
+  theme(plot.title = element_text(size=15,face="bold", family= "Montserrat"),
+        plot.subtitle = element_text(size=10,face="plain", family= "Montserrat"),
+        axis.title.y = element_text(size = 8, angle = 90, family="Montserrat", face = "bold"),
+        axis.text.y=element_text(family="Montserrat", size=7),
+        axis.title.x = element_text(size = 8, family="Montserrat", face = "bold"),
+        axis.text.x=element_text(family="Montserrat", size=7))+
+  labs(title = "Recommendation performance works best for LIMBF model",
+       subtitle = "RMSEs of particular recommendations system models",
+       x = "n & m values",
+       y = "RMSE",
+       colour = "Model") +
+  
+  theme(title = element_text(family="Courier", face="bold"))
+
+
+
+
+```
+n=m=50 Matrix Factorisation model is the best -> it is based on the interactions between users and items.
+
+
+# STEP 6 - CHOOSING THE OPTIMAL MODEL AND EVALUATING ITS RECOMMENDATIONS
+
+```{r}
+
+set.seed(1234) # setting seed
+#this is our recommended model
+recommen_model <- Recommender(getData(top100_split, "train"), 
+                              method = "LIBMF", 
+                              param=list(normalize = "center", 
+                                         method="Cosine"))
+
+
+predition_LIBMF <- predict(recommen_model, getData(top100_split, "known"), type="ratings")
+
+ 
+#building a matrix
+prediction_2 <- predict(recommen_model, top100_rate[1:25, ], type="ratings")
+as(prediction_2, "matrix")[,1:10]
+
+
+#finding recommended 5 movies for user 9
+top100_rate[1,]
+recommended.items.u9<- predict(recommen_model, top100_rate[9,], n=5)
+as(recommended.items.u9, "list")[[1]]
+# [1] "608"  "1213" "4878" "1265" "1197" movieIDs
+
+movies_u9<- c()
+movies_u9<- append(movies_u9,movie_data$title[movie_data$movieId %in% "608"])
+# "Fargo (1996)"
+
+movies_u9<- append(movies_u9,movie_data$title[movie_data$movieId %in% "1213"])
+# "Goodfellas (1990)"
+
+movies_u9<- append(movies_u9,movie_data$title[movie_data$movieId %in% "4878"])
+# "Donnie Darko (2001)"
+
+movies_u9<- append(movies_u9,movie_data$title[movie_data$movieId %in% "1265"])
+# "Groundhog Day (1993)"
+
+movies_u9<- append(movies_u9,movie_data$title[movie_data$movieId %in% "1197"])
+# "Princess Bride, The (1987)"
+
+movies_u9
+
+
+```
+
+
+
+
+--- END --- 
