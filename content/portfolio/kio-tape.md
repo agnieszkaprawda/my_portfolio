@@ -7,15 +7,8 @@ project_images:
 title: Predicting Survival of Titanic Passengers in Python
 type: portfolio
 ---
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Author : AGNIESZKA PRAWDA
-Year   : 2020
-Individual Assignment Answers: Predicting Survival of Titanic Passengers
-"""
 
-#%% IMPORT LIBRARIES
+# IMPORT LIBRARIES
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -36,7 +29,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
 
-#%% LOAD AND EXAMINE DATA
+## LOAD AND EXAMINE DATA
 
 df = pd.read_csv('titanic.csv')
 
@@ -156,7 +149,7 @@ female    0.678
 male      0.322
 Name: survived, dtype: float64
 '''
-#%% DATA PRE-PROCESSING
+# DATA PRE-PROCESSING
 # Encode 'sex' column to be female - 0, and male - 1 
 
 #Display top 5 rows of the column
@@ -353,7 +346,7 @@ To sum up:
     8 - Mrs + female Dr
 '''
 
-#%%Change titles to numerical values
+# Change titles to numerical values
     
 df['name'] = df['name'].replace(['Capt'],0)
 df['name'] = df['name'].replace(['Rev','Jonkheer'],1)
@@ -389,7 +382,7 @@ array([2, 5, 4, 8, 7, 6, 0, 3, 1])
 '''
       
 
-#%%Interpolate missing ticket fare
+## Interpolate missing ticket fare
 gp = df.groupby('pclass') #Group the data by class
 val = gp.transform('median').fare #Find the median value for each title
 df['fare'].fillna(val, inplace = True) #Fill in missing values
@@ -489,7 +482,7 @@ dtype: int64
 
 #No more missing values in the data set
 
-#%% machine learning algo training and testing
+## machine learning algo training and testing
 # seed random number generator for reproducible results
 random.seed(1234)
 

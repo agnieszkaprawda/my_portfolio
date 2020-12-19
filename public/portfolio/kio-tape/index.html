@@ -98,15 +98,8 @@
             Predicting Survival of Titanic Passengers in Python
           </h1>
           <div class="site-project-single-description">
-            <p>#!/usr/bin/env python3</p>
-<h1 id="---coding-utf-8---">-<em>- coding: utf-8 -</em>-</h1>
-<p>&quot;&rdquo;&rdquo;
-Author : AGNIESZKA PRAWDA
-Year   : 2020
-Individual Assignment Answers: Predicting Survival of Titanic Passengers
-&quot;&rdquo;&rdquo;</p>
-<p>#%% IMPORT LIBRARIES
-import numpy as np
+            <h1 id="import-libraries">IMPORT LIBRARIES</h1>
+<p>import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import random</p>
@@ -121,7 +114,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis</p>
 filterwarnings(&lsquo;ignore&rsquo;)</p>
 <p>from sklearn.model_selection import train_test_split
 from sklearn import preprocessing</p>
-<p>#%% LOAD AND EXAMINE DATA</p>
+<h2 id="load-and-examine-data">LOAD AND EXAMINE DATA</h2>
 <p>df = pd.read_csv(&lsquo;titanic.csv&rsquo;)</p>
 <p>#Explore the data</p>
 <p>#Check top 10 rows of the dataframe
@@ -224,8 +217,8 @@ sex
 female    0.678
 male      0.322
 Name: survived, dtype: float64
-'&rsquo;&rsquo;
-#%% DATA PRE-PROCESSING</p>
+'&rsquo;&rsquo;</p>
+<h1 id="data-pre-processing">DATA PRE-PROCESSING</h1>
 <h1 id="encode-sex-column-to-be-female---0-and-male---1">Encode &lsquo;sex&rsquo; column to be female - 0, and male - 1</h1>
 <p>#Display top 5 rows of the column
 df.sex.head(5)
@@ -404,7 +397,7 @@ Name: name, dtype: int64</p>
 7 - Army title
 8 - Mrs + female Dr
 '&rsquo;&rsquo;</p>
-<p>#%%Change titles to numerical values</p>
+<h1 id="change-titles-to-numerical-values">Change titles to numerical values</h1>
 <p>df[&lsquo;name&rsquo;] = df[&lsquo;name&rsquo;].replace([&lsquo;Capt&rsquo;],0)
 df[&lsquo;name&rsquo;] = df[&lsquo;name&rsquo;].replace([&lsquo;Rev&rsquo;,&lsquo;Jonkheer&rsquo;],1)
 df[&lsquo;name&rsquo;] = df[&lsquo;name&rsquo;].replace([&lsquo;Miss&rsquo;,&lsquo;Mlle&rsquo;,&lsquo;Mme&rsquo;,&lsquo;Ms&rsquo; ],2)
@@ -435,8 +428,8 @@ df.name.unique()
 '&rsquo;&rsquo;
 array([2, 5, 4, 8, 7, 6, 0, 3, 1])
 '&rsquo;&rsquo;</p>
-<p>#%%Interpolate missing ticket fare
-gp = df.groupby(&lsquo;pclass&rsquo;) #Group the data by class
+<h2 id="interpolate-missing-ticket-fare">Interpolate missing ticket fare</h2>
+<p>gp = df.groupby(&lsquo;pclass&rsquo;) #Group the data by class
 val = gp.transform(&lsquo;median&rsquo;).fare #Find the median value for each title
 df[&lsquo;fare&rsquo;].fillna(val, inplace = True) #Fill in missing values</p>
 <p>#Check if the ticket fare missing values were fixed
@@ -514,7 +507,7 @@ cabin       0
 dtype: int64
 '&rsquo;&rsquo;</p>
 <p>#No more missing values in the data set</p>
-<p>#%% machine learning algo training and testing</p>
+<h2 id="machine-learning-algo-training-and-testing">machine learning algo training and testing</h2>
 <h1 id="seed-random-number-generator-for-reproducible-results">seed random number generator for reproducible results</h1>
 <p>random.seed(1234)</p>
 <p>#Split the data into features and label (true outcome, i.e. survived)
